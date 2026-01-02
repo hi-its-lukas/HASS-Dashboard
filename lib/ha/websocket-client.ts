@@ -3,13 +3,19 @@
 import { HAState, HAMessage, HAServiceCall, HAIncomingMessage } from './types'
 
 type StateChangeCallback = (entityId: string, newState: HAState, oldState: HAState | null) => void
-type ResolveFunction = (value?: unknown) => void
-type RejectFunction = (reason?: Error) => void
+
+// Connection resolve/reject - für Promise<void>
+type ConnectResolve = () => void
+type ConnectReject = (reason: Error) => void
+
+// Generic request resolve/reject - für Promise<T> mit beliebigem Rückgabewert
+type RequestResolve = (value: unknown) => void
+type RequestReject = (reason: Error) => void
 
 export class HAWebSocketClient {
   private ws: WebSocket | null = null
   private messageId = 1
-  private pendingRequests = new Map<number, { resolve: ResolveFunction; reject: RejectFunction }>()
+  private pendingRequests = new Map<number, { resolve: RequestResolve; reject: RequestReject }>()
   private stateChangeCallbacks: StateChangeCallback[] = []
   private reconnectAttempts = 0
   private maxReconnectAttempts = 10
@@ -25,7 +31,7 @@ export class HAWebSocketClient {
   }
 
   async connect(): Promise<void> {
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
       try {
         this.ws = new WebSocket(this.url)
 
@@ -46,7 +52,7 @@ export class HAWebSocketClient {
 
         this.ws.onerror = (error) => {
           console.error('[HA WS] Error:', error)
-          reject(error)
+          reject(new Error('WebSocket error'))
         }
 
         this.ws.onclose = () => {
@@ -56,15 +62,15 @@ export class HAWebSocketClient {
           this.handleReconnect()
         }
       } catch (err) {
-        reject(err)
+        reject(err instanceof Error ? err : new Error('Connection failed'))
       }
     })
   }
 
   private async handleMessage(
     message: HAIncomingMessage,
-    connectResolve?: ResolveFunction,
-    connectReject?: RejectFunction
+    connectResolve?: ConnectResolve,
+    connectReject?: ConnectReject
   ) {
     if ('type' in message) {
       switch (message.type) {
@@ -86,7 +92,7 @@ export class HAWebSocketClient {
           break
 
         case 'result':
-          const resultMsg = message as { id: number; success: boolean; result?: any; error?: any }
+          const resultMsg = message as { id: number; success: boolean; result?: unknown; error?: { message?: string } }
           const pending = this.pendingRequests.get(resultMsg.id)
           if (pending) {
             if (resultMsg.success) {
@@ -120,9 +126,12 @@ export class HAWebSocketClient {
   }
 
   private sendCommand<T>(command: HAMessage): Promise<T> {
-    return new Promise((resolve, reject) => {
+    return new Promise<T>((resolve, reject) => {
       const id = this.messageId++
-      this.pendingRequests.set(id, { resolve, reject })
+      this.pendingRequests.set(id, {
+        resolve: resolve as RequestResolve,
+        reject
+      })
       this.send({ ...command, id })
 
       // Timeout after 30 seconds
