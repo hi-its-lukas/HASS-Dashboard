@@ -1,0 +1,59 @@
+ => ERROR [builder 5/5] RUN npm run build                                                            40.3s
+------                                                                                                     
+ > [builder 5/5] RUN npm run build:                                                                        
+0.998                                                                                                      
+0.998 > ha-dashboard@1.0.0 build                                                                           
+0.998 > next build                                                                                         
+0.998                                                                                                      
+2.896   ▲ Next.js 14.2.3
+2.898   - Environments: .env
+2.898 
+2.919    Creating an optimized production build ...
+3.516 > [PWA] Compile server
+3.518 > [PWA] Compile server
+3.519 > [PWA] Compile client (static)
+3.519 > [PWA] Auto register service worker with: /app/node_modules/next-pwa/register.js
+3.520 > [PWA] Service worker: /app/public/sw.js
+3.520 > [PWA]   url: /sw.js
+3.520 > [PWA]   scope: /
+32.88  ✓ Compiled successfully
+32.89    Linting and checking validity of types ...
+39.78 Failed to compile.
+39.78 
+39.78 ./lib/ha/store.ts:207:28
+39.78 Type error: Property 'filter' does not exist on type '{}'.
+39.78 
+39.78   205 |   
+39.78   206 |   const lightIds = lightsGroup.attributes?.entity_id || []
+39.78 > 207 |   const onCount = lightIds.filter((id: string) => states[id]?.state === 'on').length
+39.78       |                            ^
+39.78   208 |   
+39.78   209 |   return { on: onCount, total: lightIds.length }
+39.78   210 | }
+40.01 npm notice
+40.01 npm notice New major version of npm available! 10.8.2 -> 11.7.0
+40.01 npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.7.0
+40.01 npm notice To update run: npm install -g npm@11.7.0
+40.01 npm notice
+------
+[+] up 0/1
+ ⠙ Image hass-dashboard-ha-dashboard Building                                                        57.8s 
+Dockerfile:19
+
+--------------------
+
+  17 |     ENV NEXT_TELEMETRY_DISABLED=1
+
+  18 |     
+
+  19 | >>> RUN npm run build
+
+  20 |     
+
+  21 |     # Stage 3: Runner
+
+--------------------
+
+failed to solve: process "/bin/sh -c npm run build" did not complete successfully: exit code: 1
+
+WARN[0000] /opt/HASS-Dashboard/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion 
