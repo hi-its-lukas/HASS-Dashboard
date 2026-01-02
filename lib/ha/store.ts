@@ -1,4 +1,5 @@
 // Home Assistant State Store using Zustand
+// Last updated: 2026-01-02 22:05 UTC - Fixed Array.isArray type narrowing
 
 import { create } from 'zustand'
 import { HAState, SurveillanceEvent } from './types'

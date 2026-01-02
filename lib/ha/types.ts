@@ -1,4 +1,5 @@
 // Home Assistant Types
+// Last updated: 2026-01-02 22:05 UTC
 
 export interface HAState {
   entity_id: string
