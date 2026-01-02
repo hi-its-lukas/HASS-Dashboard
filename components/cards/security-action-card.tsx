@@ -4,13 +4,21 @@ import { motion } from 'framer-motion'
 import { Home, MapPin, Globe, Unlock, LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
+type SecurityAction = 'stay' | 'away' | 'outside' | 'disarm'
+
 interface SecurityActionProps {
-  action: 'stay' | 'away' | 'outside' | 'disarm'
+  action: SecurityAction
   onClick: () => void
   active?: boolean
 }
 
-const config: Record<string, { icon: LucideIcon; label: string; color: string }> = {
+interface ActionConfig {
+  icon: LucideIcon
+  label: string
+  color: string
+}
+
+const config: Record<SecurityAction, ActionConfig> = {
   stay: { icon: Home, label: 'Stay', color: 'text-accent-yellow' },
   away: { icon: MapPin, label: 'Away', color: 'text-accent-orange' },
   outside: { icon: Globe, label: 'Outside', color: 'text-accent-cyan' },

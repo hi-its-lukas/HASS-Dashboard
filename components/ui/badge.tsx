@@ -2,13 +2,15 @@
 
 import { cn } from '@/lib/utils'
 
+export type BadgeVariant = 'default' | 'success' | 'warning' | 'danger' | 'info'
+
 interface BadgeProps {
   children: React.ReactNode
-  variant?: 'default' | 'success' | 'warning' | 'danger' | 'info'
+  variant?: BadgeVariant
   className?: string
 }
 
-const variants = {
+const variants: Record<BadgeVariant, string> = {
   default: 'bg-gray-600 text-white',
   success: 'bg-accent-green text-black',
   warning: 'bg-accent-yellow text-black',

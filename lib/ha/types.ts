@@ -3,7 +3,7 @@
 export interface HAState {
   entity_id: string
   state: string
-  attributes: Record<string, any>
+  attributes: Record<string, unknown>
   last_changed: string
   last_updated: string
   context?: {
@@ -32,7 +32,7 @@ export interface HAEvent {
 export interface HAMessage {
   id?: number
   type: string
-  [key: string]: any
+  [key: string]: unknown
 }
 
 export interface HAAuthMessage {
@@ -44,7 +44,7 @@ export interface HAResultMessage {
   id: number
   type: 'result'
   success: boolean
-  result?: any
+  result?: unknown
   error?: {
     code: string
     message: string
@@ -62,7 +62,7 @@ export type HAIncomingMessage = HAResultMessage | HAEventMessage | { type: 'auth
 export interface HAServiceCall {
   domain: string
   service: string
-  serviceData?: Record<string, any>
+  serviceData?: Record<string, unknown>
   target?: {
     entity_id?: string | string[]
     device_id?: string | string[]

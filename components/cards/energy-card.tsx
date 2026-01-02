@@ -5,15 +5,24 @@ import { Card } from '@/components/ui/card'
 import { ProgressBar } from '@/components/ui/progress-bar'
 import { cn } from '@/lib/utils'
 
+type EnergyType = 'solar' | 'battery' | 'grid' | 'house'
+type AccentColor = 'yellow' | 'cyan' | 'pink' | 'green'
+
 interface EnergyCardProps {
-  type: 'solar' | 'battery' | 'grid' | 'house'
+  type: EnergyType
   value: number
   unit?: string
   subLabel?: string
   batteryLevel?: number
 }
 
-const config: Record<string, { icon: LucideIcon; label: string; accent: 'yellow' | 'cyan' | 'pink' | 'green' }> = {
+interface EnergyConfig {
+  icon: LucideIcon
+  label: string
+  accent: AccentColor
+}
+
+const config: Record<EnergyType, EnergyConfig> = {
   solar: { icon: Sun, label: 'SOLAR', accent: 'yellow' },
   battery: { icon: Battery, label: 'BATTERY', accent: 'cyan' },
   grid: { icon: Grid3X3, label: 'GRID', accent: 'pink' },

@@ -36,7 +36,7 @@ interface HAStore {
   connect: () => Promise<void>
   disconnect: () => void
   getState: (entityId: string) => HAState | undefined
-  callService: (domain: string, service: string, entityId?: string, data?: Record<string, any>) => Promise<void>
+  callService: (domain: string, service: string, entityId?: string, data?: Record<string, unknown>) => Promise<void>
   updateState: (entityId: string, state: HAState) => void
 }
 

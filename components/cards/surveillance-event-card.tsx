@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Badge } from '@/components/ui/badge'
+import { Badge, BadgeVariant } from '@/components/ui/badge'
 import { SurveillanceEvent } from '@/lib/ha/types'
 import { formatEventTime } from '@/lib/utils'
 
@@ -9,7 +9,7 @@ interface SurveillanceEventCardProps {
   event: SurveillanceEvent
 }
 
-const typeBadgeVariant: Record<string, 'default' | 'success' | 'info' | 'warning' | 'danger'> = {
+const typeBadgeVariant: Record<SurveillanceEvent['type'], BadgeVariant> = {
   person: 'danger',
   vehicle: 'info',
   animal: 'warning',

@@ -128,8 +128,10 @@ export class HAWebSocketClient {
   private sendCommand<T>(command: HAMessage): Promise<T> {
     return new Promise<T>((resolve, reject) => {
       const id = this.messageId++
+      // Cast is necessary because Map stores handlers for different return types
+      // The runtime behavior is correct as resolve() accepts the actual result value
       this.pendingRequests.set(id, {
-        resolve: resolve as RequestResolve,
+        resolve: (value: unknown) => resolve(value as T),
         reject
       })
       this.send({ ...command, id })
