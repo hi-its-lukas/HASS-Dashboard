@@ -214,12 +214,26 @@ export const usePower = () => {
   return powerState ? parseInt(powerState.state) || 0 : 0
 }
 
-export const useWeather = () => {
+export interface Weather {
+  temperature: number
+  condition: string
+}
+
+export const useWeather = (): Weather => {
   const weatherState = useEntityState(dashboardConfig.weatherEntityId)
-  return weatherState ? {
-    temperature: weatherState.attributes?.temperature || 0,
+  
+  if (!weatherState) {
+    return { temperature: 0, condition: 'unknown' }
+  }
+  
+  // Extract temperature with proper type narrowing
+  const rawTemp = weatherState.attributes?.temperature
+  const temperature = typeof rawTemp === 'number' ? rawTemp : 0
+  
+  return {
+    temperature,
     condition: weatherState.state,
-  } : { temperature: 0, condition: 'unknown' }
+  }
 }
 
 export const useAlarmState = () => {

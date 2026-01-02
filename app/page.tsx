@@ -51,7 +51,7 @@ export default function HomePage() {
         </div>
         <div className="flex items-center gap-2 px-3 py-2 bg-bg-card rounded-full">
           <span className="text-lg">{getWeatherIcon(weather.condition)}</span>
-          <span className="text-lg font-medium text-white">{weather.temperature}°</span>
+          <span className="text-lg font-medium text-white">{weather.temperature ?? '—'}°</span>
           <div className={`w-2 h-2 rounded-full ${connected ? 'bg-accent-green' : connecting ? 'bg-accent-yellow animate-pulse' : 'bg-accent-red'}`} />
         </div>
       </motion.header>
