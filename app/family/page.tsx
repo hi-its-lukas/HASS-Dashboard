@@ -6,7 +6,6 @@ import { Avatar, AvatarGroup } from '@/components/ui/avatar'
 import { PersonCard } from '@/components/cards/person-card'
 import { useHAStore, usePersonsAtHome } from '@/lib/ha'
 import { dashboardConfig } from '@/config/dashboard'
-import { formatRelativeTime } from '@/lib/utils'
 
 export default function FamilyPage() {
   const personsAtHome = usePersonsAtHome()

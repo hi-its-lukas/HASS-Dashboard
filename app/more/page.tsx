@@ -1,7 +1,6 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Link } from 'lucide-react'
 import {
   Users,
   Home,
@@ -10,7 +9,6 @@ import {
   Moon,
   LogOut,
   Zap,
-  Shield,
   Settings,
   Bell,
 } from 'lucide-react'

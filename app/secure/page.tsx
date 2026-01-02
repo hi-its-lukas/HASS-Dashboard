@@ -1,12 +1,11 @@
 'use client'
 
-import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Shield, ChevronRight, Clock, Dog, Home as HomeIcon } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Toggle } from '@/components/ui/toggle'
 import { SecurityActionCard } from '@/components/cards/security-action-card'
-import { useAlarmState, useHAStore, useEntityState } from '@/lib/ha'
+import { useAlarmState, useHAStore } from '@/lib/ha'
 import { dashboardConfig } from '@/config/dashboard'
 import { getAlarmStateLabel, cn } from '@/lib/utils'
 

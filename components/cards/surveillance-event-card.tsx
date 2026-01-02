@@ -9,7 +9,7 @@ interface SurveillanceEventCardProps {
   event: SurveillanceEvent
 }
 
-const typeBadgeVariant: Record<string, 'success' | 'info' | 'warning' | 'danger'> = {
+const typeBadgeVariant: Record<string, 'default' | 'success' | 'info' | 'warning' | 'danger'> = {
   person: 'danger',
   vehicle: 'info',
   animal: 'warning',

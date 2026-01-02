@@ -42,7 +42,6 @@ export function PowerTrendChart() {
               tickLine={false}
               tick={{ fontSize: 10, fill: '#6b7280' }}
               tickFormatter={(v) => {
-                const hours = Math.floor((36 - v) / 6)
                 if (v === 0) return '-6h'
                 if (v === 12) return '-4h'
                 if (v === 24) return '-2h'

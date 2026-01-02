@@ -3,11 +3,13 @@
 import { HAState, HAMessage, HAServiceCall, HAIncomingMessage } from './types'
 
 type StateChangeCallback = (entityId: string, newState: HAState, oldState: HAState | null) => void
+type ResolveFunction = (value?: unknown) => void
+type RejectFunction = (reason?: Error) => void
 
 export class HAWebSocketClient {
   private ws: WebSocket | null = null
   private messageId = 1
-  private pendingRequests = new Map<number, { resolve: Function; reject: Function }>()
+  private pendingRequests = new Map<number, { resolve: ResolveFunction; reject: RejectFunction }>()
   private stateChangeCallbacks: StateChangeCallback[] = []
   private reconnectAttempts = 0
   private maxReconnectAttempts = 10
@@ -61,8 +63,8 @@ export class HAWebSocketClient {
 
   private async handleMessage(
     message: HAIncomingMessage,
-    connectResolve?: Function,
-    connectReject?: Function
+    connectResolve?: ResolveFunction,
+    connectReject?: RejectFunction
   ) {
     if ('type' in message) {
       switch (message.type) {

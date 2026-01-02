@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Lightbulb, Zap, Shield, Users, Sun, Cloud } from 'lucide-react'
+import { Lightbulb, Zap, Shield, Users } from 'lucide-react'
 import { SummaryTile } from '@/components/cards/summary-tile'
 import { RoomCard } from '@/components/cards/room-card'
 import { SegmentControl } from '@/components/ui/segment-control'

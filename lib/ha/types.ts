@@ -57,7 +57,7 @@ export interface HAEventMessage {
   event: HAEvent
 }
 
-export type HAIncomingMessage = HAResultMessage | HAEventMessage | { type: 'auth_required' | 'auth_ok' | 'auth_invalid' }
+export type HAIncomingMessage = HAResultMessage | HAEventMessage | { type: 'auth_required' | 'auth_ok' | 'auth_invalid' | 'pong' }
 
 export interface HAServiceCall {
   domain: string

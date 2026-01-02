@@ -1,7 +1,6 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { EnergyCard } from '@/components/cards/energy-card'
 import { PowerTrendChart } from '@/components/cards/power-trend-chart'
 import { ApplianceCard } from '@/components/cards/appliance-card'
