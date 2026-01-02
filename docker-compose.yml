@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  ha-dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ha-dashboard
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_HA_WS_URL=${NEXT_PUBLIC_HA_WS_URL:-wss://homeassistant.local/api/websocket}
+      - HA_TOKEN=${HA_TOKEN}
+      - NEXT_PUBLIC_USE_MOCK=${NEXT_PUBLIC_USE_MOCK:-false}
+    # Optional: Add to your Home Assistant network
+    # networks:
+    #   - homeassistant
+    
+# Optional: If running on same network as Home Assistant
+# networks:
+#   homeassistant:
+#     external: true

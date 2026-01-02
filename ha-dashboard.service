@@ -1,0 +1,20 @@
+[Unit]
+Description=HA Dashboard - Home Assistant Mobile Interface
+Documentation=https://github.com/your-username/ha-dashboard
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/ha-dashboard
+ExecStart=/usr/bin/npm start
+Restart=on-failure
+RestartSec=10
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=ha-dashboard
+Environment=NODE_ENV=production
+Environment=PORT=3000
+
+[Install]
+WantedBy=multi-user.target
