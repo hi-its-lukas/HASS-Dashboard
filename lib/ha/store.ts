@@ -203,8 +203,9 @@ export const useLightsCount = () => {
   
   if (!lightsGroup) return { on: 0, total: 0 }
   
-  const lightIds = lightsGroup.attributes?.entity_id || []
-  const onCount = lightIds.filter((id: string) => states[id]?.state === 'on').length
+  const rawIds = lightsGroup.attributes?.entity_id
+  const lightIds = Array.isArray(rawIds) ? rawIds as string[] : []
+  const onCount = lightIds.filter((id) => states[id]?.state === 'on').length
   
   return { on: onCount, total: lightIds.length }
 }
