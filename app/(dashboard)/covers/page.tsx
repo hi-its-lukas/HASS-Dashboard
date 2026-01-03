@@ -19,6 +19,11 @@ interface HAEntity {
   device_id?: string
 }
 
+interface HADevice {
+  id: string
+  area_id?: string
+}
+
 interface RoomGroup {
   id: string
   name: string
@@ -33,6 +38,7 @@ export default function CoversPage() {
   const [collapsedRooms, setCollapsedRooms] = useState<Record<string, boolean>>({})
   const [areas, setAreas] = useState<HAArea[]>([])
   const [entities, setEntities] = useState<HAEntity[]>([])
+  const [devices, setDevices] = useState<HADevice[]>([])
   const [loading, setLoading] = useState(true)
   
   useEffect(() => {
@@ -43,6 +49,7 @@ export default function CoversPage() {
           const data = await res.json()
           setAreas(data.areas || [])
           setEntities(data.entities || [])
+          setDevices(data.devices || [])
         }
       } catch (error) {
         console.error('Failed to fetch registries:', error)
@@ -66,7 +73,16 @@ export default function CoversPage() {
   
   const roomGroups = useMemo(() => {
     const areaMap = new Map(areas.map(a => [a.area_id, a.name]))
-    const entityAreaMap = new Map(entities.map(e => [e.entity_id, e.area_id]))
+    const deviceAreaMap = new Map(devices.map(d => [d.id, d.area_id]))
+    const entityAreaMap = new Map<string, string | undefined>()
+    
+    entities.forEach(e => {
+      let areaId = e.area_id
+      if (!areaId && e.device_id) {
+        areaId = deviceAreaMap.get(e.device_id)
+      }
+      entityAreaMap.set(e.entity_id, areaId)
+    })
     
     const groups: Record<string, string[]> = {}
     
@@ -90,7 +106,7 @@ export default function CoversPage() {
       })
     
     return sortedGroups
-  }, [uniqueCovers, areas, entities])
+  }, [uniqueCovers, areas, entities, devices])
   
   const handleAction = async (entityId: string, action: 'open' | 'close' | 'stop') => {
     setActiveAction(`${entityId}_${action}`)

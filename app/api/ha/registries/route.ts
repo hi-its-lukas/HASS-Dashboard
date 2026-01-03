@@ -49,10 +49,11 @@ export async function GET() {
       return NextResponse.json({ error: 'Token expired' }, { status: 401 })
     }
     
-    const [states, areas, entities] = await Promise.all([
+    const [states, areas, entities, devices] = await Promise.all([
       fetchStates(user.haInstanceUrl, token),
       fetchAreas(user.haInstanceUrl, token),
-      fetchEntityRegistry(user.haInstanceUrl, token)
+      fetchEntityRegistry(user.haInstanceUrl, token),
+      fetchDeviceRegistry(user.haInstanceUrl, token)
     ])
     
     const persons = states.filter((s: { entity_id: string }) => s.entity_id.startsWith('person.'))
@@ -79,6 +80,7 @@ export async function GET() {
     return NextResponse.json({
       areas,
       entities,
+      devices,
       discovered: {
         persons,
         lights,
@@ -131,6 +133,19 @@ async function fetchAreas(haUrl: string, token: string): Promise<HAArea[]> {
 
 async function fetchEntityRegistry(haUrl: string, token: string): Promise<HAEntity[]> {
   const response = await fetch(new URL('/api/config/entity_registry/list', haUrl).toString(), {
+    method: 'POST',
+    headers: { 
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: '{}'
+  })
+  if (!response.ok) return []
+  return response.json()
+}
+
+async function fetchDeviceRegistry(haUrl: string, token: string): Promise<HADevice[]> {
+  const response = await fetch(new URL('/api/config/device_registry/list', haUrl).toString(), {
     method: 'POST',
     headers: { 
       'Authorization': `Bearer ${token}`,

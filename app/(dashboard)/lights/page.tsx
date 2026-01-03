@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { Lightbulb, Power, Settings, ChevronDown, ChevronRight, Loader2 } from 'lucide-react'
+import { Lightbulb, Power, Settings, ChevronDown, ChevronRight, Loader2, Palette } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { useHAStore } from '@/lib/ha'
 import { useConfig } from '@/lib/config/store'
@@ -19,11 +19,30 @@ interface HAEntity {
   device_id?: string
 }
 
+interface HADevice {
+  id: string
+  area_id?: string
+}
+
 interface RoomGroup {
   id: string
   name: string
   lights: string[]
 }
+
+const COLOR_PRESETS = [
+  { name: 'Warmweiß', rgb: [255, 180, 107], kelvin: 2700 },
+  { name: 'Neutralweiß', rgb: [255, 228, 206], kelvin: 4000 },
+  { name: 'Kaltweiß', rgb: [255, 255, 255], kelvin: 6500 },
+  { name: 'Rot', rgb: [255, 0, 0] },
+  { name: 'Orange', rgb: [255, 165, 0] },
+  { name: 'Gelb', rgb: [255, 255, 0] },
+  { name: 'Grün', rgb: [0, 255, 0] },
+  { name: 'Cyan', rgb: [0, 255, 255] },
+  { name: 'Blau', rgb: [0, 0, 255] },
+  { name: 'Lila', rgb: [128, 0, 255] },
+  { name: 'Pink', rgb: [255, 0, 128] },
+]
 
 export default function LightsPage() {
   const config = useConfig()
@@ -33,7 +52,9 @@ export default function LightsPage() {
   const [collapsedRooms, setCollapsedRooms] = useState<Record<string, boolean>>({})
   const [areas, setAreas] = useState<HAArea[]>([])
   const [entities, setEntities] = useState<HAEntity[]>([])
+  const [devices, setDevices] = useState<HADevice[]>([])
   const [loading, setLoading] = useState(true)
+  const [colorPickerOpen, setColorPickerOpen] = useState<string | null>(null)
   
   useEffect(() => {
     async function fetchRegistries() {
@@ -43,6 +64,7 @@ export default function LightsPage() {
           const data = await res.json()
           setAreas(data.areas || [])
           setEntities(data.entities || [])
+          setDevices(data.devices || [])
         }
       } catch (error) {
         console.error('Failed to fetch registries:', error)
@@ -66,7 +88,16 @@ export default function LightsPage() {
   
   const roomGroups = useMemo(() => {
     const areaMap = new Map(areas.map(a => [a.area_id, a.name]))
-    const entityAreaMap = new Map(entities.map(e => [e.entity_id, e.area_id]))
+    const entityAreaMap = new Map<string, string | undefined>()
+    const deviceAreaMap = new Map(devices.map(d => [d.id, d.area_id]))
+    
+    entities.forEach(e => {
+      let areaId = e.area_id
+      if (!areaId && e.device_id) {
+        areaId = deviceAreaMap.get(e.device_id)
+      }
+      entityAreaMap.set(e.entity_id, areaId)
+    })
     
     const groups: Record<string, string[]> = {}
     
@@ -90,7 +121,7 @@ export default function LightsPage() {
       })
     
     return sortedGroups
-  }, [uniqueLights, areas, entities])
+  }, [uniqueLights, areas, entities, devices])
   
   const handleToggle = async (entityId: string) => {
     const currentState = states[entityId]?.state
@@ -101,6 +132,30 @@ export default function LightsPage() {
       console.error('Failed to toggle light:', error)
     } finally {
       setToggling(null)
+    }
+  }
+  
+  const handleColorChange = async (entityId: string, color: typeof COLOR_PRESETS[0]) => {
+    setToggling(entityId)
+    try {
+      if (color.kelvin) {
+        await callService('light', 'turn_on', entityId, { color_temp_kelvin: color.kelvin })
+      } else {
+        await callService('light', 'turn_on', entityId, { rgb_color: color.rgb })
+      }
+    } catch (error) {
+      console.error('Failed to change color:', error)
+    } finally {
+      setToggling(null)
+      setColorPickerOpen(null)
+    }
+  }
+  
+  const handleBrightnessChange = async (entityId: string, brightness: number) => {
+    try {
+      await callService('light', 'turn_on', entityId, { brightness: Math.round(brightness * 2.55) })
+    } catch (error) {
+      console.error('Failed to change brightness:', error)
     }
   }
   
@@ -137,6 +192,26 @@ export default function LightsPage() {
       ...prev,
       [roomName]: !prev[roomName]
     }))
+  }
+  
+  const supportsColor = (state: any) => {
+    const colorModes = state?.attributes?.supported_color_modes as string[] | undefined
+    if (!colorModes) return false
+    return colorModes.some(mode => ['rgb', 'rgbw', 'rgbww', 'hs', 'xy'].includes(mode))
+  }
+  
+  const supportsColorTemp = (state: any) => {
+    const colorModes = state?.attributes?.supported_color_modes as string[] | undefined
+    if (!colorModes) return false
+    return colorModes.some(mode => ['color_temp'].includes(mode))
+  }
+  
+  const getCurrentColor = (state: any): string => {
+    const rgb = state?.attributes?.rgb_color as [number, number, number] | undefined
+    if (rgb) {
+      return `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`
+    }
+    return '#ffa500'
   }
   
   const onCount = uniqueLights.filter((id) => states[id]?.state === 'on').length
@@ -255,6 +330,9 @@ export default function LightsPage() {
                       const friendlyName = (state?.attributes?.friendly_name as string) || entityId.split('.')[1].replace(/_/g, ' ')
                       const brightness = state?.attributes?.brightness as number | undefined
                       const brightnessPercent = brightness ? Math.round((brightness / 255) * 100) : null
+                      const hasColor = supportsColor(state)
+                      const hasColorTemp = supportsColorTemp(state)
+                      const isColorPickerOpen = colorPickerOpen === entityId
                       
                       return (
                         <motion.div
@@ -264,23 +342,37 @@ export default function LightsPage() {
                           transition={{ delay: index * 0.02 }}
                         >
                           <Card
-                            hoverable
                             className={cn(
-                              'p-4 cursor-pointer transition-all',
+                              'p-4 transition-all relative',
                               isOn && 'ring-2 ring-accent-yellow/50 bg-accent-yellow/10'
                             )}
-                            onClick={() => handleToggle(entityId)}
                           >
-                            <div className="flex items-center justify-between mb-3">
-                              <Lightbulb className={cn(
-                                'w-6 h-6',
-                                isOn ? 'text-accent-yellow' : 'text-gray-500'
-                              )} />
-                              <div className={cn(
-                                'w-3 h-3 rounded-full',
-                                isOn ? 'bg-accent-yellow' : 'bg-gray-600',
-                                toggling === entityId && 'animate-pulse'
-                              )} />
+                            <div 
+                              className="flex items-center justify-between mb-3 cursor-pointer"
+                              onClick={() => handleToggle(entityId)}
+                            >
+                              <Lightbulb 
+                                className={cn('w-6 h-6', isOn ? 'text-accent-yellow' : 'text-gray-500')} 
+                                style={isOn && hasColor ? { color: getCurrentColor(state) } : undefined}
+                              />
+                              <div className="flex items-center gap-2">
+                                {(hasColor || hasColorTemp) && isOn && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      setColorPickerOpen(isColorPickerOpen ? null : entityId)
+                                    }}
+                                    className="p-1 hover:bg-white/10 rounded-full transition-colors"
+                                  >
+                                    <Palette className="w-4 h-4 text-text-secondary hover:text-white" />
+                                  </button>
+                                )}
+                                <div className={cn(
+                                  'w-3 h-3 rounded-full',
+                                  isOn ? 'bg-accent-yellow' : 'bg-gray-600',
+                                  toggling === entityId && 'animate-pulse'
+                                )} />
+                              </div>
                             </div>
                             <p className="text-sm font-medium text-white truncate capitalize">
                               {friendlyName}
@@ -288,6 +380,48 @@ export default function LightsPage() {
                             <p className="text-xs text-text-muted">
                               {isOn ? (brightnessPercent ? `${brightnessPercent}%` : 'An') : 'Aus'}
                             </p>
+                            
+                            {isOn && brightnessPercent !== null && (
+                              <div className="mt-3">
+                                <input
+                                  type="range"
+                                  min="1"
+                                  max="100"
+                                  value={brightnessPercent}
+                                  onChange={(e) => handleBrightnessChange(entityId, parseInt(e.target.value))}
+                                  className="w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-accent-yellow"
+                                  onClick={(e) => e.stopPropagation()}
+                                />
+                              </div>
+                            )}
+                            
+                            {isColorPickerOpen && (
+                              <motion.div
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="absolute top-full left-0 right-0 mt-2 p-3 bg-bg-card border border-white/10 rounded-xl shadow-xl z-50"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <div className="grid grid-cols-4 gap-2">
+                                  {COLOR_PRESETS.map((color) => (
+                                    <button
+                                      key={color.name}
+                                      onClick={() => handleColorChange(entityId, color)}
+                                      className="group flex flex-col items-center gap-1 p-2 hover:bg-white/5 rounded-lg transition-colors"
+                                      title={color.name}
+                                    >
+                                      <div
+                                        className="w-6 h-6 rounded-full border-2 border-white/20 group-hover:border-white/40 transition-colors"
+                                        style={{ backgroundColor: `rgb(${color.rgb.join(',')})` }}
+                                      />
+                                      <span className="text-[10px] text-text-muted truncate w-full text-center">
+                                        {color.name}
+                                      </span>
+                                    </button>
+                                  ))}
+                                </div>
+                              </motion.div>
+                            )}
                           </Card>
                         </motion.div>
                       )
