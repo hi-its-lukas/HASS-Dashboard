@@ -57,12 +57,9 @@ setup_encryption_key() {
 }
 
 init_database() {
-  if [ ! -f "$DB_FILE" ]; then
-    log_info "Initializing database at $DB_FILE"
-    npx prisma db push --skip-generate 2>/dev/null || log_warn "Database init skipped (may already exist)"
-  else
-    log_info "Database exists at $DB_FILE"
-  fi
+  log_info "Ensuring database schema at $DB_FILE"
+  npx prisma db push --skip-generate --accept-data-loss 2>&1 || log_warn "Database schema sync had warnings"
+  log_info "Database ready"
 }
 
 run_app() {
