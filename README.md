@@ -43,6 +43,15 @@ docker compose up -d --build
 
 Das Dashboard läuft auf `http://localhost` (Port 80).
 
+### Update
+
+```bash
+git pull
+docker compose down
+docker compose up -d --build
+docker logs hass-dashboard -f
+```
+
 ### 3. Cloudflare Tunnel einrichten
 
 ```bash
