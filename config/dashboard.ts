@@ -52,6 +52,15 @@ export interface CustomButtonConfig {
   data?: Record<string, unknown>
 }
 
+export interface IntercomConfig {
+  id: string
+  name: string
+  slug: string
+  cameraEntityId: string
+  speakUrl?: string
+  lockEntityId?: string
+}
+
 export interface DashboardConfig {
   weatherEntityId: string
   lightsGroupEntityId: string
@@ -64,6 +73,7 @@ export interface DashboardConfig {
   persons: PersonConfig[]
   appliances: ApplianceConfig[]
   customButtons: CustomButtonConfig[]
+  intercoms: IntercomConfig[]
 }
 
 export const dashboardConfig: DashboardConfig = {
@@ -89,6 +99,7 @@ export const dashboardConfig: DashboardConfig = {
   persons: [],
   appliances: [],
   customButtons: [],
+  intercoms: [],
 }
 
 export default dashboardConfig

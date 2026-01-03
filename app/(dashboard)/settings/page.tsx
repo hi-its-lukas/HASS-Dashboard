@@ -21,7 +21,9 @@ import {
   Trash2,
   Play,
   Plus,
-  X
+  X,
+  Video,
+  DoorOpen
 } from 'lucide-react'
 
 interface ConnectionStatus {
@@ -44,6 +46,15 @@ interface DiscoveredEntities {
   weather: Array<{ entity_id: string; state: string; attributes: Record<string, unknown> }>
 }
 
+interface IntercomConfig {
+  id: string
+  name: string
+  slug: string
+  cameraEntityId: string
+  speakUrl?: string
+  lockEntityId?: string
+}
+
 interface LayoutConfig {
   persons: string[]
   lights: string[]
@@ -57,6 +68,7 @@ interface LayoutConfig {
     entityId?: string
     data?: Record<string, unknown>
   }>
+  intercoms?: IntercomConfig[]
   weatherEntityId?: string
   alarmEntityId?: string
   powerEntityId?: string
@@ -80,8 +92,10 @@ export default function SettingsPage() {
     persons: true,
     lights: true,
     covers: false,
-    buttons: false
+    buttons: false,
+    intercoms: false
   })
+  const [newIntercom, setNewIntercom] = useState({ name: '', cameraEntityId: '', speakUrl: '', lockEntityId: '' })
   const [uploadingBackground, setUploadingBackground] = useState(false)
   const [backgroundUrl, setBackgroundUrl] = useState<string | null>(null)
   
@@ -463,6 +477,110 @@ export default function SettingsPage() {
             <p className="text-gray-500 text-sm">
               Click "Discover" to fetch available entities from Home Assistant
             </p>
+          )}
+        </div>
+        
+        <div className="bg-[#141b2d]/80 backdrop-blur-lg rounded-2xl p-6 border border-white/5 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <DoorOpen className="w-5 h-5 text-cyan-400" />
+              <h2 className="text-lg font-semibold text-white">Intercoms</h2>
+            </div>
+            <button
+              onClick={() => toggleSection('intercoms')}
+              className="p-2 hover:bg-white/5 rounded-lg transition-colors"
+            >
+              {expandedSections.intercoms ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
+            </button>
+          </div>
+          
+          {expandedSections.intercoms && (
+            <div className="space-y-4">
+              {config.intercoms?.map((intercom, index) => (
+                <div key={intercom.id} className="p-3 bg-white/5 rounded-xl flex items-center justify-between">
+                  <div>
+                    <p className="text-white font-medium">{intercom.name}</p>
+                    <p className="text-xs text-gray-500">{intercom.cameraEntityId}</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setConfig(prev => ({
+                        ...prev,
+                        intercoms: prev.intercoms?.filter((_, i) => i !== index) || []
+                      }))
+                    }}
+                    className="p-2 hover:bg-red-500/20 rounded-lg transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4 text-red-400" />
+                  </button>
+                </div>
+              ))}
+              
+              <div className="p-4 border border-dashed border-white/10 rounded-xl space-y-3">
+                <p className="text-sm text-gray-400">Neuen Intercom hinzufügen:</p>
+                <input
+                  type="text"
+                  placeholder="Name (z.B. Haustüre)"
+                  value={newIntercom.name}
+                  onChange={(e) => setNewIntercom(prev => ({ ...prev, name: e.target.value }))}
+                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                />
+                <input
+                  type="text"
+                  placeholder="Kamera Entity ID (z.B. camera.haustuere)"
+                  value={newIntercom.cameraEntityId}
+                  onChange={(e) => setNewIntercom(prev => ({ ...prev, cameraEntityId: e.target.value }))}
+                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                />
+                <input
+                  type="text"
+                  placeholder="Sprechen URL (optional)"
+                  value={newIntercom.speakUrl}
+                  onChange={(e) => setNewIntercom(prev => ({ ...prev, speakUrl: e.target.value }))}
+                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                />
+                <input
+                  type="text"
+                  placeholder="Lock Entity ID (z.B. lock.haustuere)"
+                  value={newIntercom.lockEntityId}
+                  onChange={(e) => setNewIntercom(prev => ({ ...prev, lockEntityId: e.target.value }))}
+                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                />
+                <button
+                  onClick={() => {
+                    if (newIntercom.name.trim() && newIntercom.cameraEntityId.trim()) {
+                      const baseSlug = newIntercom.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+                      const existingSlugs = (config.intercoms || []).map(i => i.slug)
+                      let slug = baseSlug
+                      let counter = 1
+                      while (existingSlugs.includes(slug)) {
+                        slug = `${baseSlug}-${counter++}`
+                      }
+                      setConfig(prev => ({
+                        ...prev,
+                        intercoms: [
+                          ...(prev.intercoms || []),
+                          {
+                            id: `intercom_${Date.now()}`,
+                            name: newIntercom.name.trim(),
+                            slug,
+                            cameraEntityId: newIntercom.cameraEntityId.trim(),
+                            ...(newIntercom.speakUrl.trim() && { speakUrl: newIntercom.speakUrl.trim() }),
+                            ...(newIntercom.lockEntityId.trim() && { lockEntityId: newIntercom.lockEntityId.trim() })
+                          }
+                        ]
+                      }))
+                      setNewIntercom({ name: '', cameraEntityId: '', speakUrl: '', lockEntityId: '' })
+                    }
+                  }}
+                  disabled={!newIntercom.name || !newIntercom.cameraEntityId}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Plus className="w-4 h-4" />
+                  Hinzufügen
+                </button>
+              </div>
+            </div>
           )}
         </div>
         

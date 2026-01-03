@@ -14,17 +14,21 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
-  Menu
+  Menu,
+  Lightbulb,
+  Blinds
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useConfigStore } from '@/lib/config/store'
 
 const navItems = [
   { href: '/', icon: Home, label: 'Home' },
-  { href: '/energy', icon: Zap, label: 'Energy' },
-  { href: '/surveillance', icon: Video, label: 'Surveillance' },
+  { href: '/lights', icon: Lightbulb, label: 'Lights' },
+  { href: '/covers', icon: Blinds, label: 'Covers' },
+  { href: '/cameras', icon: Video, label: 'Cameras' },
   { href: '/calendar', icon: Calendar, label: 'Calendar' },
-  { href: '/secure', icon: Shield, label: 'Security' },
+  { href: '/energy', icon: Zap, label: 'Energy' },
+  { href: '/surveillance', icon: Shield, label: 'Surveillance' },
   { href: '/family', icon: Users, label: 'Family' },
   { href: '/more', icon: Menu, label: 'More' },
 ]

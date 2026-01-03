@@ -14,6 +14,10 @@ import {
   Bell,
   Loader2,
   Play,
+  Lightbulb,
+  Blinds,
+  Video,
+  DoorOpen,
 } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
@@ -137,28 +141,77 @@ export default function MorePage() {
         </motion.section>
       )}
 
+      {config.intercoms && config.intercoms.length > 0 && (
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="mb-6"
+        >
+          <h2 className="text-sm font-medium text-text-muted uppercase tracking-wider mb-3">
+            Intercoms
+          </h2>
+          <div className="grid grid-cols-2 gap-3">
+            {config.intercoms.map((intercom) => (
+              <a key={intercom.id} href={`/intercom/${intercom.slug}`}>
+                <Card hoverable className="p-4">
+                  <div className="flex items-center gap-3">
+                    <DoorOpen className="w-5 h-5 text-accent-cyan" />
+                    <span className="font-medium text-white">{intercom.name}</span>
+                  </div>
+                </Card>
+              </a>
+            ))}
+          </div>
+        </motion.section>
+      )}
+
       <motion.section
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
+        transition={{ delay: 0.3 }}
       >
         <h2 className="text-sm font-medium text-text-muted uppercase tracking-wider mb-3">
           Quick Access
         </h2>
-        <div className="space-y-2">
+        <div className="grid grid-cols-2 gap-2">
+          <a href="/lights">
+            <Card hoverable className="p-4">
+              <div className="flex items-center gap-3">
+                <Lightbulb className="w-5 h-5 text-accent-yellow" />
+                <span className="font-medium text-white">Lichter</span>
+              </div>
+            </Card>
+          </a>
+          <a href="/covers">
+            <Card hoverable className="p-4">
+              <div className="flex items-center gap-3">
+                <Blinds className="w-5 h-5 text-accent-purple" />
+                <span className="font-medium text-white">Rollos</span>
+              </div>
+            </Card>
+          </a>
+          <a href="/cameras">
+            <Card hoverable className="p-4">
+              <div className="flex items-center gap-3">
+                <Video className="w-5 h-5 text-accent-cyan" />
+                <span className="font-medium text-white">Kameras</span>
+              </div>
+            </Card>
+          </a>
           <a href="/energy">
             <Card hoverable className="p-4">
               <div className="flex items-center gap-3">
-                <Zap className="w-5 h-5 text-accent-yellow" />
-                <span className="font-medium text-white">Energy Dashboard</span>
+                <Zap className="w-5 h-5 text-accent-orange" />
+                <span className="font-medium text-white">Energie</span>
               </div>
             </Card>
           </a>
           <a href="/family">
             <Card hoverable className="p-4">
               <div className="flex items-center gap-3">
-                <Users className="w-5 h-5 text-accent-cyan" />
-                <span className="font-medium text-white">Family Tracker</span>
+                <Users className="w-5 h-5 text-accent-green" />
+                <span className="font-medium text-white">Familie</span>
               </div>
             </Card>
           </a>
@@ -166,7 +219,7 @@ export default function MorePage() {
             <Card hoverable className="p-4">
               <div className="flex items-center gap-3">
                 <Settings className="w-5 h-5 text-text-muted" />
-                <span className="font-medium text-white">Settings</span>
+                <span className="font-medium text-white">Einstellungen</span>
               </div>
             </Card>
           </a>
