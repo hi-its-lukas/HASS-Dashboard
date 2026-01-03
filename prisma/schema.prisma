@@ -1,0 +1,65 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("SQLITE_URL")
+}
+
+model User {
+  id            String   @id @default(uuid())
+  haUserId      String?  @unique @map("ha_user_id")
+  haName        String?  @map("ha_name")
+  haInstanceUrl String?  @map("ha_instance_url")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  oauthTokens     OAuthToken[]
+  dashboardConfig DashboardConfig?
+  sessions        Session[]
+
+  @@map("users")
+}
+
+model OAuthToken {
+  id              String   @id @default(uuid())
+  userId          String   @map("user_id")
+  provider        String   @default("home_assistant")
+  accessTokenEnc  Bytes    @map("access_token_enc")
+  refreshTokenEnc Bytes?   @map("refresh_token_enc")
+  tokenNonce      Bytes    @map("token_nonce")
+  expiresAt       DateTime @map("expires_at")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, provider])
+  @@map("oauth_tokens")
+}
+
+model DashboardConfig {
+  id           String   @id @default(uuid())
+  userId       String   @unique @map("user_id")
+  layoutConfig String   @map("layout_config")
+  sidebarState String   @default("expanded") @map("sidebar_state")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("dashboard_configs")
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}

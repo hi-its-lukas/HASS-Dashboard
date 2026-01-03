@@ -9,6 +9,7 @@ channel = "stable-25_05"
 
 [userenv.shared]
 NEXT_PUBLIC_USE_MOCK = "true"
+SQLITE_URL = "file:./data/ha-dashboard.db"
 
 [workflows]
 runButton = "Project"

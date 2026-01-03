@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   ha-dashboard:
     build:
@@ -10,14 +8,37 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NEXT_PUBLIC_HA_WS_URL=${NEXT_PUBLIC_HA_WS_URL:-wss://homeassistant.local/api/websocket}
-      - HA_TOKEN=${HA_TOKEN}
-      - NEXT_PUBLIC_USE_MOCK=${NEXT_PUBLIC_USE_MOCK:-false}
-    # Optional: Add to your Home Assistant network
-    # networks:
-    #   - homeassistant
-    
-# Optional: If running on same network as Home Assistant
-# networks:
-#   homeassistant:
-#     external: true
+      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - SQLITE_URL=file:/data/ha-dashboard.db
+    volumes:
+      - ./data:/data
+    networks:
+      - ha-network
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: ha-dashboard-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - DOMAIN=${DOMAIN:-localhost}
+      - EMAIL=${ACME_EMAIL:-}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - ha-network
+    profiles:
+      - https
+
+networks:
+  ha-network:
+    driver: bridge
+
+volumes:
+  caddy_data:
+  caddy_config:
