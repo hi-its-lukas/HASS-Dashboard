@@ -31,30 +31,31 @@ A modern, mobile-first Progressive Web App (PWA) interface for Home Assistant, f
 - **PWA**: next-pwa
 - **Reverse Proxy**: Caddy (optional, for HTTPS)
 
-## Zero Configuration
+## Setup
 
-**No `.env` file required!** The dashboard:
-- Auto-generates encryption keys on first start (stored in `./data/.encryption_key`)
-- Auto-detects the URL from incoming requests
-- Creates the database automatically
+**HTTPS is always enabled** with automatic Let's Encrypt certificates via Caddy.
 
-### Optional: HTTPS with Caddy
+### Required Configuration
+
+Create a `.env` file with your domain:
 
 ```env
 DOMAIN=dashboard.yourdomain.com
 ACME_EMAIL=your@email.com
 ```
 
-Then start with: `docker compose --profile https up -d --build`
+### Auto-Configuration
+
+The dashboard automatically:
+- Generates encryption keys on first start (stored in `./data/.encryption_key`)
+- Creates the SQLite database in `./data/`
+- Obtains SSL certificates from Let's Encrypt
 
 ### Optional Overrides
 
 | Variable | Description |
 |----------|-------------|
-| `APP_BASE_URL` | Override auto-detected URL |
 | `ENCRYPTION_KEY` | Use your own key instead of auto-generated |
-| `DOMAIN` | Domain for Caddy HTTPS |
-| `ACME_EMAIL` | Let's Encrypt email |
 | `NEXT_PUBLIC_USE_MOCK` | Use mock data for development |
 
 **Important**: User-specific settings (Home Assistant URL, entity mappings) are stored in the database and configured via the Settings UI - NOT in environment files.
@@ -66,22 +67,15 @@ Then start with: `docker compose --profile https up -d --build`
 git clone https://github.com/yourusername/ha-dashboard.git
 cd ha-dashboard
 
-# Start (no configuration needed!)
+# Create .env with your domain
+cp .env.example .env
+nano .env  # Edit DOMAIN and ACME_EMAIL
+
+# Start
 docker compose up -d --build
 ```
 
-Access the dashboard at `http://<your-server-ip>:5000`
-
-### With HTTPS
-
-```bash
-# Create .env with your domain
-echo "DOMAIN=dashboard.yourdomain.com" > .env
-echo "ACME_EMAIL=your@email.com" >> .env
-
-# Start with HTTPS
-docker compose --profile https up -d --build
-```
+Access the dashboard at `https://dashboard.yourdomain.com`
 
 ## Network Setup for External Access
 
