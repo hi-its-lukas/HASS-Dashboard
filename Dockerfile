@@ -13,10 +13,8 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Generate Prisma client
 RUN npx prisma generate
 
-# Disable telemetry during build
 ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN npm run build
@@ -28,10 +26,14 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+# Install su-exec for privilege dropping (alpine alternative to gosu)
+RUN apk add --no-cache su-exec
 
-# Create data directory for SQLite
+# Create app user (will be used after entrypoint fixes permissions)
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nextjs
+
+# Create data directory with correct ownership
 RUN mkdir -p /data && chown nextjs:nodejs /data
 
 COPY --from=builder /app/public ./public
@@ -41,14 +43,17 @@ COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/docker-entrypoint.sh ./docker-entrypoint.sh
 
-RUN chmod +x ./docker-entrypoint.sh
+RUN chmod +x ./docker-entrypoint.sh && \
+    chown -R nextjs:nodejs /app
 
-USER nextjs
+# Run as root initially - entrypoint will fix /data permissions then drop to nextjs
+# This ensures mounted volumes work regardless of host permissions
+USER root
 
 EXPOSE 3000
 
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
-ENV DATABASE_URL="file:/data/ha-dashboard.db"
+ENV DATABASE_URL="file:/data/hass-dashboard.db"
 
 ENTRYPOINT ["./docker-entrypoint.sh"]

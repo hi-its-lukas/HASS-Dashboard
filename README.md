@@ -134,6 +134,22 @@ Nach dem Login unter **Einstellungen**:
 - **OAuth PKCE** - Schutz vor Interception-Angriffen
 - **365-Tage Sessions** - Lange Login-Dauer
 
+## Datenpersistenz
+
+Das `/data` Verzeichnis im Container speichert:
+
+| Datei | Beschreibung |
+|-------|-------------|
+| `.encryption_key` | Auto-generierter AES-256 Schlüssel |
+| `hass-dashboard.db` | SQLite Datenbank (Benutzer, Tokens, Einstellungen) |
+
+Der Container:
+- Erstellt `/data` automatisch falls nicht vorhanden
+- Generiert den Encryption Key beim ersten Start
+- Behebt Berechtigungsprobleme automatisch
+
+**Keine manuelle Konfiguration erforderlich.**
+
 ## Troubleshooting
 
 ### OAuth funktioniert nicht
@@ -141,6 +157,24 @@ Nach dem Login unter **Einstellungen**:
 1. Split-DNS korrekt eingerichtet?
 2. Gleiche Domain intern und extern?
 3. Home Assistant erreichbar vom Dashboard-Server?
+
+### Berechtigungsprobleme mit /data
+
+Falls der Container mit "Permission denied" crasht:
+
+```bash
+# Option 1: Verzeichnis löschen und neu starten
+docker compose down
+rm -rf data/
+docker compose up -d --build
+
+# Option 2: Berechtigungen manuell fixen
+sudo chown -R 1001:1001 ./data
+docker compose restart
+```
+
+Der Container versucht automatisch die Berechtigungen zu fixen.
+Falls das nicht funktioniert, erscheint eine klare Fehlermeldung im Log.
 
 ### Datenbank zurücksetzen
 

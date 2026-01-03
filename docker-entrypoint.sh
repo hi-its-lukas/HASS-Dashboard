@@ -1,28 +1,82 @@
 #!/bin/sh
 set -e
 
-# Auto-generate ENCRYPTION_KEY if not set
-if [ -z "$ENCRYPTION_KEY" ]; then
-  KEY_FILE="/data/.encryption_key"
-  
+APP_USER="nextjs"
+APP_UID="1001"
+DATA_DIR="/data"
+KEY_FILE="$DATA_DIR/.encryption_key"
+DB_FILE="$DATA_DIR/hass-dashboard.db"
+APP_GROUP="nodejs"
+
+log_info() {
+  echo "[INIT] $1"
+}
+
+log_warn() {
+  echo "[WARN] $1"
+}
+
+log_fatal() {
+  echo "[FATAL] $1"
+  exit 1
+}
+
+ensure_data_dir() {
+  if [ ! -d "$DATA_DIR" ]; then
+    log_info "Creating $DATA_DIR directory"
+    mkdir -p "$DATA_DIR" 2>/dev/null || log_fatal "Cannot create $DATA_DIR"
+  fi
+
+  if [ "$(id -u)" = "0" ]; then
+    log_info "Fixing ownership of $DATA_DIR"
+    chown -R "$APP_UID:$APP_UID" "$DATA_DIR" 2>/dev/null || log_warn "Could not chown $DATA_DIR"
+    chmod 755 "$DATA_DIR" 2>/dev/null || true
+  fi
+
+  if [ ! -w "$DATA_DIR" ]; then
+    log_fatal "$DATA_DIR is not writable. Please check volume permissions on host."
+  fi
+}
+
+setup_encryption_key() {
+  if [ -n "$ENCRYPTION_KEY" ]; then
+    log_info "Using ENCRYPTION_KEY from environment"
+    return
+  fi
+
   if [ -f "$KEY_FILE" ]; then
-    # Load existing key
     export ENCRYPTION_KEY=$(cat "$KEY_FILE")
-    echo "[Setup] Loaded existing encryption key"
+    log_info "Loaded existing encryption key from $KEY_FILE"
   else
-    # Generate new key
+    log_info "Generating new encryption key"
     export ENCRYPTION_KEY=$(head -c 32 /dev/urandom | od -A n -t x1 | tr -d ' \n')
     echo "$ENCRYPTION_KEY" > "$KEY_FILE"
     chmod 600 "$KEY_FILE"
-    echo "[Setup] Generated new encryption key"
+    log_info "Saved encryption key to $KEY_FILE"
   fi
-fi
+}
 
-# Initialize database if needed
-if [ ! -f "/data/ha-dashboard.db" ]; then
-  echo "[Setup] Initializing database..."
-  npx prisma db push --skip-generate 2>/dev/null || true
-fi
+init_database() {
+  if [ ! -f "$DB_FILE" ]; then
+    log_info "Initializing database at $DB_FILE"
+    npx prisma db push --skip-generate 2>/dev/null || log_warn "Database init skipped (may already exist)"
+  else
+    log_info "Database exists at $DB_FILE"
+  fi
+}
 
-echo "[Setup] Starting HA Dashboard..."
-exec node server.js
+run_app() {
+  log_info "Starting HASS Dashboard on port ${PORT:-3000}"
+  
+  if [ "$(id -u)" = "0" ]; then
+    log_info "Dropping privileges to $APP_USER"
+    exec su-exec "$APP_USER" node server.js
+  else
+    exec node server.js
+  fi
+}
+
+ensure_data_dir
+setup_encryption_key
+init_database
+run_app
