@@ -1,320 +1,295 @@
 # HA Dashboard
 
-A modern, mobile-first Progressive Web App (PWA) interface for Home Assistant, featuring a dark neumorphism/glassmorphism design with WebSocket-based real-time updates.
-
-![Dashboard Preview](docs/preview.png)
+A modern, mobile-first Progressive Web App (PWA) interface for Home Assistant, featuring a dark neumorphism/glassmorphism design with OAuth authentication and per-user configuration.
 
 ## Features
 
-- 🏠 **Home Screen** - Time, weather, lights count, power usage, alarm status, presence tracking
-- ⚡ **Energy Dashboard** - Solar, battery, grid, and house consumption monitoring with trend charts
-- 🔒 **Security Panel** - Alarm control with Stay/Away/Night/Disarm modes, zone status, dog mode
-- 👨‍👩‍👧‍👦 **Family Tracker** - Presence detection with activity data (steps, distance, floors)
-- 🎥 **AI Surveillance** - Event feed with person/vehicle detection and confidence scores
-- 📱 **PWA Support** - Install as native app on iOS/Android
+- **Login with Home Assistant** - OAuth 2.0 with PKCE for secure authentication
+- **Multi-User Support** - Each user has their own dashboard configuration
+- **Per-User Settings** - Configure entity mappings via Settings UI
+- **Secure Token Storage** - OAuth tokens encrypted at rest (AES-256-GCM)
+- **Real-time Updates** - WebSocket-based state synchronization
+
+### Dashboard Pages
+
+- **Home** - Time, weather, lights count, power usage, alarm status, presence tracking
+- **Energy** - Solar, battery, grid, and house consumption monitoring with trend charts
+- **Security** - Alarm control with Stay/Away/Night/Disarm modes, zone status
+- **Family** - Presence detection with activity data (steps, distance, floors)
+- **Surveillance** - Event feed with person/vehicle detection
+- **PWA Support** - Install as native app on iOS/Android
 
 ## Tech Stack
 
 - **Framework**: Next.js 14 (App Router) + TypeScript
 - **Styling**: Tailwind CSS
 - **State Management**: Zustand
+- **Database**: SQLite via Prisma ORM
 - **Animations**: Framer Motion
 - **Charts**: Recharts
 - **Icons**: Lucide React
 - **PWA**: next-pwa
+- **Reverse Proxy**: Caddy (optional, for HTTPS)
 
-## Setup
-
-### Linux / Ubuntu / Raspberry Pi (Empfohlen)
-
-```bash
-# 1. Node.js 20 installieren
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo bash -
-sudo apt install -y nodejs
-
-# 2. Projekt entpacken
-unzip ha-dashboard.zip
-cd ha-dashboard
-
-# 3. Setup-Script ausführen
-chmod +x setup.sh
-./setup.sh
-
-# 4. Konfiguration anpassen
-nano .env.local
-
-# 5. Starten
-npm start
-```
-
-Das Dashboard ist dann erreichbar unter `http://<IP-Adresse>:3000`
-
-#### Autostart mit systemd
-
-```bash
-# Service-Datei anpassen (User & WorkingDirectory prüfen)
-nano ha-dashboard.service
-
-# Service installieren
-sudo cp ha-dashboard.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable ha-dashboard
-sudo systemctl start ha-dashboard
-
-# Status prüfen
-sudo systemctl status ha-dashboard
-```
-
-#### Autostart mit PM2 (Alternative)
-
-```bash
-sudo npm install -g pm2
-pm2 start npm --name "ha-dashboard" -- start
-pm2 startup
-pm2 save
-```
+## Quick Start
 
 ### Prerequisites
 
-- Node.js 18+ 
-- npm or yarn
-- Home Assistant instance with WebSocket API enabled
-- Long-Lived Access Token from Home Assistant
+- Node.js 20+
+- Docker and Docker Compose (recommended)
+- Home Assistant instance accessible via HTTPS
 
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone <repo-url>
-   cd ha-dashboard
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Configure environment variables**
-   ```bash
-   cp .env.example .env.local
-   ```
-
-   Edit `.env.local`:
-   ```env
-   # Home Assistant WebSocket URL
-   NEXT_PUBLIC_HA_WS_URL=wss://your-home-assistant.local/api/websocket
-
-   # Long-Lived Access Token (keep this secret!)
-   HA_TOKEN=your-long-lived-access-token
-
-   # Set to 'false' when connecting to real HA
-   NEXT_PUBLIC_USE_MOCK=false
-   ```
-
-4. **Start development server**
-   ```bash
-   npm run dev
-   ```
-
-5. **Open in browser**
-   Visit `http://localhost:3000`
-
-### Production Build
+### 1. Clone and Setup
 
 ```bash
+git clone <repo-url>
+cd ha-dashboard
+cp .env.example .env.local
+```
+
+### 2. Configure Environment
+
+Edit `.env.local`:
+
+```env
+# REQUIRED: Public URL where the dashboard is accessible
+NEXT_PUBLIC_APP_URL=https://dashboard.yourdomain.com
+
+# REQUIRED: 32-byte hex key for encrypting OAuth tokens
+# Generate with: openssl rand -hex 32
+ENCRYPTION_KEY=your-32-byte-hex-key
+
+# REQUIRED: Secret for signing session cookies
+# Generate with: openssl rand -hex 32
+SESSION_SECRET=your-32-byte-hex-key
+
+# Database path
+DATABASE_URL=file:./data/ha-dashboard.db
+
+# For HTTPS with Caddy (optional)
+DOMAIN=dashboard.yourdomain.com
+ACME_EMAIL=your@email.com
+
+# Development: Use mock data instead of real HA
+NEXT_PUBLIC_USE_MOCK=false
+```
+
+### 3. Start with Docker
+
+**Development (HTTP only):**
+```bash
+docker compose up -d --build
+```
+
+**Production with HTTPS:**
+```bash
+docker compose --profile https up -d --build
+```
+
+### 4. Access the Dashboard
+
+- Open `https://dashboard.yourdomain.com` (or `http://localhost:5000` for development)
+- Click "Login with Home Assistant"
+- Enter your Home Assistant URL and authorize
+
+## Network Setup for External Access
+
+To access the dashboard from both inside your home network and externally (e.g., from mobile), use **Split-Horizon DNS**:
+
+### Why Split DNS?
+
+OAuth requires the same callback URL everywhere. If you use `192.168.x.x` at home but `dashboard.yourdomain.com` remotely, login will fail.
+
+### Setup
+
+1. **Public DNS**: Point `dashboard.yourdomain.com` to your external IP (or use DynDNS)
+
+2. **Router/Local DNS**: Add a local override:
+   - `dashboard.yourdomain.com` -> `192.168.x.x` (your server's local IP)
+   - This can be done in your router settings, Pi-hole, or AdGuard Home
+
+3. **Port Forwarding**: Forward ports 80 and 443 to your Caddy container
+
+4. **Firewall**: Ensure ports are open on your server
+
+Now both internal and external clients will use the same URL, and OAuth will work everywhere.
+
+## Manual Installation (without Docker)
+
+### Linux / Ubuntu / Raspberry Pi
+
+```bash
+# Install Node.js 20
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo bash -
+sudo apt install -y nodejs
+
+# Clone and install
+git clone <repo-url>
+cd ha-dashboard
+npm install
+
+# Setup database
+npx prisma generate
+npx prisma db push
+
+# Build and start
 npm run build
 npm start
 ```
 
-## Docker Deployment
-
-### Quick Start with Docker Compose
-
-1. **Create `.env` file** (or set environment variables):
-   ```env
-   NEXT_PUBLIC_HA_WS_URL=wss://your-home-assistant.local/api/websocket
-   HA_TOKEN=your-long-lived-access-token
-   NEXT_PUBLIC_USE_MOCK=false
-   ```
-
-2. **Build and run**:
-   ```bash
-   docker-compose up -d --build
-   ```
-
-3. **Access the dashboard** at `http://localhost:3000`
-
-### Manual Docker Build
+### Autostart with systemd
 
 ```bash
-# Build the image
-docker build -t ha-dashboard .
-
-# Run the container
-docker run -d \
-  --name ha-dashboard \
-  -p 3000:3000 \
-  -e NEXT_PUBLIC_HA_WS_URL=wss://your-ha/api/websocket \
-  -e HA_TOKEN=your-token \
-  -e NEXT_PUBLIC_USE_MOCK=false \
-  --restart unless-stopped \
-  ha-dashboard
+# Create service file
+sudo nano /etc/systemd/system/ha-dashboard.service
 ```
 
-### Home Assistant Add-on (Optional)
+```ini
+[Unit]
+Description=HA Dashboard
+After=network.target
 
-If you want to run this as a Home Assistant add-on, you can create a local add-on:
+[Service]
+Type=simple
+User=your-user
+WorkingDirectory=/opt/ha-dashboard
+ExecStart=/usr/bin/npm start
+Restart=on-failure
+Environment=NODE_ENV=production
 
-1. Copy the project to `/addons/ha-dashboard/` on your HA server
-2. Add a `config.yaml` for the add-on configuration
-3. Install via Supervisor → Add-on Store → Local Add-ons
+[Install]
+WantedBy=multi-user.target
+```
 
-### Docker Network Configuration
-
-If Home Assistant is also running in Docker, you may need to connect both containers to the same network:
-
-```yaml
-# docker-compose.yml
-services:
-  ha-dashboard:
-    # ... other config ...
-    networks:
-      - homeassistant
-
-networks:
-  homeassistant:
-    external: true
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable ha-dashboard
+sudo systemctl start ha-dashboard
 ```
 
 ## Configuration
 
-### Entity Mapping
+### Settings UI
 
-Edit `config/dashboard.ts` to map your Home Assistant entities:
+After logging in, go to **Settings** to configure:
 
-```typescript
-export const dashboardConfig: DashboardConfig = {
-  // Weather entity for header
-  weatherEntityId: 'weather.home',
-  
-  // Group containing all lights
-  lightsGroupEntityId: 'group.all_lights',
-  
-  // Power consumption sensor
-  powerEntityId: 'sensor.power_consumption',
-  
-  // Energy sensors
-  energy: {
-    solarEntityId: 'sensor.solar_power',
-    batteryEntityId: 'sensor.battery_power',
-    batteryLevelEntityId: 'sensor.battery_level',
-    gridEntityId: 'sensor.grid_power',
-    houseEntityId: 'sensor.house_power',
-  },
-  
-  // Room definitions
-  rooms: [
-    {
-      id: 'kitchen',
-      name: 'Kitchen',
-      floor: 'ground',
-      icon: 'utensils',
-      entityIds: ['light.kitchen_main', 'light.kitchen_counter'],
-    },
-    // ... add more rooms
-  ],
-  
-  // Family members
-  persons: [
-    {
-      id: 'user1',
-      name: 'John',
-      entityId: 'person.john',
-      batteryEntityId: 'sensor.john_phone_battery',
-      stepsEntityId: 'sensor.john_steps',
-      // ...
-    },
-  ],
-}
-```
+- **Home Assistant URL** - Your HA instance URL
+- **Entity Discovery** - Automatically discovers all your HA entities
+- **Entity Mapping** - Map entities to dashboard widgets
 
-### Available Icons for Rooms
+### Static Configuration (fallback)
 
-- `utensils` - Kitchen
-- `sofa` - Living Room
-- `door-open` - Entry
-- `layout` - Hallway
-- `warehouse` - Garage
-- `home` - Bedroom
-- `star` - Kids Room
-- `heart` - Nursery
+For unauthenticated users or development, edit `config/dashboard.ts`.
 
 ## Security
 
-### Token Protection
+### Authentication Flow
 
-The Home Assistant token is **never** exposed to the client browser. It's stored server-side and accessed via a Next.js API route:
+1. User clicks "Login with Home Assistant"
+2. Dashboard redirects to Home Assistant OAuth authorize endpoint
+3. User approves access in Home Assistant
+4. HA redirects back with authorization code
+5. Dashboard exchanges code for tokens (server-side)
+6. Tokens are encrypted with AES-256-GCM and stored in SQLite
+7. Session cookie is set (httpOnly, secure, sameSite)
 
-```
-Client → /api/ha/token → Server (reads HA_TOKEN) → Client
-```
+### Security Features
 
-The WebSocket connection is established client-side, but authentication happens through the server proxy.
+- **No tokens in browser** - All HA API calls go through server-side proxy
+- **Encrypted at rest** - OAuth tokens encrypted with ENCRYPTION_KEY
+- **httpOnly cookies** - Session cookies not accessible via JavaScript
+- **OAuth with PKCE** - Proof Key for Code Exchange prevents interception
+- **Separate nonces** - Each encrypted token uses a unique nonce
+- **30-day sessions** - Sessions expire after 30 days of inactivity
 
 ### Recommendations
 
-1. Use HTTPS for your Home Assistant instance
-2. Create a dedicated HA user with limited permissions
-3. Rotate your Long-Lived Access Token periodically
-4. Consider adding additional authentication in `/api/ha/token/route.ts`
+1. Always use HTTPS in production (Caddy handles this automatically)
+2. Use a strong, random ENCRYPTION_KEY
+3. Keep your Home Assistant instance updated
+4. Use the Split-DNS setup for external access
 
 ## Project Structure
 
 ```
 ha-dashboard/
 ├── app/
-│   ├── api/ha/token/     # Server-side token proxy
-│   ├── cams/             # AI Surveillance page
-│   ├── calendar/         # Calendar page
-│   ├── energy/           # Energy dashboard
-│   ├── family/           # Family tracker
-│   ├── more/             # More/Alexa page
-│   ├── secure/           # Security panel
-│   ├── globals.css       # Global styles
-│   ├── layout.tsx        # Root layout
-│   └── page.tsx          # Home page
+│   ├── (dashboard)/        # Protected dashboard pages
+│   │   ├── page.tsx        # Home
+│   │   ├── energy/         # Energy dashboard
+│   │   ├── family/         # Family tracker
+│   │   ├── secure/         # Security panel
+│   │   ├── surveillance/   # AI Surveillance
+│   │   ├── calendar/       # Calendar
+│   │   ├── more/           # More options
+│   │   └── settings/       # User settings
+│   ├── api/
+│   │   ├── auth/           # OAuth endpoints
+│   │   ├── ha/             # HA proxy endpoints
+│   │   ├── me/             # Current user
+│   │   ├── settings/       # User config
+│   │   └── status/         # Connection status
+│   ├── login/              # Login page
+│   └── layout.tsx          # Root layout
 ├── components/
-│   ├── cards/            # Card components
-│   ├── nav/              # Navigation components
-│   ├── providers/        # Context providers
-│   └── ui/               # Reusable UI components
+│   ├── cards/              # Dashboard cards
+│   ├── nav/                # Navigation (sidebar, bottom-nav)
+│   ├── providers/          # Context providers
+│   └── ui/                 # Reusable UI components
 ├── config/
-│   └── dashboard.ts      # Entity configuration
+│   └── dashboard.ts        # Static entity configuration
 ├── lib/
-│   ├── ha/               # Home Assistant client
-│   │   ├── index.ts
-│   │   ├── mock-data.ts
-│   │   ├── store.ts
-│   │   ├── types.ts
-│   │   └── websocket-client.ts
-│   └── utils.ts          # Utility functions
-└── public/
-    └── manifest.json     # PWA manifest
+│   ├── auth/               # Authentication utilities
+│   ├── config/             # Config store
+│   ├── db/                 # Prisma client
+│   └── ha/                 # Home Assistant client
+├── prisma/
+│   └── schema.prisma       # Database schema
+├── docker-compose.yml      # Docker configuration
+├── Dockerfile              # Docker build
+└── Caddyfile               # Caddy reverse proxy config
 ```
 
-## Mock Mode
+## API Endpoints
 
-The app includes a mock data layer for development without a real Home Assistant instance:
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/auth/login` | POST | Initiate OAuth login |
+| `/api/auth/callback` | GET | OAuth callback handler |
+| `/api/auth/logout` | POST | Logout and clear session |
+| `/api/me` | GET | Get current user info |
+| `/api/settings` | GET/POST | User dashboard config |
+| `/api/status` | GET | HA connection status |
+| `/api/ha/states` | GET | Proxy to HA states |
+| `/api/ha/call-service` | POST | Proxy to HA services |
+| `/api/ha/registries` | GET | Get HA areas/entities |
 
-```env
-NEXT_PUBLIC_USE_MOCK=true
+## Troubleshooting
+
+### OAuth Redirect Issues
+
+- Ensure `NEXT_PUBLIC_APP_URL` matches exactly how users access the dashboard
+- Check that your Home Assistant is accessible from the dashboard server
+- Verify Split-DNS is configured correctly
+
+### "Connection Refused" after HA Login
+
+- The callback URL is pointing to localhost or wrong port
+- Set `NEXT_PUBLIC_APP_URL` to your actual dashboard URL
+
+### Database Reset
+
+```bash
+rm -rf data/
+npx prisma db push
 ```
 
-Mock data includes:
-- 12 lights across 9 rooms
-- Energy sensors with realistic values
-- 4 family members with activity data
-- 5 surveillance events
+Or with Docker:
+```bash
+docker compose down
+rm -rf data/
+docker compose up -d --build
+```
 
 ## Contributing
 
