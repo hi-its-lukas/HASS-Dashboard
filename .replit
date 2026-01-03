@@ -10,6 +10,7 @@ channel = "stable-25_05"
 [userenv.shared]
 NEXT_PUBLIC_USE_MOCK = "true"
 SQLITE_URL = "file:./data/ha-dashboard.db"
+NEXT_PUBLIC_APP_URL = "https://00ad1773-3454-4c9b-9707-86b864fd2c4d-00-3otbz5gzcc1mu.picard.replit.dev"
 
 [workflows]
 runButton = "Project"
