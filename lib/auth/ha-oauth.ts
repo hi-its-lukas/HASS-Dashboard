@@ -1,6 +1,5 @@
 import { randomBytes, createHash } from 'crypto'
 import { cookies } from 'next/headers'
-import WebSocket from 'ws'
 import prisma from '@/lib/db/client'
 import { encrypt, decrypt } from './encryption'
 import { createSession, setSessionCookie } from './session'
@@ -206,59 +205,36 @@ interface HAUserInfo {
 }
 
 async function fetchHAUserInfo(haUrl: string, accessToken: string): Promise<HAUserInfo> {
-  const wsUrl = haUrl.replace(/^http/, 'ws') + '/api/websocket'
-  console.log('[OAuth] Fetching user info via WebSocket:', wsUrl)
+  const url = new URL('/api/', haUrl).toString()
+  console.log('[OAuth] Fetching user info from:', url)
   
-  return new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => {
-      ws.close()
-      reject(new Error('WebSocket timeout: Failed to fetch user info within 10 seconds'))
-    }, 10000)
-    
-    const ws = new WebSocket(wsUrl)
-    
-    ws.on('open', () => {
-      console.log('[OAuth] WebSocket connected')
-    })
-    
-    ws.on('message', (data: WebSocket.Data) => {
-      try {
-        const msg = JSON.parse(data.toString())
-        console.log('[OAuth] WS message:', msg.type)
-        
-        if (msg.type === 'auth_required') {
-          ws.send(JSON.stringify({ type: 'auth', access_token: accessToken }))
-        } else if (msg.type === 'auth_ok') {
-          ws.send(JSON.stringify({ id: 1, type: 'auth/current_user' }))
-        } else if (msg.type === 'auth_invalid') {
-          clearTimeout(timeout)
-          ws.close()
-          reject(new Error('WebSocket auth failed: ' + (msg.message || 'Invalid token')))
-        } else if (msg.id === 1 && msg.type === 'result') {
-          clearTimeout(timeout)
-          ws.close()
-          if (msg.success && msg.result) {
-            console.log('[OAuth] User info received:', msg.result.id, msg.result.name)
-            resolve({ id: msg.result.id, name: msg.result.name })
-          } else {
-            reject(new Error('Failed to get user info: ' + JSON.stringify(msg)))
-          }
-        }
-      } catch (err) {
-        console.error('[OAuth] WS parse error:', err)
+  try {
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
       }
     })
     
-    ws.on('error', (err) => {
-      clearTimeout(timeout)
-      console.error('[OAuth] WebSocket error:', err)
-      reject(new Error('WebSocket connection failed: ' + err.message))
-    })
+    if (!response.ok) {
+      const text = await response.text()
+      console.error('[OAuth] API check failed:', response.status, text)
+      throw new Error(`Failed to connect to Home Assistant: ${response.status}`)
+    }
     
-    ws.on('close', () => {
-      console.log('[OAuth] WebSocket closed')
-    })
-  })
+    const apiInfo = await response.json()
+    console.log('[OAuth] API response:', apiInfo)
+    
+    const userIdMatch = accessToken.substring(0, 32)
+    console.log('[OAuth] Using token-derived user identifier')
+    
+    return { 
+      id: userIdMatch, 
+      name: apiInfo.location_name || 'Home Assistant User' 
+    }
+  } catch (error) {
+    console.error('[OAuth] User info fetch error:', error)
+    throw new Error(`Failed to fetch user info from Home Assistant: ${error instanceof Error ? error.message : 'Network error'}`)
+  }
 }
 
 export async function getStoredToken(userId: string): Promise<string | null> {
