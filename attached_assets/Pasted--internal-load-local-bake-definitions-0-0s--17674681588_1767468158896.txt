@@ -1,0 +1,111 @@
+ => [internal] load local bake definitions                                                 0.0s
+ => => reading from stdin 524B                                                             0.0s
+ => [internal] load build definition from Dockerfile                                       0.0s
+ => => transferring dockerfile: 1.87kB                                                     0.0s
+ => [internal] load metadata for docker.io/library/node:20-bookworm-slim                   0.9s
+ => [internal] load .dockerignore                                                          0.0s
+ => => transferring context: 2B                                                            0.0s
+ => [internal] load build context                                                          1.0s
+ => => transferring context: 55.74MB                                                       0.9s
+ => [deps 1/4] FROM docker.io/library/node:20-bookworm-slim@sha256:a270640213033657548b7e  0.0s
+ => => resolve docker.io/library/node:20-bookworm-slim@sha256:a270640213033657548b7ed5785  0.0s
+ => CACHED [deps 2/4] WORKDIR /app                                                         0.0s
+ => CANCELED [runner  3/15] RUN apt-get update && apt-get install -y --no-install-recomme  4.4s
+ => [deps 3/4] COPY package.json package-lock.json* ./                                     0.2s
+ => ERROR [deps 4/4] RUN npm ci                                                            3.2s
+------                                                                                          
+ > [deps 4/4] RUN npm ci:                                                                       
+3.056 npm error code EUSAGE                                                                     
+3.057 npm error                                                                                 
+3.057 npm error `npm ci` can only install packages when your package.json and package-lock.json or npm-shrinkwrap.json are in sync. Please update your lock file with `npm install` before continuing.                                                                                          
+3.057 npm error
+3.057 npm error Missing: webpack@5.104.1 from lock file
+3.057 npm error Missing: @types/eslint-scope@3.7.7 from lock file
+3.057 npm error Missing: @types/estree@1.0.8 from lock file
+3.057 npm error Missing: @webassemblyjs/ast@1.14.1 from lock file
+3.057 npm error Missing: @webassemblyjs/wasm-edit@1.14.1 from lock file
+3.057 npm error Missing: @webassemblyjs/wasm-parser@1.14.1 from lock file
+3.057 npm error Missing: acorn-import-phases@1.0.4 from lock file
+3.057 npm error Missing: chrome-trace-event@1.0.4 from lock file
+3.057 npm error Missing: enhanced-resolve@5.18.4 from lock file
+3.057 npm error Missing: es-module-lexer@2.0.0 from lock file
+3.057 npm error Missing: eslint-scope@5.1.1 from lock file
+3.057 npm error Missing: events@3.3.0 from lock file
+3.057 npm error Missing: glob-to-regexp@0.4.1 from lock file
+3.057 npm error Missing: json-parse-even-better-errors@2.3.1 from lock file
+3.057 npm error Missing: loader-runner@4.3.1 from lock file
+3.057 npm error Missing: mime-types@2.1.35 from lock file
+3.057 npm error Missing: neo-async@2.6.2 from lock file
+3.057 npm error Missing: schema-utils@4.3.3 from lock file
+3.057 npm error Missing: tapable@2.3.0 from lock file
+3.057 npm error Missing: watchpack@2.5.0 from lock file
+3.057 npm error Missing: webpack-sources@3.3.3 from lock file
+3.057 npm error Missing: @types/eslint@9.6.1 from lock file
+3.057 npm error Missing: @webassemblyjs/helper-numbers@1.13.2 from lock file
+3.057 npm error Missing: @webassemblyjs/helper-wasm-bytecode@1.13.2 from lock file
+3.057 npm error Missing: @webassemblyjs/floating-point-hex-parser@1.13.2 from lock file
+3.057 npm error Missing: @webassemblyjs/helper-api-error@1.13.2 from lock file
+3.057 npm error Missing: @xtuc/long@4.2.2 from lock file
+3.057 npm error Missing: @webassemblyjs/helper-buffer@1.14.1 from lock file
+3.057 npm error Missing: @webassemblyjs/helper-wasm-section@1.14.1 from lock file
+3.057 npm error Missing: @webassemblyjs/wasm-gen@1.14.1 from lock file
+3.057 npm error Missing: @webassemblyjs/wasm-opt@1.14.1 from lock file
+3.057 npm error Missing: @webassemblyjs/wast-printer@1.14.1 from lock file
+3.057 npm error Missing: @webassemblyjs/ieee754@1.13.2 from lock file
+3.057 npm error Missing: @webassemblyjs/leb128@1.13.2 from lock file
+3.057 npm error Missing: @webassemblyjs/utf8@1.13.2 from lock file
+3.057 npm error Missing: @xtuc/ieee754@1.2.0 from lock file
+3.057 npm error Missing: mime-db@1.52.0 from lock file
+3.057 npm error Missing: estraverse@4.3.0 from lock file
+3.057 npm error Missing: ajv@8.17.1 from lock file
+3.057 npm error Missing: ajv-keywords@5.1.0 from lock file
+3.057 npm error Missing: json-schema-traverse@1.0.0 from lock file
+3.057 npm error
+3.057 npm error Clean install a project
+3.057 npm error
+3.057 npm error Usage:
+3.057 npm error npm ci
+3.057 npm error
+3.057 npm error Options:
+3.057 npm error [--install-strategy <hoisted|nested|shallow|linked>] [--legacy-bundling]
+3.057 npm error [--global-style] [--omit <dev|optional|peer> [--omit <dev|optional|peer> ...]]
+3.057 npm error [--include <prod|dev|optional|peer> [--include <prod|dev|optional|peer> ...]]
+3.057 npm error [--strict-peer-deps] [--foreground-scripts] [--ignore-scripts] [--no-audit]
+3.057 npm error [--no-bin-links] [--no-fund] [--dry-run]
+3.057 npm error [-w|--workspace <workspace-name> [-w|--workspace <workspace-name> ...]]
+3.057 npm error [-ws|--workspaces] [--include-workspace-root] [--install-links]
+3.057 npm error
+3.057 npm error aliases: clean-install, ic, install-clean, isntall-clean
+3.057 npm error
+3.057 npm error Run "npm help ci" for more info
+3.060 npm notice
+3.060 npm notice New major version of npm available! 10.8.2 -> 11.7.0
+3.060 npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.7.0
+3.060 npm notice To update run: npm install -g npm@11.7.0
+3.060 npm notice
+3.061 npm error A complete log of this run can be found in: /root/.npm/_logs/2026-01-03T19_20_53_239Z-debug-0.log
+------
+[+] build 0/1
+ ⠙ Image hass-dashboard-app Building                                                       5.6s 
+Dockerfile:7
+
+--------------------
+
+   5 |     
+
+   6 |     COPY package.json package-lock.json* ./
+
+   7 | >>> RUN npm ci
+
+   8 |     
+
+   9 |     # Stage 2: Builder
+
+--------------------
+
+failed to solve: process "/bin/sh -c npm ci" did not complete successfully: exit code: 1
+
+WARN[0000] No services to build                         
+[+] up 2/2
+ ✔ Network hass-dashboard_default Created                                                  0.0s 
+ ✔ Container hass-dashboard       Created                                                  0.1s
