@@ -289,12 +289,12 @@ async function refreshAccessToken(userId: string, tokenRecord: TokenRecordForRef
 }
 
 function getClientId(): string {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:5000'
+  const baseUrl = process.env.APP_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:5000'
   return baseUrl
 }
 
 function getRedirectUri(): string {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:5000'
+  const baseUrl = process.env.APP_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:5000'
   return `${baseUrl}/api/auth/callback`
 }
 

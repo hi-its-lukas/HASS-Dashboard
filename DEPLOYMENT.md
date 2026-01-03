@@ -3,38 +3,60 @@
 ## Prerequisites
 
 - Docker and Docker Compose installed
-- Access to your Home Assistant instance
-- Home Assistant must be accessible via HTTPS (for OAuth)
+- Access to your Home Assistant instance (must be HTTPS for OAuth)
+
+## Environment Variables
+
+### Required for Production
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `APP_BASE_URL` | Public URL of the dashboard | `https://dashboard.yourdomain.com` |
+| `ENCRYPTION_KEY` | 32-byte hex key for token encryption | `openssl rand -hex 32` |
+| `DATABASE_URL` | SQLite database path | `file:/data/ha-dashboard.db` |
+
+### Optional (HTTPS with Caddy)
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `DOMAIN` | Domain for Caddy | `dashboard.yourdomain.com` |
+| `ACME_EMAIL` | Email for Let's Encrypt | `your@email.com` |
+
+### Development Only
+
+| Variable | Description |
+|----------|-------------|
+| `NEXT_PUBLIC_USE_MOCK` | Use mock data instead of real HA |
 
 ## Quick Start
 
-### 1. Generate Encryption Key
+### 1. Create Environment File
 
-Generate a 32-byte encryption key for token storage:
+```bash
+cp .env.example .env
+```
+
+### 2. Generate Encryption Key
 
 ```bash
 openssl rand -hex 32
 ```
 
-### 2. Create Environment File
+Copy the output to `ENCRYPTION_KEY` in `.env`.
 
-Create a `.env` file in the project root:
+### 3. Configure `.env`
 
 ```env
-# Required: 32-byte hex encryption key for token storage
+APP_BASE_URL=https://dashboard.yourdomain.com
 ENCRYPTION_KEY=<your-generated-key>
-
-# App URL (used for OAuth redirect)
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-
-# For HTTPS (optional, requires caddy profile)
-DOMAIN=your-domain.com
-ACME_EMAIL=your-email@example.com
+DATABASE_URL=file:/data/ha-dashboard.db
+DOMAIN=dashboard.yourdomain.com
+ACME_EMAIL=your@email.com
 ```
 
-### 3. Start the Application
+### 4. Start the Application
 
-**Without HTTPS (development):**
+**Without HTTPS (development/testing):**
 ```bash
 docker compose up -d --build
 ```
@@ -43,33 +65,6 @@ docker compose up -d --build
 ```bash
 docker compose --profile https up -d --build
 ```
-
-### 4. Configure Home Assistant OAuth
-
-In your Home Assistant configuration, add this application as an OAuth client:
-
-1. Go to Home Assistant → Settings → Devices & Services → Integrations
-2. The dashboard will redirect users to your HA instance for login
-3. Users authorize access, and tokens are stored securely server-side
-
-## Updating on Raspberry Pi
-
-```bash
-cd /opt/HASS-Dashboard
-git pull
-docker compose down
-docker compose up -d --build
-```
-
-## Environment Variables
-
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `ENCRYPTION_KEY` | Yes | 32-byte hex key for encrypting OAuth tokens |
-| `NEXT_PUBLIC_APP_URL` | Yes | Public URL of the dashboard (for OAuth redirect) |
-| `SQLITE_URL` | No | SQLite database path (default: file:/data/ha-dashboard.db) |
-| `DOMAIN` | No | Domain for HTTPS (Caddy) |
-| `ACME_EMAIL` | No | Email for Let's Encrypt certificates |
 
 ## Architecture
 
@@ -82,11 +77,21 @@ docker compose up -d --build
 
 ### Database
 
-SQLite database stored in `/data/ha-dashboard.db`:
+SQLite database stored in `./data/ha-dashboard.db`:
 - `users`: User accounts linked to HA users
 - `oauth_tokens`: Encrypted access/refresh tokens
 - `dashboard_configs`: Per-user dashboard settings
 - `sessions`: Active user sessions
+
+### User Configuration
+
+User-specific settings are stored in the database and managed via the Settings UI:
+- Home Assistant URL (per user)
+- Entity mappings
+- Dashboard layout
+- Sidebar state
+
+These are **NOT** configured via environment variables.
 
 ### API Endpoints
 
@@ -114,12 +119,24 @@ The included Caddy configuration automatically obtains Let's Encrypt certificate
 docker compose --profile https up -d
 ```
 
+## Updating
+
+### On Raspberry Pi / Ubuntu
+
+```bash
+cd /path/to/ha-dashboard
+git pull
+docker compose down
+docker compose up -d --build
+```
+
 ## Troubleshooting
 
 ### OAuth Redirect Issues
 
-- Ensure `NEXT_PUBLIC_APP_URL` matches the URL users access
-- HA must be accessible via the same URL used during login
+- Ensure `APP_BASE_URL` matches the URL users access
+- HA must be accessible via HTTPS
+- Check that ports 80/443 are forwarded if using Caddy
 
 ### Token Expired
 
@@ -133,4 +150,10 @@ To reset the database:
 docker compose down
 rm -rf data/
 docker compose up -d --build
+```
+
+### View Logs
+
+```bash
+docker compose logs -f ha-dashboard
 ```

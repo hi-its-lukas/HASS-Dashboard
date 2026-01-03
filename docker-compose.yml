@@ -6,11 +6,12 @@ services:
     container_name: ha-dashboard
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "5000:3000"
     environment:
-      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
-      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
-      - SQLITE_URL=file:/data/ha-dashboard.db
+      - NODE_ENV=production
+      - APP_BASE_URL=${APP_BASE_URL:-http://localhost:5000}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:?ENCRYPTION_KEY is required}
+      - DATABASE_URL=file:/data/ha-dashboard.db
     volumes:
       - ./data:/data
     networks:

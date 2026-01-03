@@ -6,7 +6,7 @@ A modern, mobile-first Progressive Web App (PWA) interface for Home Assistant, f
 
 - **Login with Home Assistant** - OAuth 2.0 with PKCE for secure authentication
 - **Multi-User Support** - Each user has their own dashboard configuration
-- **Per-User Settings** - Configure entity mappings via Settings UI
+- **Per-User Settings** - Configure entity mappings via Settings UI (not env files)
 - **Secure Token Storage** - OAuth tokens encrypted at rest (AES-256-GCM)
 - **Real-time Updates** - WebSocket-based state synchronization
 
@@ -31,70 +31,81 @@ A modern, mobile-first Progressive Web App (PWA) interface for Home Assistant, f
 - **PWA**: next-pwa
 - **Reverse Proxy**: Caddy (optional, for HTTPS)
 
-## Quick Start
+## Environment Variables
 
-### Prerequisites
+### Production (Docker)
 
-- Node.js 20+
-- Docker and Docker Compose (recommended)
-- Home Assistant instance accessible via HTTPS
-
-### 1. Clone and Setup
-
-```bash
-git clone https://github.com/hi-its-lukas/HASS-Dashboard
-cd ha-dashboard
-cp .env.example .env.local
-```
-
-### 2. Configure Environment
-
-Edit `.env.local`:
+Create a `.env` file in the project root:
 
 ```env
-# REQUIRED: Public URL where the dashboard is accessible
-NEXT_PUBLIC_APP_URL=https://dashboard.yourdomain.com
+# REQUIRED: Base URL where the dashboard is accessible (no trailing slash)
+APP_BASE_URL=https://dashboard.yourdomain.com
 
 # REQUIRED: 32-byte hex key for encrypting OAuth tokens
 # Generate with: openssl rand -hex 32
-ENCRYPTION_KEY=your-32-byte-hex-key
+ENCRYPTION_KEY=your-64-character-hex-key
 
-# REQUIRED: Secret for signing session cookies
-# Generate with: openssl rand -hex 32
-SESSION_SECRET=your-32-byte-hex-key
+# Database path (Docker uses /data volume)
+DATABASE_URL=file:/data/ha-dashboard.db
 
-# Database path
-DATABASE_URL=file:./data/ha-dashboard.db
-
-# For HTTPS with Caddy (optional)
+# For HTTPS with Caddy
 DOMAIN=dashboard.yourdomain.com
 ACME_EMAIL=your@email.com
-
-# Development: Use mock data instead of real HA
-NEXT_PUBLIC_USE_MOCK=false
 ```
 
-### 3. Start with Docker
+### Development (Local)
 
-**Development (HTTP only):**
+Create a `.env.local` file (ignored by git):
+
+```env
+APP_BASE_URL=http://localhost:5000
+ENCRYPTION_KEY=your-64-character-hex-key
+DATABASE_URL=file:./data/ha-dashboard.db
+NEXT_PUBLIC_USE_MOCK=true
+```
+
+### What Goes Where
+
+| Variable | `.env` (Production) | `.env.local` (Dev) | Description |
+|----------|---------------------|---------------------|-------------|
+| `APP_BASE_URL` | Required | Required | Public URL of the dashboard |
+| `ENCRYPTION_KEY` | Required | Required | Token encryption key |
+| `DATABASE_URL` | Required | Required | SQLite database path |
+| `DOMAIN` | For HTTPS | - | Domain for Caddy |
+| `ACME_EMAIL` | For HTTPS | - | Let's Encrypt email |
+| `NEXT_PUBLIC_USE_MOCK` | - | Optional | Use mock data for dev |
+
+**Important**: User-specific settings (Home Assistant URL, entity mappings, dashboard layout) are stored in the database and configured via the Settings UI - NOT in environment files.
+
+## Quick Start with Docker
+
 ```bash
+# Clone repository
+git clone https://github.com/yourusername/ha-dashboard.git
+cd ha-dashboard
+
+# Create production environment file
+cp .env.example .env
+
+# Generate encryption key
+openssl rand -hex 32
+# Copy the output to ENCRYPTION_KEY in .env
+
+# Edit .env with your values
+nano .env
+
+# Start without HTTPS (development)
 docker compose up -d --build
-```
 
-**Production with HTTPS:**
-```bash
+# OR start with HTTPS (production)
 docker compose --profile https up -d --build
 ```
 
-### 4. Access the Dashboard
-
-- Open `https://dashboard.yourdomain.com` (or `http://localhost:5000` for development)
-- Click "Login with Home Assistant"
-- Enter your Home Assistant URL and authorize
+Access the dashboard at `http://localhost:5000` (or your configured domain).
 
 ## Network Setup for External Access
 
-To access the dashboard from both inside your home network and externally (e.g., from mobile), use **Split-Horizon DNS**:
+To access the dashboard from both inside your home network and externally (e.g., mobile), use **Split-Horizon DNS**:
 
 ### Why Split DNS?
 
@@ -124,9 +135,13 @@ curl -fsSL https://deb.nodesource.com/setup_20.x | sudo bash -
 sudo apt install -y nodejs
 
 # Clone and install
-git clone <repo-url>
+git clone https://github.com/yourusername/ha-dashboard.git
 cd ha-dashboard
 npm install
+
+# Create environment file
+cp .env.example .env.local
+nano .env.local
 
 # Setup database
 npx prisma generate
@@ -140,7 +155,6 @@ npm start
 ### Autostart with systemd
 
 ```bash
-# Create service file
 sudo nano /etc/systemd/system/ha-dashboard.service
 ```
 
@@ -173,9 +187,9 @@ sudo systemctl start ha-dashboard
 
 After logging in, go to **Settings** to configure:
 
-- **Home Assistant URL** - Your HA instance URL
 - **Entity Discovery** - Automatically discovers all your HA entities
 - **Entity Mapping** - Map entities to dashboard widgets
+- **Dashboard Layout** - Configure rooms, persons, and more
 
 ### Static Configuration (fallback)
 
@@ -202,80 +216,18 @@ For unauthenticated users or development, edit `config/dashboard.ts`.
 - **Separate nonces** - Each encrypted token uses a unique nonce
 - **30-day sessions** - Sessions expire after 30 days of inactivity
 
-### Recommendations
-
-1. Always use HTTPS in production (Caddy handles this automatically)
-2. Use a strong, random ENCRYPTION_KEY
-3. Keep your Home Assistant instance updated
-4. Use the Split-DNS setup for external access
-
-## Project Structure
-
-```
-ha-dashboard/
-├── app/
-│   ├── (dashboard)/        # Protected dashboard pages
-│   │   ├── page.tsx        # Home
-│   │   ├── energy/         # Energy dashboard
-│   │   ├── family/         # Family tracker
-│   │   ├── secure/         # Security panel
-│   │   ├── surveillance/   # AI Surveillance
-│   │   ├── calendar/       # Calendar
-│   │   ├── more/           # More options
-│   │   └── settings/       # User settings
-│   ├── api/
-│   │   ├── auth/           # OAuth endpoints
-│   │   ├── ha/             # HA proxy endpoints
-│   │   ├── me/             # Current user
-│   │   ├── settings/       # User config
-│   │   └── status/         # Connection status
-│   ├── login/              # Login page
-│   └── layout.tsx          # Root layout
-├── components/
-│   ├── cards/              # Dashboard cards
-│   ├── nav/                # Navigation (sidebar, bottom-nav)
-│   ├── providers/          # Context providers
-│   └── ui/                 # Reusable UI components
-├── config/
-│   └── dashboard.ts        # Static entity configuration
-├── lib/
-│   ├── auth/               # Authentication utilities
-│   ├── config/             # Config store
-│   ├── db/                 # Prisma client
-│   └── ha/                 # Home Assistant client
-├── prisma/
-│   └── schema.prisma       # Database schema
-├── docker-compose.yml      # Docker configuration
-├── Dockerfile              # Docker build
-└── Caddyfile               # Caddy reverse proxy config
-```
-
-## API Endpoints
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/auth/login` | POST | Initiate OAuth login |
-| `/api/auth/callback` | GET | OAuth callback handler |
-| `/api/auth/logout` | POST | Logout and clear session |
-| `/api/me` | GET | Get current user info |
-| `/api/settings` | GET/POST | User dashboard config |
-| `/api/status` | GET | HA connection status |
-| `/api/ha/states` | GET | Proxy to HA states |
-| `/api/ha/call-service` | POST | Proxy to HA services |
-| `/api/ha/registries` | GET | Get HA areas/entities |
-
 ## Troubleshooting
 
 ### OAuth Redirect Issues
 
-- Ensure `NEXT_PUBLIC_APP_URL` matches exactly how users access the dashboard
+- Ensure `APP_BASE_URL` matches exactly how users access the dashboard
 - Check that your Home Assistant is accessible from the dashboard server
 - Verify Split-DNS is configured correctly
 
 ### "Connection Refused" after HA Login
 
 - The callback URL is pointing to localhost or wrong port
-- Set `NEXT_PUBLIC_APP_URL` to your actual dashboard URL
+- Set `APP_BASE_URL` to your actual dashboard URL
 
 ### Database Reset
 
@@ -291,6 +243,23 @@ rm -rf data/
 docker compose up -d --build
 ```
 
+## Project Structure
+
+```
+ha-dashboard/
+├── app/
+│   ├── (dashboard)/        # Protected dashboard pages
+│   ├── api/                # API routes
+│   └── login/              # Login page
+├── components/             # React components
+├── config/                 # Static configuration
+├── lib/                    # Utilities and stores
+├── prisma/                 # Database schema
+├── docker-compose.yml
+├── Dockerfile
+└── Caddyfile
+```
+
 ## Contributing
 
 1. Fork the repository
@@ -301,8 +270,3 @@ docker compose up -d --build
 ## License
 
 MIT License - see LICENSE file for details
-
-## Acknowledgments
-
-- Design inspired by Nico Papanicolaou's Home Assistant mobile interface
-- Icons from [Lucide](https://lucide.dev)

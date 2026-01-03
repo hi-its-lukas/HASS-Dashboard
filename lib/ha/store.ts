@@ -75,14 +75,19 @@ export const useHAStore = create<HAStore>((set, get) => ({
     }
 
     try {
-      // Real HA connection via proxy
-      const wsUrl = process.env.NEXT_PUBLIC_HA_WS_URL
-      if (!wsUrl) {
-        throw new Error('NEXT_PUBLIC_HA_WS_URL not configured')
+      // Get HA instance URL from user's session/config
+      const meRes = await fetch('/api/me')
+      if (!meRes.ok) throw new Error('Not authenticated')
+      const meData = await meRes.json()
+      
+      if (!meData.user?.haInstanceUrl) {
+        throw new Error('Home Assistant URL not configured')
       }
+      
+      const haUrl = meData.user.haInstanceUrl.replace(/\/$/, '')
+      const wsUrl = haUrl.replace(/^http/, 'ws') + '/api/websocket'
 
       wsClient = new HAWebSocketClient(wsUrl, async () => {
-        // Fetch token from server-side proxy
         const res = await fetch('/api/ha/token')
         if (!res.ok) throw new Error('Failed to get token')
         const { token } = await res.json()

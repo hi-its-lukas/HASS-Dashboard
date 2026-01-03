@@ -9,12 +9,14 @@ HA Dashboard is a modern, mobile-first Progressive Web App (PWA) for Home Assist
 Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (2026-01-03)
-- Refactored all dashboard pages to use dynamic per-user configuration via `useConfig()` hook
-- Created `lib/config/store.ts` - Zustand store that loads user config from API and falls back to static defaults
-- Added `ConfigProvider` component to initialize config on app mount
-- Updated sidebar to persist collapsed state via config store for authenticated users
-- Fixed token encryption security - each token (access/refresh) now uses unique nonces
-- All pages verified working: Home, Energy, Family, Security, Settings
+- Aligned environment variable handling with Docker + Next.js best practices
+- Renamed `NEXT_PUBLIC_APP_URL` to `APP_BASE_URL` for server-only use
+- Changed Prisma to use `DATABASE_URL` instead of `SQLITE_URL`
+- Updated docker-compose.yml with required env validation
+- Removed deprecated `HA_TOKEN` and `NEXT_PUBLIC_HA_WS_URL` - now uses OAuth tokens from database
+- Updated ha/store.ts to fetch HA URL from user's session instead of env vars
+- Updated README.md, DEPLOYMENT.md, setup.sh with clear .env vs .env.local distinction
+- User-specific settings (HA URL, entities) are now stored in database, NOT env files
 
 ## System Architecture
 

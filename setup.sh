@@ -49,20 +49,28 @@ if ! command -v npm &> /dev/null; then
 fi
 echo -e "${GREEN}npm $(npm -v) gefunden ✓${NC}"
 
-# Create .env.local if not exists
+# Create .env.local for development
 if [ ! -f .env.local ]; then
     echo ""
-    echo -e "${YELLOW}Erstelle Konfigurationsdatei...${NC}"
-    cp .env.example .env.local
+    echo -e "${YELLOW}Erstelle Entwicklungs-Konfigurationsdatei...${NC}"
+    
+    # Generate encryption key
+    ENCRYPTION_KEY=$(openssl rand -hex 32 2>/dev/null || head -c 32 /dev/urandom | xxd -p)
+    
+    cat > .env.local << EOF
+# HA Dashboard - Development Configuration
+# For production (Docker), use .env instead
+
+APP_BASE_URL=http://localhost:5000
+ENCRYPTION_KEY=${ENCRYPTION_KEY}
+DATABASE_URL=file:./data/ha-dashboard.db
+NEXT_PUBLIC_USE_MOCK=false
+EOF
+    
     echo -e "${GREEN}.env.local erstellt ✓${NC}"
     echo ""
-    echo -e "${YELLOW}WICHTIG: Bearbeite .env.local mit deinen Home Assistant Daten:${NC}"
-    echo "  nano .env.local"
-    echo ""
-    echo "Erforderliche Einstellungen:"
-    echo "  NEXT_PUBLIC_HA_WS_URL=wss://dein-home-assistant:8123/api/websocket"
-    echo "  HA_TOKEN=dein-long-lived-access-token"
-    echo "  NEXT_PUBLIC_USE_MOCK=false"
+    echo -e "${YELLOW}HINWEIS: .env.local ist nur für lokale Entwicklung.${NC}"
+    echo -e "${YELLOW}Für Docker/Produktion, erstelle eine .env Datei.${NC}"
     echo ""
 fi
 
@@ -70,6 +78,19 @@ fi
 echo -e "${YELLOW}Installiere Abhängigkeiten...${NC}"
 npm ci --legacy-peer-deps
 echo -e "${GREEN}Abhängigkeiten installiert ✓${NC}"
+
+# Generate Prisma client
+echo -e "${YELLOW}Generiere Datenbank-Client...${NC}"
+npx prisma generate
+echo -e "${GREEN}Prisma Client generiert ✓${NC}"
+
+# Create data directory
+mkdir -p data
+
+# Initialize database
+echo -e "${YELLOW}Initialisiere Datenbank...${NC}"
+npx prisma db push
+echo -e "${GREEN}Datenbank initialisiert ✓${NC}"
 
 # Build
 echo ""
@@ -84,11 +105,11 @@ echo "=========================================="
 echo ""
 echo "Nächste Schritte:"
 echo ""
-echo "1. Konfiguration anpassen (falls noch nicht geschehen):"
-echo "   nano .env.local"
-echo ""
-echo "2. Dashboard starten:"
+echo "1. Starte das Dashboard:"
 echo "   npm start"
+echo ""
+echo "2. Öffne im Browser:"
+echo "   http://localhost:5000"
 echo ""
 echo "3. Für dauerhaften Betrieb (mit PM2):"
 echo "   sudo npm install -g pm2"
@@ -96,5 +117,5 @@ echo "   pm2 start npm --name 'ha-dashboard' -- start"
 echo "   pm2 startup"
 echo "   pm2 save"
 echo ""
-echo "Dashboard URL: http://$(hostname -I | awk '{print $1}'):3000"
+echo "Dashboard URL: http://$(hostname -I | awk '{print $1}'):5000"
 echo ""

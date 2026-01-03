@@ -1,22 +1,25 @@
-// Server-side API route to provide HA token securely
-// Token is never exposed to client bundle
-
 import { NextResponse } from 'next/server'
+import { getSessionFromCookie } from '@/lib/auth/session'
+import { getStoredToken } from '@/lib/auth/ha-oauth'
 
 export async function GET() {
-  const token = process.env.HA_TOKEN
-
-  if (!token) {
+  const session = await getSessionFromCookie()
+  
+  if (!session) {
     return NextResponse.json(
-      { error: 'HA_TOKEN not configured' },
-      { status: 500 }
+      { error: 'Not authenticated' },
+      { status: 401 }
     )
   }
-
-  // In production, you might want to add additional security checks here:
-  // - Verify the request origin
-  // - Check for valid session/authentication
-  // - Rate limiting
-
+  
+  const token = await getStoredToken(session.userId)
+  
+  if (!token) {
+    return NextResponse.json(
+      { error: 'No tokens found - please re-authenticate' },
+      { status: 401 }
+    )
+  }
+  
   return NextResponse.json({ token })
 }
