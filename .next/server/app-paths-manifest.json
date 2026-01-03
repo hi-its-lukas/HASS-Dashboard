@@ -1,11 +1,7 @@
 {
   "/_not-found/page": "app/_not-found/page.js",
-  "/calendar/page": "app/calendar/page.js",
-  "/cams/page": "app/cams/page.js",
-  "/api/ha/token/route": "app/api/ha/token/route.js",
-  "/energy/page": "app/energy/page.js",
-  "/family/page": "app/family/page.js",
-  "/more/page": "app/more/page.js",
   "/page": "app/page.js",
-  "/secure/page": "app/secure/page.js"
+  "/energy/page": "app/energy/page.js",
+  "/cams/page": "app/cams/page.js",
+  "/calendar/page": "app/calendar/page.js"
 }
