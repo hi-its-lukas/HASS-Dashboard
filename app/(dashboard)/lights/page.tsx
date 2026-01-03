@@ -1,18 +1,40 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { Lightbulb, Power, Settings } from 'lucide-react'
+import { Lightbulb, Power, Settings, ChevronDown, ChevronRight } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { useHAStore } from '@/lib/ha'
 import { useConfig } from '@/lib/config/store'
 import { cn } from '@/lib/utils'
+
+interface RoomGroup {
+  name: string
+  lights: string[]
+}
+
+function extractRoomName(entityId: string, friendlyName?: string): string {
+  if (friendlyName) {
+    const parts = friendlyName.split(' ')
+    if (parts.length > 1) {
+      return parts[0]
+    }
+  }
+  
+  const name = entityId.replace('light.', '')
+  const parts = name.split('_')
+  if (parts.length > 1) {
+    return parts[0].charAt(0).toUpperCase() + parts[0].slice(1)
+  }
+  return 'Sonstige'
+}
 
 export default function LightsPage() {
   const config = useConfig()
   const states = useHAStore((s) => s.states)
   const callService = useHAStore((s) => s.callService)
   const [toggling, setToggling] = useState<string | null>(null)
+  const [collapsedRooms, setCollapsedRooms] = useState<Record<string, boolean>>({})
   
   const roomLights = (config.rooms || [])
     .flatMap((r) => r.entityIds || [])
@@ -23,8 +45,26 @@ export default function LightsPage() {
     .filter(Boolean)
   
   const lightEntities = [...roomLights, ...configuredLights]
-  
   const uniqueLights = [...new Set(lightEntities)]
+  
+  const roomGroups = useMemo(() => {
+    const groups: Record<string, string[]> = {}
+    
+    uniqueLights.forEach((entityId) => {
+      const state = states[entityId]
+      const friendlyName = state?.attributes?.friendly_name as string | undefined
+      const roomName = extractRoomName(entityId, friendlyName)
+      
+      if (!groups[roomName]) {
+        groups[roomName] = []
+      }
+      groups[roomName].push(entityId)
+    })
+    
+    return Object.entries(groups)
+      .map(([name, lights]) => ({ name, lights }))
+      .sort((a, b) => a.name.localeCompare(b.name, 'de'))
+  }, [uniqueLights, states])
   
   const handleToggle = async (entityId: string) => {
     const currentState = states[entityId]?.state
@@ -51,6 +91,26 @@ export default function LightsPage() {
     } finally {
       setToggling(null)
     }
+  }
+  
+  const handleRoomToggle = async (roomLights: string[], turnOn: boolean) => {
+    setToggling('room')
+    try {
+      for (const entityId of roomLights) {
+        await callService('light', turnOn ? 'turn_on' : 'turn_off', entityId)
+      }
+    } catch (error) {
+      console.error('Failed to toggle room lights:', error)
+    } finally {
+      setToggling(null)
+    }
+  }
+  
+  const toggleRoomCollapse = (roomName: string) => {
+    setCollapsedRooms(prev => ({
+      ...prev,
+      [roomName]: !prev[roomName]
+    }))
   }
   
   const onCount = uniqueLights.filter((id) => states[id]?.state === 'on').length
@@ -103,48 +163,104 @@ export default function LightsPage() {
           </a>
         </motion.div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {uniqueLights.map((entityId, index) => {
-            const state = states[entityId]
-            const isOn = state?.state === 'on'
-            const friendlyName = (state?.attributes?.friendly_name as string) || entityId.split('.')[1].replace(/_/g, ' ')
-            const brightness = state?.attributes?.brightness as number | undefined
-            const brightnessPercent = brightness ? Math.round((brightness / 255) * 100) : null
+        <div className="space-y-6">
+          {roomGroups.map((room, roomIndex) => {
+            const roomOnCount = room.lights.filter((id) => states[id]?.state === 'on').length
+            const isCollapsed = collapsedRooms[room.name]
             
             return (
-              <motion.div
-                key={entityId}
+              <motion.section
+                key={room.name}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
+                transition={{ delay: roomIndex * 0.1 }}
               >
-                <Card
-                  hoverable
-                  className={cn(
-                    'p-4 cursor-pointer transition-all',
-                    isOn && 'ring-2 ring-accent-yellow/50 bg-accent-yellow/10'
-                  )}
-                  onClick={() => handleToggle(entityId)}
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <Lightbulb className={cn(
-                      'w-6 h-6',
-                      isOn ? 'text-accent-yellow' : 'text-gray-500'
-                    )} />
-                    <div className={cn(
-                      'w-3 h-3 rounded-full',
-                      isOn ? 'bg-accent-yellow' : 'bg-gray-600',
-                      toggling === entityId && 'animate-pulse'
-                    )} />
+                <div className="flex items-center justify-between mb-3">
+                  <button
+                    onClick={() => toggleRoomCollapse(room.name)}
+                    className="flex items-center gap-2 text-white hover:text-accent-yellow transition-colors"
+                  >
+                    {isCollapsed ? (
+                      <ChevronRight className="w-5 h-5" />
+                    ) : (
+                      <ChevronDown className="w-5 h-5" />
+                    )}
+                    <h2 className="text-lg font-semibold">{room.name}</h2>
+                    <span className="text-sm text-text-muted">
+                      ({roomOnCount}/{room.lights.length})
+                    </span>
+                  </button>
+                  
+                  <div className="flex gap-2">
+                    {roomOnCount > 0 && (
+                      <button
+                        onClick={() => handleRoomToggle(room.lights, false)}
+                        disabled={toggling === 'room'}
+                        className="text-xs px-3 py-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-colors disabled:opacity-50"
+                      >
+                        Aus
+                      </button>
+                    )}
+                    {roomOnCount < room.lights.length && (
+                      <button
+                        onClick={() => handleRoomToggle(room.lights, true)}
+                        disabled={toggling === 'room'}
+                        className="text-xs px-3 py-1 bg-accent-yellow/20 hover:bg-accent-yellow/30 text-accent-yellow rounded-lg transition-colors disabled:opacity-50"
+                      >
+                        An
+                      </button>
+                    )}
                   </div>
-                  <p className="text-sm font-medium text-white truncate capitalize">
-                    {friendlyName}
-                  </p>
-                  <p className="text-xs text-text-muted">
-                    {isOn ? (brightnessPercent ? `${brightnessPercent}%` : 'An') : 'Aus'}
-                  </p>
-                </Card>
-              </motion.div>
+                </div>
+                
+                {!isCollapsed && (
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                    {room.lights.map((entityId, index) => {
+                      const state = states[entityId]
+                      const isOn = state?.state === 'on'
+                      const friendlyName = (state?.attributes?.friendly_name as string) || entityId.split('.')[1].replace(/_/g, ' ')
+                      const brightness = state?.attributes?.brightness as number | undefined
+                      const brightnessPercent = brightness ? Math.round((brightness / 255) * 100) : null
+                      
+                      return (
+                        <motion.div
+                          key={entityId}
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: index * 0.02 }}
+                        >
+                          <Card
+                            hoverable
+                            className={cn(
+                              'p-4 cursor-pointer transition-all',
+                              isOn && 'ring-2 ring-accent-yellow/50 bg-accent-yellow/10'
+                            )}
+                            onClick={() => handleToggle(entityId)}
+                          >
+                            <div className="flex items-center justify-between mb-3">
+                              <Lightbulb className={cn(
+                                'w-6 h-6',
+                                isOn ? 'text-accent-yellow' : 'text-gray-500'
+                              )} />
+                              <div className={cn(
+                                'w-3 h-3 rounded-full',
+                                isOn ? 'bg-accent-yellow' : 'bg-gray-600',
+                                toggling === entityId && 'animate-pulse'
+                              )} />
+                            </div>
+                            <p className="text-sm font-medium text-white truncate capitalize">
+                              {friendlyName}
+                            </p>
+                            <p className="text-xs text-text-muted">
+                              {isOn ? (brightnessPercent ? `${brightnessPercent}%` : 'An') : 'Aus'}
+                            </p>
+                          </Card>
+                        </motion.div>
+                      )
+                    })}
+                  </div>
+                )}
+              </motion.section>
             )
           })}
         </div>
