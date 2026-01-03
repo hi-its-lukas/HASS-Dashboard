@@ -14,13 +14,14 @@ import {
   usePersonsAtHome,
   useConnectionStatus,
 } from '@/lib/ha'
-import { dashboardConfig } from '@/config/dashboard'
+import { useConfig } from '@/lib/config/store'
 import { formatTime, formatDate, getAlarmStateLabel, getWeatherIcon } from '@/lib/utils'
 
 export default function HomePage() {
   const [currentTime, setCurrentTime] = useState(new Date())
   const [floor, setFloor] = useState<'ground' | 'upper'>('ground')
   
+  const config = useConfig()
   const { connected, connecting, error } = useConnectionStatus()
   const { on: lightsOn } = useLightsCount()
   const power = usePower()
@@ -33,7 +34,7 @@ export default function HomePage() {
     return () => clearInterval(interval)
   }, [])
 
-  const filteredRooms = dashboardConfig.rooms.filter((r) => r.floor === floor)
+  const filteredRooms = config.rooms.filter((r) => r.floor === floor)
 
   return (
     <div className="px-4 py-6 safe-top max-w-7xl mx-auto">

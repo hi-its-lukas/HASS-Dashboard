@@ -1,11 +1,11 @@
 // Home Assistant State Store using Zustand
-// Last updated: 2026-01-02 22:05 UTC - Fixed Array.isArray type narrowing
+// Last updated: 2026-01-03 - Refactored to use dynamic per-user config
 
 import { create } from 'zustand'
 import { HAState, SurveillanceEvent } from './types'
 import { HAWebSocketClient } from './websocket-client'
 import { mockStates, generatePowerTrendData, mockSurveillanceEvents, mockSurveillanceStats } from './mock-data'
-import { dashboardConfig } from '@/config/dashboard'
+import { useConfigStore } from '@/lib/config/store'
 
 interface PowerTrendPoint {
   time: string
@@ -199,7 +199,8 @@ export const useConnectionStatus = () => useHAStore((s) => ({
 export const useEntityState = (entityId: string) => useHAStore((s) => s.states[entityId])
 
 export const useLightsCount = () => {
-  const lightsGroup = useEntityState(dashboardConfig.lightsGroupEntityId)
+  const config = useConfigStore((s) => s.config)
+  const lightsGroup = useHAStore((s) => s.states[config.lightsGroupEntityId])
   const states = useHAStore((s) => s.states)
   
   if (!lightsGroup) return { on: 0, total: 0 }
@@ -212,7 +213,8 @@ export const useLightsCount = () => {
 }
 
 export const usePower = () => {
-  const powerState = useEntityState(dashboardConfig.powerEntityId)
+  const config = useConfigStore((s) => s.config)
+  const powerState = useHAStore((s) => s.states[config.powerEntityId])
   return powerState ? parseInt(powerState.state) || 0 : 0
 }
 
@@ -222,13 +224,13 @@ export interface Weather {
 }
 
 export const useWeather = (): Weather => {
-  const weatherState = useEntityState(dashboardConfig.weatherEntityId)
+  const config = useConfigStore((s) => s.config)
+  const weatherState = useHAStore((s) => s.states[config.weatherEntityId])
   
   if (!weatherState) {
     return { temperature: 0, condition: 'unknown' }
   }
   
-  // Extract temperature with proper type narrowing
   const rawTemp = weatherState.attributes?.temperature
   const temperature = typeof rawTemp === 'number' ? rawTemp : 0
   
@@ -239,13 +241,14 @@ export const useWeather = (): Weather => {
 }
 
 export const useAlarmState = () => {
-  const alarmState = useEntityState(dashboardConfig.security.alarmEntityId)
+  const config = useConfigStore((s) => s.config)
+  const alarmState = useHAStore((s) => s.states[config.security.alarmEntityId])
   return alarmState?.state || 'unknown'
 }
 
 export const usePersonsAtHome = () => {
   const states = useHAStore((s) => s.states)
-  const persons = dashboardConfig.persons
+  const persons = useConfigStore((s) => s.config.persons)
   
   const atHome = persons.filter((p) => states[p.entityId]?.state === 'home')
   return atHome.length
@@ -264,7 +267,7 @@ export const useRoomLightsStatus = (roomEntityIds: string[]) => {
 
 export const useEnergy = () => {
   const states = useHAStore((s) => s.states)
-  const { energy } = dashboardConfig
+  const energy = useConfigStore((s) => s.config.energy)
   
   return {
     solar: parseInt(states[energy.solarEntityId]?.state || '0'),

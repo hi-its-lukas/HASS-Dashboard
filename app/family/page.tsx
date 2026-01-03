@@ -5,13 +5,14 @@ import { Card } from '@/components/ui/card'
 import { Avatar, AvatarGroup } from '@/components/ui/avatar'
 import { PersonCard } from '@/components/cards/person-card'
 import { useHAStore, usePersonsAtHome } from '@/lib/ha'
-import { dashboardConfig } from '@/config/dashboard'
+import { useConfig } from '@/lib/config/store'
 
 export default function FamilyPage() {
+  const config = useConfig()
   const personsAtHome = usePersonsAtHome()
   const states = useHAStore((s) => s.states)
   
-  const homePersons = dashboardConfig.persons.filter(
+  const homePersons = config.persons.filter(
     (p) => states[p.entityId]?.state === 'home'
   )
 
@@ -42,9 +43,9 @@ export default function FamilyPage() {
               <div>
                 <span className="text-5xl font-bold text-white">{personsAtHome}</span>
                 <p className="text-sm text-text-secondary mt-1">
-                  {personsAtHome === dashboardConfig.persons.length
+                  {personsAtHome === config.persons.length
                     ? 'Everyone is home'
-                    : `${personsAtHome} of ${dashboardConfig.persons.length} home`}
+                    : `${personsAtHome} of ${config.persons.length} home`}
                 </p>
               </div>
               <AvatarGroup>
@@ -72,7 +73,7 @@ export default function FamilyPage() {
           Activity
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          {dashboardConfig.persons.map((person, index) => (
+          {config.persons.map((person, index) => (
             <motion.div
               key={person.id}
               initial={{ opacity: 0, y: 20 }}

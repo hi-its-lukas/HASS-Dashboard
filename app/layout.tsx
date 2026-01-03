@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { HAProvider } from '@/components/providers/ha-provider'
+import { ConfigProvider } from '@/components/providers/config-provider'
 import { BottomNav } from '@/components/nav/bottom-nav'
 import { Sidebar } from '@/components/nav/sidebar'
 
@@ -34,17 +35,19 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/icon-192.png" />
       </head>
       <body className="antialiased">
-        <HAProvider>
-          <div className="flex min-h-screen">
-            <Sidebar />
-            <main className="flex-1 pb-20 lg:pb-6 lg:ml-64">
-              {children}
-            </main>
-          </div>
-          <div className="lg:hidden">
-            <BottomNav />
-          </div>
-        </HAProvider>
+        <ConfigProvider>
+          <HAProvider>
+            <div className="flex min-h-screen">
+              <Sidebar />
+              <main className="flex-1 pb-20 lg:pb-6 lg:ml-64">
+                {children}
+              </main>
+            </div>
+            <div className="lg:hidden">
+              <BottomNav />
+            </div>
+          </HAProvider>
+        </ConfigProvider>
       </body>
     </html>
   )

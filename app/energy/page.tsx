@@ -5,9 +5,10 @@ import { EnergyCard } from '@/components/cards/energy-card'
 import { PowerTrendChart } from '@/components/cards/power-trend-chart'
 import { ApplianceCard } from '@/components/cards/appliance-card'
 import { useEnergy } from '@/lib/ha'
-import { dashboardConfig } from '@/config/dashboard'
+import { useConfig } from '@/lib/config/store'
 
 export default function EnergyPage() {
+  const config = useConfig()
   const energy = useEnergy()
 
   return (
@@ -77,7 +78,7 @@ export default function EnergyPage() {
               Appliances
             </h2>
             <div className="space-y-2">
-              {dashboardConfig.appliances.map((appliance) => (
+              {config.appliances.map((appliance) => (
                 <ApplianceCard
                   key={appliance.id}
                   name={appliance.name}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -17,6 +17,7 @@ import {
   Menu
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useConfigStore } from '@/lib/config/store'
 
 const navItems = [
   { href: '/', icon: Home, label: 'Home' },
@@ -28,25 +29,27 @@ const navItems = [
   { href: '/more', icon: Menu, label: 'More' },
 ]
 
-interface SidebarProps {
-  defaultCollapsed?: boolean
-}
-
-export function Sidebar({ defaultCollapsed = false }: SidebarProps) {
+export function Sidebar() {
   const pathname = usePathname()
-  const [collapsed, setCollapsed] = useState(defaultCollapsed)
+  const sidebarState = useConfigStore((s) => s.sidebarState)
+  const setSidebarState = useConfigStore((s) => s.setSidebarState)
+  const isLoaded = useConfigStore((s) => s.isLoaded)
+  
+  const collapsed = sidebarState === 'collapsed'
   
   useEffect(() => {
-    const saved = localStorage.getItem('sidebar_collapsed')
-    if (saved !== null) {
-      setCollapsed(saved === 'true')
+    if (!isLoaded) {
+      const saved = localStorage.getItem('sidebar_collapsed')
+      if (saved === 'true') {
+        setSidebarState('collapsed')
+      }
     }
-  }, [])
+  }, [isLoaded, setSidebarState])
   
   const toggleCollapsed = () => {
-    const newState = !collapsed
-    setCollapsed(newState)
-    localStorage.setItem('sidebar_collapsed', String(newState))
+    const newState = collapsed ? 'expanded' : 'collapsed'
+    setSidebarState(newState)
+    localStorage.setItem('sidebar_collapsed', String(newState === 'collapsed'))
   }
   
   const isActive = (href: string) => {

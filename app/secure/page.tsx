@@ -6,18 +6,19 @@ import { Card } from '@/components/ui/card'
 import { Toggle } from '@/components/ui/toggle'
 import { SecurityActionCard } from '@/components/cards/security-action-card'
 import { useAlarmState, useHAStore } from '@/lib/ha'
-import { dashboardConfig } from '@/config/dashboard'
+import { useConfig } from '@/lib/config/store'
 import { getAlarmStateLabel, cn } from '@/lib/utils'
 
 export default function SecurityPage() {
+  const config = useConfig()
   const alarmState = useAlarmState()
   const callService = useHAStore((s) => s.callService)
   const states = useHAStore((s) => s.states)
-  const dogModeState = dashboardConfig.security.dogModeEntityId 
-    ? states[dashboardConfig.security.dogModeEntityId]?.state === 'on'
+  const dogModeState = config.security.dogModeEntityId 
+    ? states[config.security.dogModeEntityId]?.state === 'on'
     : false
 
-  const activeZones = dashboardConfig.security.zones.filter(
+  const activeZones = config.security.zones.filter(
     (z) => states[z.entityId]?.state === 'on'
   )
 
@@ -31,16 +32,16 @@ export default function SecurityPage() {
     await callService(
       'alarm_control_panel',
       serviceMap[action],
-      dashboardConfig.security.alarmEntityId
+      config.security.alarmEntityId
     )
   }
 
   const handleDogModeToggle = async (checked: boolean) => {
-    if (dashboardConfig.security.dogModeEntityId) {
+    if (config.security.dogModeEntityId) {
       await callService(
         'input_boolean',
         checked ? 'turn_on' : 'turn_off',
-        dashboardConfig.security.dogModeEntityId
+        config.security.dogModeEntityId
       )
     }
   }
@@ -168,7 +169,7 @@ export default function SecurityPage() {
               <span className="text-xs text-text-secondary">{activeZones.length} active</span>
             </div>
             <div className="space-y-2">
-              {dashboardConfig.security.zones.map((zone) => {
+              {config.security.zones.map((zone) => {
                 const isActive = states[zone.entityId]?.state === 'on'
                 return (
                   <Card key={zone.id} className="p-3">

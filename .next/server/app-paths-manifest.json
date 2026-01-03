@@ -1,8 +1,10 @@
 {
+  "/_not-found/page": "app/_not-found/page.js",
   "/page": "app/page.js",
-  "/login/page": "app/login/page.js",
-  "/settings/page": "app/settings/page.js",
-  "/api/me/route": "app/api/me/route.js",
-  "/api/status/route": "app/api/status/route.js",
-  "/api/settings/route": "app/api/settings/route.js"
+  "/api/settings/route": "app/api/settings/route.js",
+  "/more/page": "app/more/page.js",
+  "/family/page": "app/family/page.js",
+  "/energy/page": "app/energy/page.js",
+  "/cams/page": "app/cams/page.js",
+  "/calendar/page": "app/calendar/page.js"
 }
