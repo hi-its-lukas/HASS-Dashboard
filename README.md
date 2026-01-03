@@ -35,30 +35,27 @@ A modern, mobile-first Progressive Web App (PWA) interface for Home Assistant, f
 
 **HTTPS is always enabled** with automatic Let's Encrypt certificates via Caddy.
 
-### Required Configuration
+### Minimal Configuration
 
-Create a `.env` file with your domain:
+Only **one variable** is required - your domain:
 
 ```env
 DOMAIN=dashboard.yourdomain.com
-ACME_EMAIL=your@email.com
 ```
 
-### Auto-Configuration
+Everything else is auto-configured:
+- Encryption keys are generated automatically
+- SQLite database is created automatically
+- SSL certificates are obtained from Let's Encrypt
 
-The dashboard automatically:
-- Generates encryption keys on first start (stored in `./data/.encryption_key`)
-- Creates the SQLite database in `./data/`
-- Obtains SSL certificates from Let's Encrypt
-
-### Optional Overrides
+### Optional
 
 | Variable | Description |
 |----------|-------------|
+| `ACME_EMAIL` | Email for Let's Encrypt notifications |
 | `ENCRYPTION_KEY` | Use your own key instead of auto-generated |
-| `NEXT_PUBLIC_USE_MOCK` | Use mock data for development |
 
-**Important**: User-specific settings (Home Assistant URL, entity mappings) are stored in the database and configured via the Settings UI - NOT in environment files.
+**Important**: User-specific settings (Home Assistant URL, entity mappings) are configured in the Settings UI after login - NOT in environment files.
 
 ## Quick Start with Docker
 
