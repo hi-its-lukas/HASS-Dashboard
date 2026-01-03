@@ -205,17 +205,29 @@ interface HAUserInfo {
 }
 
 async function fetchHAUserInfo(haUrl: string, accessToken: string): Promise<HAUserInfo> {
-  const response = await fetch(new URL('/api/auth/current_user', haUrl).toString(), {
-    headers: {
-      'Authorization': `Bearer ${accessToken}`
+  const url = new URL('/api/auth/current_user', haUrl).toString()
+  console.log('[OAuth] Fetching user info from:', url)
+  
+  try {
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      }
+    })
+    
+    if (!response.ok) {
+      const text = await response.text()
+      console.error('[OAuth] User info fetch failed:', response.status, text)
+      throw new Error(`Failed to fetch user info from Home Assistant: ${response.status}`)
     }
-  })
-  
-  if (!response.ok) {
-    throw new Error('Failed to fetch user info from Home Assistant')
+    
+    const userInfo = await response.json()
+    console.log('[OAuth] User info received:', userInfo.id, userInfo.name)
+    return userInfo
+  } catch (error) {
+    console.error('[OAuth] User info fetch error:', error)
+    throw new Error(`Failed to fetch user info from Home Assistant: ${error instanceof Error ? error.message : 'Network error'}`)
   }
-  
-  return response.json()
 }
 
 export async function getStoredToken(userId: string): Promise<string | null> {
