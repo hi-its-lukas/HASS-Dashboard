@@ -1,32 +1,28 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { Lightbulb, Power, Settings, ChevronDown, ChevronRight } from 'lucide-react'
+import { Lightbulb, Power, Settings, ChevronDown, ChevronRight, Loader2 } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { useHAStore } from '@/lib/ha'
 import { useConfig } from '@/lib/config/store'
 import { cn } from '@/lib/utils'
 
-interface RoomGroup {
+interface HAArea {
+  area_id: string
   name: string
-  lights: string[]
 }
 
-function extractRoomName(entityId: string, friendlyName?: string): string {
-  if (friendlyName) {
-    const parts = friendlyName.split(' ')
-    if (parts.length > 1) {
-      return parts[0]
-    }
-  }
-  
-  const name = entityId.replace('light.', '')
-  const parts = name.split('_')
-  if (parts.length > 1) {
-    return parts[0].charAt(0).toUpperCase() + parts[0].slice(1)
-  }
-  return 'Sonstige'
+interface HAEntity {
+  entity_id: string
+  area_id?: string
+  device_id?: string
+}
+
+interface RoomGroup {
+  id: string
+  name: string
+  lights: string[]
 }
 
 export default function LightsPage() {
@@ -35,6 +31,27 @@ export default function LightsPage() {
   const callService = useHAStore((s) => s.callService)
   const [toggling, setToggling] = useState<string | null>(null)
   const [collapsedRooms, setCollapsedRooms] = useState<Record<string, boolean>>({})
+  const [areas, setAreas] = useState<HAArea[]>([])
+  const [entities, setEntities] = useState<HAEntity[]>([])
+  const [loading, setLoading] = useState(true)
+  
+  useEffect(() => {
+    async function fetchRegistries() {
+      try {
+        const res = await fetch('/api/ha/registries')
+        if (res.ok) {
+          const data = await res.json()
+          setAreas(data.areas || [])
+          setEntities(data.entities || [])
+        }
+      } catch (error) {
+        console.error('Failed to fetch registries:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchRegistries()
+  }, [])
   
   const roomLights = (config.rooms || [])
     .flatMap((r) => r.entityIds || [])
@@ -48,12 +65,15 @@ export default function LightsPage() {
   const uniqueLights = [...new Set(lightEntities)]
   
   const roomGroups = useMemo(() => {
+    const areaMap = new Map(areas.map(a => [a.area_id, a.name]))
+    const entityAreaMap = new Map(entities.map(e => [e.entity_id, e.area_id]))
+    
     const groups: Record<string, string[]> = {}
     
     uniqueLights.forEach((entityId) => {
-      const state = states[entityId]
-      const friendlyName = state?.attributes?.friendly_name as string | undefined
-      const roomName = extractRoomName(entityId, friendlyName)
+      const areaId = entityAreaMap.get(entityId)
+      const areaName = areaId ? areaMap.get(areaId) : null
+      const roomName = areaName || 'Sonstige'
       
       if (!groups[roomName]) {
         groups[roomName] = []
@@ -61,10 +81,16 @@ export default function LightsPage() {
       groups[roomName].push(entityId)
     })
     
-    return Object.entries(groups)
-      .map(([name, lights]) => ({ name, lights }))
-      .sort((a, b) => a.name.localeCompare(b.name, 'de'))
-  }, [uniqueLights, states])
+    const sortedGroups = Object.entries(groups)
+      .map(([name, lights]) => ({ id: name, name, lights }))
+      .sort((a, b) => {
+        if (a.name === 'Sonstige') return 1
+        if (b.name === 'Sonstige') return -1
+        return a.name.localeCompare(b.name, 'de')
+      })
+    
+    return sortedGroups
+  }, [uniqueLights, areas, entities])
   
   const handleToggle = async (entityId: string) => {
     const currentState = states[entityId]?.state
@@ -114,6 +140,14 @@ export default function LightsPage() {
   }
   
   const onCount = uniqueLights.filter((id) => states[id]?.state === 'on').length
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <Loader2 className="w-8 h-8 text-accent-yellow animate-spin" />
+      </div>
+    )
+  }
 
   return (
     <div className="px-4 py-6 safe-top max-w-7xl mx-auto">
@@ -170,7 +204,7 @@ export default function LightsPage() {
             
             return (
               <motion.section
-                key={room.name}
+                key={room.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: roomIndex * 0.1 }}
