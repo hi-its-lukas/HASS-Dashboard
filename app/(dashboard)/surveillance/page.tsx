@@ -1,12 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Video, User, Car } from 'lucide-react'
+import { Video, User, Car, RefreshCw } from 'lucide-react'
 import { FilterChip } from '@/components/ui/filter-chip'
 import { SurveillanceEventCard } from '@/components/cards/surveillance-event-card'
-import { useSurveillanceEvents, useSurveillanceStats } from '@/lib/ha'
 import { formatRelativeTime } from '@/lib/utils'
+import { SurveillanceEvent } from '@/lib/ha/types'
 
 type TimeFilter = '1h' | '6h' | '24h'
 type TypeFilter = 'person' | 'vehicle' | null
@@ -14,30 +14,45 @@ type TypeFilter = 'person' | 'vehicle' | null
 export default function SurveillancePage() {
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('6h')
   const [typeFilter, setTypeFilter] = useState<TypeFilter>(null)
-  
-  const events = useSurveillanceEvents()
-  const stats = useSurveillanceStats()
+  const [events, setEvents] = useState<SurveillanceEvent[]>([])
+  const [loading, setLoading] = useState(true)
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
+
+  const fetchEvents = async () => {
+    setLoading(true)
+    try {
+      const hours = timeFilter === '1h' ? 1 : timeFilter === '6h' ? 6 : 24
+      const res = await fetch(`/api/ha/frigate/events?hours=${hours}&limit=50`)
+      if (res.ok) {
+        const data = await res.json()
+        setEvents(data)
+        setLastUpdate(new Date())
+      }
+    } catch (error) {
+      console.error('Failed to fetch surveillance events:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchEvents()
+  }, [timeFilter])
 
   const filteredEvents = events.filter((event) => {
     if (typeFilter && event.type !== typeFilter) return false
-    
-    const eventTime = new Date(event.timestamp).getTime()
-    const now = Date.now()
-    const hourMs = 60 * 60 * 1000
-    
-    switch (timeFilter) {
-      case '1h': return now - eventTime < hourMs
-      case '6h': return now - eventTime < 6 * hourMs
-      case '24h': return now - eventTime < 24 * hourMs
-      default: return true
-    }
+    return true
   })
 
-  const lastUpdate = events.length > 0 ? formatRelativeTime(events[0].timestamp) : 'Unknown'
+  const stats = {
+    events: events.length,
+    people: events.filter((e) => e.type === 'person').length,
+    vehicles: events.filter((e) => e.type === 'vehicle').length,
+    ai: events.filter((e) => e.confidence > 80).length,
+  }
 
   return (
     <div className="px-4 py-6 safe-top max-w-7xl mx-auto">
-      {/* Header */}
       <motion.header
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -46,17 +61,23 @@ export default function SurveillancePage() {
         <div className="w-10 h-10 rounded-full bg-accent-cyan/20 flex items-center justify-center">
           <Video className="w-5 h-5 text-accent-cyan" />
         </div>
-        <div>
+        <div className="flex-1">
           <h1 className="text-2xl font-bold text-white">AI Surveillance</h1>
-          <p className="text-xs text-accent-orange">LAST UPDATE {lastUpdate.toUpperCase()}</p>
+          <p className="text-xs text-accent-orange">
+            {lastUpdate ? `LAST UPDATE ${formatRelativeTime(lastUpdate.toISOString()).toUpperCase()}` : 'LOADING...'}
+          </p>
         </div>
+        <button
+          onClick={fetchEvents}
+          disabled={loading}
+          className="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors disabled:opacity-50"
+        >
+          <RefreshCw className={`w-5 h-5 text-white ${loading ? 'animate-spin' : ''}`} />
+        </button>
       </motion.header>
 
-      {/* Desktop: Two column layout */}
       <div className="lg:grid lg:grid-cols-3 lg:gap-6">
-        {/* Left column - Stats and filters */}
         <div className="lg:col-span-1">
-          {/* Stats */}
           <motion.section
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -81,7 +102,6 @@ export default function SurveillancePage() {
             </div>
           </motion.section>
 
-          {/* Filters */}
           <motion.section
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -119,7 +139,6 @@ export default function SurveillancePage() {
           </motion.section>
         </div>
 
-        {/* Right column - Event list */}
         <div className="lg:col-span-2">
           <motion.section
             initial={{ opacity: 0, y: 20 }}
@@ -127,13 +146,18 @@ export default function SurveillancePage() {
             transition={{ delay: 0.3 }}
             className="space-y-3"
           >
-            {filteredEvents.map((event) => (
-              <SurveillanceEventCard key={event.id} event={event} />
-            ))}
-            {filteredEvents.length === 0 && (
+            {loading && events.length === 0 ? (
+              <div className="text-center py-12 text-text-muted">
+                Loading events...
+              </div>
+            ) : filteredEvents.length === 0 ? (
               <div className="text-center py-12 text-text-muted">
                 No events found for the selected filters
               </div>
+            ) : (
+              filteredEvents.map((event) => (
+                <SurveillanceEventCard key={event.id} event={event} />
+              ))
             )}
           </motion.section>
         </div>

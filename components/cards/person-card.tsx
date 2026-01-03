@@ -12,6 +12,19 @@ interface PersonCardProps {
   person: PersonConfig
 }
 
+function findSensorByPattern(states: Record<string, unknown>, patterns: string[]): string | null {
+  for (const pattern of patterns) {
+    const entityId = Object.keys(states).find((id) => 
+      id.toLowerCase().includes(pattern.toLowerCase())
+    )
+    if (entityId) {
+      const state = states[entityId] as { state?: string }
+      return state?.state || null
+    }
+  }
+  return null
+}
+
 export function PersonCard({ person }: PersonCardProps) {
   const states = useHAStore((s) => s.states)
   
@@ -19,12 +32,57 @@ export function PersonCard({ person }: PersonCardProps) {
   const isHome = personState?.state === 'home'
   
   const displayName = (personState?.attributes?.friendly_name as string) || person.name
+  const personName = person.name.toLowerCase().replace(/\s+/g, '_')
   
-  const battery = person.batteryEntityId ? parseInt(states[person.batteryEntityId]?.state || '0') : null
-  const steps = person.stepsEntityId ? parseInt(states[person.stepsEntityId]?.state || '0') : null
-  const distance = person.distanceEntityId ? states[person.distanceEntityId]?.state : null
-  const floors = person.floorsEntityId ? parseInt(states[person.floorsEntityId]?.state || '0') : null
-  const activity = person.activityEntityId ? states[person.activityEntityId]?.state : null
+  let battery: number | null = null
+  let steps: number | null = null
+  let distance: string | null = null
+  let floors: number | null = null
+  let activity: string | null = null
+  
+  if (person.batteryEntityId) {
+    battery = parseInt(states[person.batteryEntityId]?.state || '0')
+  } else {
+    const batteryValue = findSensorByPattern(states, [
+      `sensor.${personName}_battery`,
+      `sensor.${personName}_phone_battery`,
+    ])
+    if (batteryValue) battery = parseInt(batteryValue)
+  }
+  
+  if (person.stepsEntityId) {
+    steps = parseInt(states[person.stepsEntityId]?.state || '0')
+  } else {
+    const stepsValue = findSensorByPattern(states, [
+      `sensor.${personName}_steps`,
+      `sensor.${personName}_daily_steps`,
+    ])
+    if (stepsValue) steps = parseInt(stepsValue)
+  }
+  
+  if (person.distanceEntityId) {
+    distance = states[person.distanceEntityId]?.state as string
+  } else {
+    const distValue = findSensorByPattern(states, [
+      `sensor.${personName}_distance`,
+      `sensor.${personName}_daily_distance`,
+    ])
+    if (distValue) distance = distValue
+  }
+  
+  if (person.floorsEntityId) {
+    floors = parseInt(states[person.floorsEntityId]?.state || '0')
+  }
+  
+  if (person.activityEntityId) {
+    activity = states[person.activityEntityId]?.state as string
+  } else {
+    const activityValue = findSensorByPattern(states, [
+      `sensor.${personName}_activity`,
+      `sensor.${personName}_activity_type`,
+    ])
+    if (activityValue) activity = activityValue
+  }
 
   return (
     <Card className="p-4">
