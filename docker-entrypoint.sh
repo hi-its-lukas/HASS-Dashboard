@@ -58,7 +58,7 @@ setup_encryption_key() {
 
 init_database() {
   log_info "Ensuring database schema at $DB_FILE"
-  npx prisma db push --skip-generate --accept-data-loss 2>&1 || log_warn "Database schema sync had warnings"
+  npx prisma db push --accept-data-loss 2>&1 || log_warn "Database schema sync had warnings"
   log_info "Database ready"
 }
 
