@@ -1,19 +1,63 @@
 import { randomBytes, createCipheriv, createDecipheriv } from 'crypto'
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs'
+import { join, dirname } from 'path'
 
 const ALGORITHM = 'aes-256-gcm'
 const IV_LENGTH = 12
 const AUTH_TAG_LENGTH = 16
 
+const KEY_FILE_PATH = '/data/.encryption_key'
+const DEV_KEY_FILE_PATH = join(process.cwd(), 'data', '.encryption_key')
+
+let cachedKey: Buffer | null = null
+
+function getKeyFilePath(): string {
+  if (existsSync('/data')) {
+    return KEY_FILE_PATH
+  }
+  return DEV_KEY_FILE_PATH
+}
+
+function ensureKeyFileExists(): void {
+  const keyPath = getKeyFilePath()
+  const keyDir = dirname(keyPath)
+  
+  if (!existsSync(keyDir)) {
+    mkdirSync(keyDir, { recursive: true })
+  }
+  
+  if (!existsSync(keyPath)) {
+    const newKey = randomBytes(32).toString('hex')
+    writeFileSync(keyPath, newKey, { mode: 0o600 })
+    console.log('[Encryption] Generated new encryption key at:', keyPath)
+  }
+}
+
 function getEncryptionKey(): Buffer {
-  const key = process.env.ENCRYPTION_KEY
-  if (!key) {
-    throw new Error('ENCRYPTION_KEY environment variable is required')
+  if (cachedKey) {
+    return cachedKey
   }
-  const keyBuffer = Buffer.from(key, 'hex')
+
+  const envKey = process.env.ENCRYPTION_KEY
+  if (envKey) {
+    const keyBuffer = Buffer.from(envKey, 'hex')
+    if (keyBuffer.length === 32) {
+      cachedKey = keyBuffer
+      return cachedKey
+    }
+  }
+
+  ensureKeyFileExists()
+  const keyPath = getKeyFilePath()
+  const fileKey = readFileSync(keyPath, 'utf8').trim()
+  
+  const keyBuffer = Buffer.from(fileKey, 'hex')
   if (keyBuffer.length !== 32) {
-    throw new Error('ENCRYPTION_KEY must be 32 bytes (64 hex characters)')
+    throw new Error('Encryption key must be 32 bytes (64 hex characters)')
   }
-  return keyBuffer
+  
+  cachedKey = keyBuffer
+  return cachedKey
 }
 
 export interface EncryptedData {

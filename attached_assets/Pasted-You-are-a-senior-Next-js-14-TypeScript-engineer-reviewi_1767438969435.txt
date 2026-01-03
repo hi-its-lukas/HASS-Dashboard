@@ -1,0 +1,88 @@
+You are a senior Next.js 14 + TypeScript engineer reviewing a production
+dashboard application.
+
+GOAL
+The application must run in Docker with:
+- NO required `.env` or `.env.local` file
+- NO mandatory runtime environment variables
+- All required secrets and configuration must be generated, derived, or persisted automatically
+
+Currently, parts of the codebase still implicitly depend on `process.env.*`.
+Your task is to audit and correct the code so that it is truly env-free.
+
+CORE REQUIREMENTS
+
+1) Environment Variables
+- The application MUST NOT require `.env` or `.env.local` to start.
+- `process.env.*` must not be required for:
+  - encryption keys
+  - base URL / OAuth redirect URL
+  - Home Assistant configuration
+- Optional env vars (e.g. for optional HTTPS/Caddy profiles) are allowed,
+  but the app must fully function without them.
+
+2) Encryption Key Handling
+- On first startup:
+  - generate a secure random encryption key (32 bytes)
+  - store it persistently at `/data/.encryption_key`
+- On subsequent startups:
+  - load the existing key from `/data/.encryption_key`
+- If both ENV and file exist, prefer the file.
+- NEVER crash if ENV is missing.
+
+3) Base URL / OAuth Redirect
+- Remove hard dependency on `APP_BASE_URL` or `NEXT_PUBLIC_APP_URL`.
+- Derive base URL dynamically from the incoming request:
+  - protocol (x-forwarded-proto / cf-visitor / request.url)
+  - host (host / x-forwarded-host)
+- This must work correctly:
+  - internally (LAN)
+  - externally (Cloudflare Tunnel)
+  - with split DNS
+- OAuth redirect URLs must be generated dynamically per request.
+
+4) Docker & Compose
+- `docker compose up -d --build` must succeed with ZERO env variables set.
+- `docker-compose.yml` must not require ENCRYPTION_KEY or APP_BASE_URL.
+- Data persistence must be handled via mounted `/data` volume.
+
+5) Code Audit
+- Search the entire repository for:
+  - `process.env`
+  - implicit env assumptions
+- For each occurrence:
+  - confirm it is optional OR
+  - refactor to env-free logic
+- Do NOT introduce `any`, `@ts-ignore`, or disable type checks.
+
+6) File Freshness / Timestamps
+- Add a visible "last modified" indicator for each file:
+  - Option A (preferred): add a comment header like:
+    // Last modified: YYYY-MM-DD HH:MM
+  - Option B: add a generated `BUILD_METADATA.json` that lists:
+    file path → last modified timestamp
+- The solution must be deterministic and reproducible.
+- Do NOT rely on Git history alone.
+
+7) Documentation
+- Update README:
+  - explicitly state: "No .env required"
+  - describe how encryption keys and base URLs are handled
+  - explain `/data` persistence
+- Add a short "First start" explanation.
+
+CONSTRAINTS
+- No breaking changes to runtime behavior.
+- No hardcoded domains or secrets.
+- No assumption about Cloudflare vs LAN – must work with both.
+- Keep changes minimal but correct.
+
+DELIVERABLES
+- Updated code implementing env-free startup.
+- Summary of changes:
+  - which env dependencies were removed
+  - where keys/base URLs are now handled
+- Confirmation that:
+  - `npm run build` passes
+  - `docker compose up -d --build` passes
+  - App runs without any env file present

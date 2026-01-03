@@ -301,7 +301,7 @@ async function refreshAccessToken(userId: string, tokenRecord: TokenRecordForRef
 }
 
 function getBaseUrl(): string {
-  return process.env.APP_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:5000'
+  return 'http://localhost:5000'
 }
 
 function getClientId(): string {
@@ -314,6 +314,28 @@ function getRedirectUri(): string {
 
 export function getAppBaseUrl(): string {
   return getBaseUrl()
+}
+
+export function deriveBaseUrlFromRequest(request: Request): string {
+  const url = new URL(request.url)
+  
+  const forwardedProto = request.headers.get('x-forwarded-proto')
+  const cfVisitor = request.headers.get('cf-visitor')
+  let protocol = forwardedProto || url.protocol.replace(':', '')
+  
+  if (cfVisitor) {
+    try {
+      const visitor = JSON.parse(cfVisitor)
+      if (visitor.scheme) {
+        protocol = visitor.scheme
+      }
+    } catch {}
+  }
+  
+  const forwardedHost = request.headers.get('x-forwarded-host')
+  const host = forwardedHost || request.headers.get('host') || url.host
+  
+  return `${protocol}://${host}`
 }
 
 function getDefaultLayoutConfig() {
