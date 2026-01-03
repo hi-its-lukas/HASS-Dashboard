@@ -1,33 +1,43 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { Blinds, ChevronUp, ChevronDown, Square, Settings, ChevronRight, Loader2 } from 'lucide-react'
+import { Blinds, ChevronUp, ChevronDown, Square, Settings, ChevronRight } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { useHAStore } from '@/lib/ha'
 import { useConfig } from '@/lib/config/store'
 import { cn } from '@/lib/utils'
 
-interface HAArea {
-  area_id: string
-  name: string
-}
-
-interface HAEntity {
-  entity_id: string
-  area_id?: string
-  device_id?: string
-}
-
-interface HADevice {
-  id: string
-  area_id?: string
-}
-
 interface RoomGroup {
   id: string
   name: string
   covers: string[]
+}
+
+function extractRoomFromEntity(entityId: string, friendlyName?: string): string {
+  if (friendlyName) {
+    const parts = friendlyName.split(' ')
+    if (parts.length >= 2) {
+      const roomWords: string[] = []
+      for (const word of parts) {
+        const lower = word.toLowerCase()
+        if (['rollo', 'rollladen', 'jalousie', 'cover', 'blind', 'shutter', 'links', 'rechts', 'oben', 'unten', 'fenster', 'tür'].some(kw => lower.includes(kw))) {
+          continue
+        }
+        roomWords.push(word)
+      }
+      if (roomWords.length > 0) {
+        return roomWords.slice(0, 2).join(' ')
+      }
+    }
+  }
+  
+  const name = entityId.replace('cover.', '')
+  const parts = name.split('_')
+  if (parts.length >= 1) {
+    return parts[0].charAt(0).toUpperCase() + parts[0].slice(1)
+  }
+  return 'Sonstige'
 }
 
 export default function CoversPage() {
@@ -36,29 +46,6 @@ export default function CoversPage() {
   const callService = useHAStore((s) => s.callService)
   const [activeAction, setActiveAction] = useState<string | null>(null)
   const [collapsedRooms, setCollapsedRooms] = useState<Record<string, boolean>>({})
-  const [areas, setAreas] = useState<HAArea[]>([])
-  const [entities, setEntities] = useState<HAEntity[]>([])
-  const [devices, setDevices] = useState<HADevice[]>([])
-  const [loading, setLoading] = useState(true)
-  
-  useEffect(() => {
-    async function fetchRegistries() {
-      try {
-        const res = await fetch('/api/ha/registries')
-        if (res.ok) {
-          const data = await res.json()
-          setAreas(data.areas || [])
-          setEntities(data.entities || [])
-          setDevices(data.devices || [])
-        }
-      } catch (error) {
-        console.error('Failed to fetch registries:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchRegistries()
-  }, [])
   
   const roomCovers = (config.rooms || [])
     .flatMap((r) => r.entityIds || [])
@@ -72,24 +59,12 @@ export default function CoversPage() {
   const uniqueCovers = [...new Set(coverEntities)]
   
   const roomGroups = useMemo(() => {
-    const areaMap = new Map(areas.map(a => [a.area_id, a.name]))
-    const deviceAreaMap = new Map(devices.map(d => [d.id, d.area_id]))
-    const entityAreaMap = new Map<string, string | undefined>()
-    
-    entities.forEach(e => {
-      let areaId = e.area_id
-      if (!areaId && e.device_id) {
-        areaId = deviceAreaMap.get(e.device_id)
-      }
-      entityAreaMap.set(e.entity_id, areaId)
-    })
-    
     const groups: Record<string, string[]> = {}
     
     uniqueCovers.forEach((entityId) => {
-      const areaId = entityAreaMap.get(entityId)
-      const areaName = areaId ? areaMap.get(areaId) : null
-      const roomName = areaName || 'Sonstige'
+      const state = states[entityId]
+      const friendlyName = state?.attributes?.friendly_name as string | undefined
+      const roomName = extractRoomFromEntity(entityId, friendlyName)
       
       if (!groups[roomName]) {
         groups[roomName] = []
@@ -106,7 +81,7 @@ export default function CoversPage() {
       })
     
     return sortedGroups
-  }, [uniqueCovers, areas, entities, devices])
+  }, [uniqueCovers, states])
   
   const handleAction = async (entityId: string, action: 'open' | 'close' | 'stop') => {
     setActiveAction(`${entityId}_${action}`)
@@ -150,14 +125,6 @@ export default function CoversPage() {
       ...prev,
       [roomName]: !prev[roomName]
     }))
-  }
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <Loader2 className="w-8 h-8 text-accent-purple animate-spin" />
-      </div>
-    )
   }
 
   return (

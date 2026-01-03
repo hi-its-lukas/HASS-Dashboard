@@ -1,28 +1,12 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { Lightbulb, Power, Settings, ChevronDown, ChevronRight, Loader2, Palette } from 'lucide-react'
+import { Lightbulb, Power, Settings, ChevronDown, ChevronRight, Palette } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { useHAStore } from '@/lib/ha'
 import { useConfig } from '@/lib/config/store'
 import { cn } from '@/lib/utils'
-
-interface HAArea {
-  area_id: string
-  name: string
-}
-
-interface HAEntity {
-  entity_id: string
-  area_id?: string
-  device_id?: string
-}
-
-interface HADevice {
-  id: string
-  area_id?: string
-}
 
 interface RoomGroup {
   id: string
@@ -44,36 +28,39 @@ const COLOR_PRESETS = [
   { name: 'Pink', rgb: [255, 0, 128] },
 ]
 
+function extractRoomFromEntity(entityId: string, friendlyName?: string): string {
+  if (friendlyName) {
+    const parts = friendlyName.split(' ')
+    if (parts.length >= 2) {
+      const roomWords: string[] = []
+      for (const word of parts) {
+        const lower = word.toLowerCase()
+        if (['licht', 'lampe', 'decke', 'wand', 'steh', 'hänge', 'led', 'spot', 'stripe', 'links', 'rechts', 'oben', 'unten', 'haupt', 'neben', 'indirekt', 'ventilator', 'spiegel'].some(kw => lower.includes(kw))) {
+          continue
+        }
+        roomWords.push(word)
+      }
+      if (roomWords.length > 0) {
+        return roomWords.slice(0, 2).join(' ')
+      }
+    }
+  }
+  
+  const name = entityId.replace('light.', '')
+  const parts = name.split('_')
+  if (parts.length >= 1) {
+    return parts[0].charAt(0).toUpperCase() + parts[0].slice(1)
+  }
+  return 'Sonstige'
+}
+
 export default function LightsPage() {
   const config = useConfig()
   const states = useHAStore((s) => s.states)
   const callService = useHAStore((s) => s.callService)
   const [toggling, setToggling] = useState<string | null>(null)
   const [collapsedRooms, setCollapsedRooms] = useState<Record<string, boolean>>({})
-  const [areas, setAreas] = useState<HAArea[]>([])
-  const [entities, setEntities] = useState<HAEntity[]>([])
-  const [devices, setDevices] = useState<HADevice[]>([])
-  const [loading, setLoading] = useState(true)
   const [colorPickerOpen, setColorPickerOpen] = useState<string | null>(null)
-  
-  useEffect(() => {
-    async function fetchRegistries() {
-      try {
-        const res = await fetch('/api/ha/registries')
-        if (res.ok) {
-          const data = await res.json()
-          setAreas(data.areas || [])
-          setEntities(data.entities || [])
-          setDevices(data.devices || [])
-        }
-      } catch (error) {
-        console.error('Failed to fetch registries:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchRegistries()
-  }, [])
   
   const roomLights = (config.rooms || [])
     .flatMap((r) => r.entityIds || [])
@@ -87,24 +74,12 @@ export default function LightsPage() {
   const uniqueLights = [...new Set(lightEntities)]
   
   const roomGroups = useMemo(() => {
-    const areaMap = new Map(areas.map(a => [a.area_id, a.name]))
-    const entityAreaMap = new Map<string, string | undefined>()
-    const deviceAreaMap = new Map(devices.map(d => [d.id, d.area_id]))
-    
-    entities.forEach(e => {
-      let areaId = e.area_id
-      if (!areaId && e.device_id) {
-        areaId = deviceAreaMap.get(e.device_id)
-      }
-      entityAreaMap.set(e.entity_id, areaId)
-    })
-    
     const groups: Record<string, string[]> = {}
     
     uniqueLights.forEach((entityId) => {
-      const areaId = entityAreaMap.get(entityId)
-      const areaName = areaId ? areaMap.get(areaId) : null
-      const roomName = areaName || 'Sonstige'
+      const state = states[entityId]
+      const friendlyName = state?.attributes?.friendly_name as string | undefined
+      const roomName = extractRoomFromEntity(entityId, friendlyName)
       
       if (!groups[roomName]) {
         groups[roomName] = []
@@ -121,7 +96,7 @@ export default function LightsPage() {
       })
     
     return sortedGroups
-  }, [uniqueLights, areas, entities, devices])
+  }, [uniqueLights, states])
   
   const handleToggle = async (entityId: string) => {
     const currentState = states[entityId]?.state
@@ -215,14 +190,6 @@ export default function LightsPage() {
   }
   
   const onCount = uniqueLights.filter((id) => states[id]?.state === 'on').length
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <Loader2 className="w-8 h-8 text-accent-yellow animate-spin" />
-      </div>
-    )
-  }
 
   return (
     <div className="px-4 py-6 safe-top max-w-7xl mx-auto">
