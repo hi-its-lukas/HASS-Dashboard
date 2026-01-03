@@ -64,13 +64,15 @@ Preferred communication style: Simple, everyday language.
 - REST API for entity states and service calls
 - WebSocket API for real-time state subscriptions
 
-### Environment Variables Required
-- `ENCRYPTION_KEY`: 32-byte hex key for token encryption (server-only)
-- `NEXT_PUBLIC_APP_URL`: Application URL for OAuth redirects
-- `DATABASE_URL`: Prisma database connection (defaults to SQLite file)
+### Environment Variables
+All environment variables are optional - the app auto-configures:
+- `ENCRYPTION_KEY`: Auto-generated if not set (stored in `/data/.encryption_key`)
+- `DATABASE_URL`: Defaults to `file:/data/ha-dashboard.db`
 
-### Optional Services
-- **Caddy**: Reverse proxy for HTTPS with automatic Let's Encrypt certificates (via Docker Compose `--profile https`)
+### HTTPS
+- HTTPS is handled externally by **Cloudflare Tunnel**
+- No Let's Encrypt / ACME - TLS terminates at Cloudflare
+- App runs on HTTP internally (port 3000)
 
 ### Build & Deployment
 - Docker Compose for containerized deployment

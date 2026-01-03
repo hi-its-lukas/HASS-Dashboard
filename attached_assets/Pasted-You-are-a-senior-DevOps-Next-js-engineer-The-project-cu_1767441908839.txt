@@ -1,0 +1,71 @@
+You are a senior DevOps + Next.js engineer.
+
+The project currently includes optional HTTPS support via Caddy + Let’s Encrypt
+(ACME http-01 / tls-alpn-01 challenges, DOMAIN / ACME_EMAIL env vars, setup script).
+
+We are switching to Cloudflare Tunnel for ALL external HTTPS.
+Therefore:
+- TLS is terminated by Cloudflare
+- No inbound ports 80/443 are reachable
+- Let’s Encrypt / ACME MUST be fully removed
+
+TASKS
+
+1) Remove Let's Encrypt / ACME completely
+- Remove any Caddy configuration that:
+  - enables automatic HTTPS
+  - uses ACME (http-01, tls-alpn-01)
+  - references ACME_EMAIL or DOMAIN
+- Ensure Caddy does NOT attempt to obtain certificates.
+
+2) Simplify Caddy to reverse proxy only (optional)
+- Caddy should function only as:
+  - optional internal reverse proxy
+  - optional HTTP → app proxy
+- No TLS requirements inside the container.
+- It must work behind Cloudflare Tunnel over plain HTTP.
+
+3) Remove setup logic related to certificates
+- Delete or update any setup scripts that:
+  - generate `.env` for DOMAIN / ACME_EMAIL
+  - mention Let's Encrypt
+  - instruct opening ports 80/443
+- Remove these references from README and documentation.
+
+4) Docker Compose cleanup
+- Remove HTTPS / ACME profiles from docker-compose.yml.
+- Ensure `docker compose up -d --build` works with:
+  - NO DOMAIN env var
+  - NO ACME_EMAIL env var
+- Ensure no container crashes when env vars are missing.
+
+5) Cloudflare Tunnel compatibility
+- Ensure the app can be accessed via:
+  Cloudflare Tunnel → http://localhost:3000
+  OR
+  Cloudflare Tunnel → http://localhost:80 (if Caddy is kept)
+- OAuth redirects must continue to work correctly
+  (base URL derived dynamically from request headers).
+
+6) Documentation update
+- Update README:
+  - Clearly state: "HTTPS is handled by Cloudflare Tunnel"
+  - Remove all references to Let's Encrypt and ACME
+  - Document recommended Cloudflare Tunnel setup
+- Add a short section:
+  "Why Let's Encrypt is intentionally not used in this setup"
+
+CONSTRAINTS
+- Do NOT introduce breaking changes to app behavior.
+- Do NOT add new infrastructure dependencies.
+- Keep changes minimal but correct.
+- Do NOT leave dead code or unused configuration behind.
+
+DELIVERABLES
+- Cleaned-up Caddyfile (or confirmation it was removed entirely).
+- Cleaned-up docker-compose.yml.
+- Removed/updated setup scripts.
+- Updated README.
+- Confirmation that:
+  - `docker compose up -d --build` works
+  - App runs correctly behind Cloudflare Tunnel without any cert logic

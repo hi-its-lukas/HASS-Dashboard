@@ -29,36 +29,35 @@ A modern, mobile-first Progressive Web App (PWA) interface for Home Assistant, f
 - **Charts**: Recharts
 - **Icons**: Lucide React
 - **PWA**: next-pwa
-- **Reverse Proxy**: Caddy (optional, for HTTPS)
 
 ## Setup
 
-**HTTPS is always enabled** with automatic Let's Encrypt certificates via Caddy.
+**Zero configuration required!** HTTPS is handled by Cloudflare Tunnel.
 
-### Interactive Setup
-
-Run the setup script - it asks for domain and email:
+### Quick Start
 
 ```bash
-chmod +x setup.sh
+# Clone repository
+git clone https://github.com/yourusername/ha-dashboard.git
+cd ha-dashboard
+
+# Run setup (checks Docker)
 ./setup.sh
+
+# Start
+docker compose up -d --build
 ```
 
-### Manual Setup
+The app runs on `http://localhost:3000` - expose it via Cloudflare Tunnel.
 
-Or create `.env` manually:
+### Auto-Configuration
 
-```env
-DOMAIN=dashboard.yourdomain.com
-ACME_EMAIL=your@email.com
-```
+Everything is configured automatically:
+- Encryption keys are generated on first start
+- SQLite database is created in `./data/`
+- OAuth URLs are derived from request headers
 
-Everything else is auto-configured:
-- Encryption keys are generated automatically
-- SQLite database is created automatically
-- SSL certificates are obtained from Let's Encrypt
-
-### Optional
+### Optional Overrides
 
 | Variable | Description |
 |----------|-------------|
@@ -66,43 +65,73 @@ Everything else is auto-configured:
 
 **Important**: User-specific settings (Home Assistant URL, entity mappings) are configured in the Settings UI after login - NOT in environment files.
 
-## Quick Start with Docker
+## Cloudflare Tunnel Setup
 
-```bash
-# Clone repository
-git clone https://github.com/yourusername/ha-dashboard.git
-cd ha-dashboard
+HTTPS is handled externally by Cloudflare Tunnel. No ports need to be opened.
 
-# Run interactive setup
-./setup.sh
+### Why Cloudflare Tunnel?
 
-# Start
-docker compose up -d --build
-```
-
-Access the dashboard at `https://yourdomain.com`
-
-## Network Setup for External Access
-
-To access the dashboard from both inside your home network and externally (e.g., mobile), use **Split-Horizon DNS**:
-
-### Why Split DNS?
-
-OAuth requires the same callback URL everywhere. If you use `192.168.x.x` at home but `dashboard.yourdomain.com` remotely, login will fail.
+- **No open ports** - No port forwarding needed
+- **Automatic HTTPS** - Cloudflare handles TLS
+- **Works behind CGNAT** - No public IP required
+- **DDoS protection** - Built into Cloudflare
 
 ### Setup
 
-1. **Public DNS**: Point `dashboard.yourdomain.com` to your external IP (or use DynDNS)
+1. **Install cloudflared** on your server:
+   ```bash
+   # Raspberry Pi / Debian
+   curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-arm64.deb -o cloudflared.deb
+   sudo dpkg -i cloudflared.deb
+   ```
 
-2. **Router/Local DNS**: Add a local override:
-   - `dashboard.yourdomain.com` -> `192.168.x.x` (your server's local IP)
-   - This can be done in your router settings, Pi-hole, or AdGuard Home
+2. **Login to Cloudflare**:
+   ```bash
+   cloudflared tunnel login
+   ```
 
-3. **Port Forwarding**: Forward ports 80 and 443 to your Caddy container
+3. **Create a tunnel**:
+   ```bash
+   cloudflared tunnel create ha-dashboard
+   ```
 
-4. **Firewall**: Ensure ports are open on your server
+4. **Configure the tunnel** (`~/.cloudflared/config.yml`):
+   ```yaml
+   tunnel: ha-dashboard
+   credentials-file: /home/pi/.cloudflared/<tunnel-id>.json
 
-Now both internal and external clients will use the same URL, and OAuth will work everywhere.
+   ingress:
+     - hostname: dashboard.yourdomain.com
+       service: http://localhost:3000
+     - service: http_status:404
+   ```
+
+5. **Add DNS record**:
+   ```bash
+   cloudflared tunnel route dns ha-dashboard dashboard.yourdomain.com
+   ```
+
+6. **Run as service**:
+   ```bash
+   sudo cloudflared service install
+   sudo systemctl start cloudflared
+   ```
+
+### Split-DNS for Local Access
+
+To access the dashboard locally without going through Cloudflare:
+
+1. **Local DNS override** (Pi-hole/AdGuard/Router):
+   - `dashboard.yourdomain.com` → `192.168.x.x` (local IP)
+
+2. This ensures OAuth works from both internal and external networks.
+
+### Why Not Let's Encrypt?
+
+This project intentionally does not use Let's Encrypt because:
+- Cloudflare Tunnel provides HTTPS without opening ports
+- No need for ACME challenges (http-01/tls-alpn-01)
+- Simpler setup with no certificate renewal
 
 ## Manual Installation (without Docker)
 

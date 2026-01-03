@@ -5,40 +5,11 @@ services:
       dockerfile: Dockerfile
     container_name: ha-dashboard
     restart: unless-stopped
-    expose:
-      - "3000"
+    ports:
+      - "3000:3000"
     environment:
       - NODE_ENV=production
       - ENCRYPTION_KEY=${ENCRYPTION_KEY:-}
       - DATABASE_URL=${DATABASE_URL:-file:/data/ha-dashboard.db}
     volumes:
       - ./data:/data
-    networks:
-      - ha-network
-
-  caddy:
-    image: caddy:2-alpine
-    container_name: ha-dashboard-caddy
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    environment:
-      - DOMAIN=${DOMAIN:?DOMAIN is required - run ./setup.sh}
-      - EMAIL=${ACME_EMAIL:?ACME_EMAIL is required - run ./setup.sh}
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
-    depends_on:
-      - ha-dashboard
-    networks:
-      - ha-network
-
-networks:
-  ha-network:
-    driver: bridge
-
-volumes:
-  caddy_data:
-  caddy_config:
