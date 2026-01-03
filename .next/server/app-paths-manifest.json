@@ -1,22 +1,8 @@
 {
-  "/_not-found/page": "app/_not-found/page.js",
-  "/api/auth/callback/route": "app/api/auth/callback/route.js",
-  "/api/auth/login/route": "app/api/auth/login/route.js",
-  "/api/ha/call-service/route": "app/api/ha/call-service/route.js",
-  "/api/auth/logout/route": "app/api/auth/logout/route.js",
-  "/api/ha/token/route": "app/api/ha/token/route.js",
-  "/calendar/page": "app/calendar/page.js",
-  "/cams/page": "app/cams/page.js",
-  "/energy/page": "app/energy/page.js",
-  "/login/page": "app/login/page.js",
-  "/family/page": "app/family/page.js",
   "/page": "app/page.js",
-  "/secure/page": "app/secure/page.js",
-  "/more/page": "app/more/page.js",
+  "/login/page": "app/login/page.js",
   "/settings/page": "app/settings/page.js",
   "/api/me/route": "app/api/me/route.js",
-  "/api/settings/route": "app/api/settings/route.js",
-  "/api/ha/registries/route": "app/api/ha/registries/route.js",
-  "/api/ha/states/route": "app/api/ha/states/route.js",
-  "/api/status/route": "app/api/status/route.js"
+  "/api/status/route": "app/api/status/route.js",
+  "/api/settings/route": "app/api/settings/route.js"
 }

@@ -117,8 +117,8 @@ export async function handleOAuthCallback(code: string, state: string): Promise<
       })
     }
     
-    const { ciphertext: accessTokenEnc, nonce: tokenNonce } = encrypt(tokenResponse.access_token)
-    const refreshTokenData = tokenResponse.refresh_token ? encrypt(tokenResponse.refresh_token) : null
+    const accessTokenEncrypted = encrypt(tokenResponse.access_token)
+    const refreshTokenEncrypted = tokenResponse.refresh_token ? encrypt(tokenResponse.refresh_token) : null
     
     await prisma.oAuthToken.upsert({
       where: {
@@ -130,15 +130,17 @@ export async function handleOAuthCallback(code: string, state: string): Promise<
       create: {
         userId: user.id,
         provider: 'home_assistant',
-        accessTokenEnc,
-        refreshTokenEnc: refreshTokenData?.ciphertext ?? null,
-        tokenNonce,
+        accessTokenEnc: accessTokenEncrypted.ciphertext,
+        accessTokenNonce: accessTokenEncrypted.nonce,
+        refreshTokenEnc: refreshTokenEncrypted?.ciphertext ?? null,
+        refreshTokenNonce: refreshTokenEncrypted?.nonce ?? null,
         expiresAt: new Date(Date.now() + tokenResponse.expires_in * 1000)
       },
       update: {
-        accessTokenEnc,
-        refreshTokenEnc: refreshTokenData?.ciphertext ?? null,
-        tokenNonce,
+        accessTokenEnc: accessTokenEncrypted.ciphertext,
+        accessTokenNonce: accessTokenEncrypted.nonce,
+        refreshTokenEnc: refreshTokenEncrypted?.ciphertext ?? null,
+        refreshTokenNonce: refreshTokenEncrypted?.nonce ?? null,
         expiresAt: new Date(Date.now() + tokenResponse.expires_in * 1000)
       }
     })
@@ -217,7 +219,7 @@ export async function getStoredToken(userId: string): Promise<string | null> {
   if (!tokenRecord) return null
   
   if (new Date() > tokenRecord.expiresAt) {
-    if (tokenRecord.refreshTokenEnc) {
+    if (tokenRecord.refreshTokenEnc && tokenRecord.refreshTokenNonce) {
       try {
         const user = await prisma.user.findUnique({ where: { id: userId } })
         if (user?.haInstanceUrl) {
@@ -226,7 +228,7 @@ export async function getStoredToken(userId: string): Promise<string | null> {
             where: { userId_provider: { userId, provider: 'home_assistant' } }
           })
           if (refreshedToken) {
-            return decrypt(refreshedToken.accessTokenEnc, refreshedToken.tokenNonce)
+            return decrypt(refreshedToken.accessTokenEnc, refreshedToken.accessTokenNonce)
           }
         }
       } catch (error) {
@@ -237,15 +239,20 @@ export async function getStoredToken(userId: string): Promise<string | null> {
     return null
   }
   
-  return decrypt(tokenRecord.accessTokenEnc, tokenRecord.tokenNonce)
+  return decrypt(tokenRecord.accessTokenEnc, tokenRecord.accessTokenNonce)
 }
 
-async function refreshAccessToken(userId: string, tokenRecord: { refreshTokenEnc: Buffer | null; tokenNonce: Buffer }, haUrl: string): Promise<void> {
-  if (!tokenRecord.refreshTokenEnc) {
+interface TokenRecordForRefresh {
+  refreshTokenEnc: Buffer | null
+  refreshTokenNonce: Buffer | null
+}
+
+async function refreshAccessToken(userId: string, tokenRecord: TokenRecordForRefresh, haUrl: string): Promise<void> {
+  if (!tokenRecord.refreshTokenEnc || !tokenRecord.refreshTokenNonce) {
     throw new Error('No refresh token available')
   }
   
-  const refreshToken = decrypt(tokenRecord.refreshTokenEnc, tokenRecord.tokenNonce)
+  const refreshToken = decrypt(tokenRecord.refreshTokenEnc, tokenRecord.refreshTokenNonce)
   
   const tokenUrl = new URL('/auth/token', haUrl)
   const response = await fetch(tokenUrl.toString(), {
@@ -266,15 +273,16 @@ async function refreshAccessToken(userId: string, tokenRecord: { refreshTokenEnc
   
   const tokenData: TokenResponse = await response.json()
   
-  const { ciphertext: accessTokenEnc, nonce: tokenNonce } = encrypt(tokenData.access_token)
-  const refreshTokenData = tokenData.refresh_token ? encrypt(tokenData.refresh_token) : null
+  const accessTokenEncrypted = encrypt(tokenData.access_token)
+  const refreshTokenEncrypted = tokenData.refresh_token ? encrypt(tokenData.refresh_token) : null
   
   await prisma.oAuthToken.update({
     where: { userId_provider: { userId, provider: 'home_assistant' } },
     data: {
-      accessTokenEnc,
-      refreshTokenEnc: refreshTokenData?.ciphertext ?? null,
-      tokenNonce,
+      accessTokenEnc: accessTokenEncrypted.ciphertext,
+      accessTokenNonce: accessTokenEncrypted.nonce,
+      refreshTokenEnc: refreshTokenEncrypted?.ciphertext ?? null,
+      refreshTokenNonce: refreshTokenEncrypted?.nonce ?? null,
       expiresAt: new Date(Date.now() + tokenData.expires_in * 1000)
     }
   })
