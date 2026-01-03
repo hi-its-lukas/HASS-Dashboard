@@ -9,6 +9,13 @@ HA Dashboard is a modern, mobile-first Progressive Web App (PWA) for Home Assist
 Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (2026-01-03)
+- **New Lights page** (`/lights`) - Grid view of all configured lights with toggle controls and "All off" button
+- **New Covers page** (`/covers`) - Grid view of all blinds/covers with open/stop/close controls and "All open/close" buttons
+- **New Cameras page** (`/cameras`) - Grid of all camera entities with live feeds, click for fullscreen modal
+- **New Intercom pages** (`/intercom/[slug]`) - Dynamic pages for configured intercoms with camera feed, speak button, and door unlock
+- **Intercom configuration in Settings** - Add/remove intercoms with camera entity, speak URL, and lock entity
+- Updated sidebar navigation with Lights, Covers, Cameras links
+- Updated More page with quick access grid for all pages and intercoms section
 - Per-user background image upload with secure file storage in /data/backgrounds
 - Background images served via API with authentication (users can only access their own)
 - Settings page includes background upload/preview/delete UI
