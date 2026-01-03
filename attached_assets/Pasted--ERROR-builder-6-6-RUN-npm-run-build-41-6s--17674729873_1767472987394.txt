@@ -1,0 +1,57 @@
+=> ERROR [builder 6/6] RUN npm run build                                                 41.6s 
+------                                                                                          
+ > [builder 6/6] RUN npm run build:                                                             
+0.382                                                                                           
+0.382 > hass-dashboard@1.0.0 build                                                              
+0.382 > next build                                                                              
+0.382                                                                                           
+1.993   ▲ Next.js 14.2.3
+1.994   - Environments: .env
+1.995 
+2.026    Creating an optimized production build ...
+2.564 > [PWA] Compile server
+2.566 > [PWA] Compile server
+2.567 > [PWA] Compile client (static)
+2.567 > [PWA] Auto register service worker with: /app/node_modules/next-pwa/register.js
+2.568 > [PWA] Service worker: /app/public/sw.js
+2.568 > [PWA]   url: /sw.js
+2.568 > [PWA]   scope: /
+31.16  ✓ Compiled successfully
+31.16    Linting and checking validity of types ...
+41.12 Failed to compile.
+41.12 
+41.12 ./app/(dashboard)/covers/page.tsx:21:36
+41.12 Type error: Property 'covers' does not exist on type 'DashboardConfig'.
+41.12 
+41.12   19 |     .filter((id) => id.startsWith('cover.'))
+41.12   20 |   
+41.12 > 21 |   const configuredCovers = (config.covers || [])
+41.12      |                                    ^
+41.12   22 |     .map((c) => typeof c === 'string' ? c : c.entityId)
+41.12   23 |     .filter(Boolean)
+41.12   24 |   
+------
+[+] build 0/1
+ ⠙ Image hass-dashboard-app Building                                                      96.0s 
+Dockerfile:21
+
+--------------------
+
+  19 |     ENV NEXT_TELEMETRY_DISABLED=1
+
+  20 |     
+
+  21 | >>> RUN npm run build
+
+  22 |     
+
+  23 |     # Stage 3: Runner
+
+--------------------
+
+failed to solve: process "/bin/sh -c npm run build" did not complete successfully: exit code: 1
+
+WARN[0000] No services to build                         
+[+] up 2/2
+ ✔ Network hass-dashboard_default Created                                                  0.1s 
+ ✔ Container hass-dashboard       Created 

@@ -61,6 +61,16 @@ export interface IntercomConfig {
   lockEntityId?: string
 }
 
+export interface LightConfig {
+  entityId: string
+  name?: string
+}
+
+export interface CoverConfig {
+  entityId: string
+  name?: string
+}
+
 export interface DashboardConfig {
   weatherEntityId: string
   lightsGroupEntityId: string
@@ -74,6 +84,8 @@ export interface DashboardConfig {
   appliances: ApplianceConfig[]
   customButtons: CustomButtonConfig[]
   intercoms: IntercomConfig[]
+  lights: (string | LightConfig)[]
+  covers: (string | CoverConfig)[]
 }
 
 export const dashboardConfig: DashboardConfig = {
@@ -100,6 +112,8 @@ export const dashboardConfig: DashboardConfig = {
   appliances: [],
   customButtons: [],
   intercoms: [],
+  lights: [],
+  covers: [],
 }
 
 export default dashboardConfig

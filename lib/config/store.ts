@@ -162,6 +162,8 @@ function mergeWithDefaults(userConfig: UserLayoutConfig): DashboardConfig {
     appliances,
     customButtons: userConfig.customButtons || staticConfig.customButtons,
     intercoms: userConfig.intercoms || staticConfig.intercoms,
+    lights: userConfig.lights || staticConfig.lights,
+    covers: userConfig.covers || staticConfig.covers,
   }
 }
 
