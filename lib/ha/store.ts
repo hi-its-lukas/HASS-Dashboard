@@ -3,7 +3,7 @@
 
 import { create } from 'zustand'
 import { HAState, SurveillanceEvent } from './types'
-import { HAWebSocketClient } from './websocket-client'
+import { HAWebSocketClient, HAArea, HADevice, HAEntityRegistryEntry } from './websocket-client'
 import { mockStates, generatePowerTrendData, mockSurveillanceEvents, mockSurveillanceStats } from './mock-data'
 import { useConfigStore } from '@/lib/config/store'
 
@@ -23,6 +23,11 @@ interface HAStore {
   // Entity states
   states: Record<string, HAState>
 
+  // Registry data
+  areas: HAArea[]
+  devices: HADevice[]
+  entityRegistry: HAEntityRegistryEntry[]
+
   // Derived data
   powerTrend: PowerTrendPoint[]
   surveillanceEvents: SurveillanceEvent[]
@@ -39,6 +44,7 @@ interface HAStore {
   getState: (entityId: string) => HAState | undefined
   callService: (domain: string, service: string, entityId?: string, data?: Record<string, unknown>) => Promise<void>
   updateState: (entityId: string, state: HAState) => void
+  getEntityArea: (entityId: string) => string | null
 }
 
 let wsClient: HAWebSocketClient | null = null
@@ -50,6 +56,9 @@ export const useHAStore = create<HAStore>((set, get) => ({
   useMock: process.env.NEXT_PUBLIC_USE_MOCK === 'true',
 
   states: {},
+  areas: [],
+  devices: [],
+  entityRegistry: [],
   powerTrend: [],
   surveillanceEvents: [],
   surveillanceStats: { events: 0, people: 0, vehicles: 0, ai: 0 },
@@ -96,8 +105,14 @@ export const useHAStore = create<HAStore>((set, get) => ({
 
       await wsClient.connect()
 
-      // Get initial states
-      const states = await wsClient.getStates()
+      // Get initial states and registries in parallel
+      const [states, areas, devices, entityRegistry] = await Promise.all([
+        wsClient.getStates(),
+        wsClient.getAreaRegistry().catch(() => []),
+        wsClient.getDeviceRegistry().catch(() => []),
+        wsClient.getEntityRegistry().catch(() => [])
+      ])
+      
       const statesMap: Record<string, HAState> = {}
       states.forEach((s) => {
         statesMap[s.entity_id] = s
@@ -115,6 +130,9 @@ export const useHAStore = create<HAStore>((set, get) => ({
         connected: true,
         connecting: false,
         states: statesMap,
+        areas,
+        devices,
+        entityRegistry,
         powerTrend: generatePowerTrendData(),
         surveillanceEvents: mockSurveillanceEvents,
         surveillanceStats: mockSurveillanceStats,
@@ -191,6 +209,22 @@ export const useHAStore = create<HAStore>((set, get) => ({
     set((s) => ({
       states: { ...s.states, [entityId]: state },
     }))
+  },
+
+  getEntityArea: (entityId: string) => {
+    const { areas, devices, entityRegistry } = get()
+    const entity = entityRegistry.find(e => e.entity_id === entityId)
+    if (!entity) return null
+    
+    let areaId = entity.area_id
+    if (!areaId && entity.device_id) {
+      const device = devices.find(d => d.id === entity.device_id)
+      areaId = device?.area_id
+    }
+    
+    if (!areaId) return null
+    const area = areas.find(a => a.area_id === areaId)
+    return area?.name || null
   },
 }))
 

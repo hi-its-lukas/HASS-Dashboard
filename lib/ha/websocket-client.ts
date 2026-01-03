@@ -4,6 +4,30 @@ import { HAState, HAMessage, HAServiceCall, HAIncomingMessage } from './types'
 
 type StateChangeCallback = (entityId: string, newState: HAState, oldState: HAState | null) => void
 
+export interface HAArea {
+  area_id: string
+  name: string
+  picture?: string | null
+  aliases?: string[]
+}
+
+export interface HADevice {
+  id: string
+  name: string
+  area_id?: string | null
+  manufacturer?: string
+  model?: string
+}
+
+export interface HAEntityRegistryEntry {
+  entity_id: string
+  name?: string | null
+  area_id?: string | null
+  device_id?: string | null
+  platform?: string
+  disabled_by?: string | null
+}
+
 // Connection resolve/reject - für Promise<void>
 type ConnectResolve = () => void
 type ConnectReject = (reason: Error) => void
@@ -165,6 +189,18 @@ export class HAWebSocketClient {
       service_data: call.serviceData,
       target: call.target,
     })
+  }
+
+  async getAreaRegistry(): Promise<HAArea[]> {
+    return this.sendCommand<HAArea[]>({ type: 'config/area_registry/list' })
+  }
+
+  async getDeviceRegistry(): Promise<HADevice[]> {
+    return this.sendCommand<HADevice[]>({ type: 'config/device_registry/list' })
+  }
+
+  async getEntityRegistry(): Promise<HAEntityRegistryEntry[]> {
+    return this.sendCommand<HAEntityRegistryEntry[]>({ type: 'config/entity_registry/list' })
   }
 
   onStateChange(callback: StateChangeCallback) {

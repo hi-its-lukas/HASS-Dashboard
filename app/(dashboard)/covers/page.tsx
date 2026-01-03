@@ -14,36 +14,11 @@ interface RoomGroup {
   covers: string[]
 }
 
-function extractRoomFromEntity(entityId: string, friendlyName?: string): string {
-  if (friendlyName) {
-    const parts = friendlyName.split(' ')
-    if (parts.length >= 2) {
-      const roomWords: string[] = []
-      for (const word of parts) {
-        const lower = word.toLowerCase()
-        if (['rollo', 'rollladen', 'jalousie', 'cover', 'blind', 'shutter', 'links', 'rechts', 'oben', 'unten', 'fenster', 'tür'].some(kw => lower.includes(kw))) {
-          continue
-        }
-        roomWords.push(word)
-      }
-      if (roomWords.length > 0) {
-        return roomWords.slice(0, 2).join(' ')
-      }
-    }
-  }
-  
-  const name = entityId.replace('cover.', '')
-  const parts = name.split('_')
-  if (parts.length >= 1) {
-    return parts[0].charAt(0).toUpperCase() + parts[0].slice(1)
-  }
-  return 'Sonstige'
-}
-
 export default function CoversPage() {
   const config = useConfig()
   const states = useHAStore((s) => s.states)
   const callService = useHAStore((s) => s.callService)
+  const getEntityArea = useHAStore((s) => s.getEntityArea)
   const [activeAction, setActiveAction] = useState<string | null>(null)
   const [collapsedRooms, setCollapsedRooms] = useState<Record<string, boolean>>({})
   
@@ -62,14 +37,12 @@ export default function CoversPage() {
     const groups: Record<string, string[]> = {}
     
     uniqueCovers.forEach((entityId) => {
-      const state = states[entityId]
-      const friendlyName = state?.attributes?.friendly_name as string | undefined
-      const roomName = extractRoomFromEntity(entityId, friendlyName)
+      const areaName = getEntityArea(entityId) || 'Sonstige'
       
-      if (!groups[roomName]) {
-        groups[roomName] = []
+      if (!groups[areaName]) {
+        groups[areaName] = []
       }
-      groups[roomName].push(entityId)
+      groups[areaName].push(entityId)
     })
     
     const sortedGroups = Object.entries(groups)
@@ -81,7 +54,7 @@ export default function CoversPage() {
       })
     
     return sortedGroups
-  }, [uniqueCovers, states])
+  }, [uniqueCovers, getEntityArea])
   
   const handleAction = async (entityId: string, action: 'open' | 'close' | 'stop') => {
     setActiveAction(`${entityId}_${action}`)
