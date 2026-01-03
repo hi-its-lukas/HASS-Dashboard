@@ -12,6 +12,7 @@ function LoginForm() {
   const [haUrl, setHaUrl] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(errorMessage)
+  const redirectPath = searchParams.get('redirect') || '/'
   
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -22,7 +23,7 @@ function LoginForm() {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ haUrl })
+        body: JSON.stringify({ haUrl, redirect: redirectPath })
       })
       
       const data = await response.json()

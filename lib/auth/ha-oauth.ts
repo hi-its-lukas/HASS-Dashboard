@@ -25,7 +25,7 @@ function generateCodeChallenge(verifier: string): string {
   return base64UrlEncode(hash)
 }
 
-export async function initiateOAuth(haUrl: string): Promise<string> {
+export async function initiateOAuth(haUrl: string, redirectPath: string = '/'): Promise<string> {
   const state = randomBytes(32).toString('hex')
   const codeVerifier = base64UrlEncode(randomBytes(32))
   const codeChallenge = generateCodeChallenge(codeVerifier)
@@ -42,7 +42,7 @@ export async function initiateOAuth(haUrl: string): Promise<string> {
     maxAge: 600
   })
   
-  cookieStore.set(OAUTH_VERIFIER_COOKIE, JSON.stringify({ verifier: codeVerifier, haUrl: normalizedUrl }), {
+  cookieStore.set(OAUTH_VERIFIER_COOKIE, JSON.stringify({ verifier: codeVerifier, haUrl: normalizedUrl, redirectPath }), {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
@@ -64,7 +64,7 @@ export async function initiateOAuth(haUrl: string): Promise<string> {
   return authUrl.toString()
 }
 
-export async function handleOAuthCallback(code: string, state: string): Promise<{ success: boolean; error?: string }> {
+export async function handleOAuthCallback(code: string, state: string): Promise<{ success: boolean; error?: string; redirectPath?: string }> {
   const cookieStore = await cookies()
   
   const storedState = cookieStore.get(OAUTH_STATE_COOKIE)?.value
@@ -81,7 +81,7 @@ export async function handleOAuthCallback(code: string, state: string): Promise<
     return { success: false, error: 'Missing OAuth verifier' }
   }
   
-  const { verifier, haUrl } = JSON.parse(verifierData) as { verifier: string; haUrl: string }
+  const { verifier, haUrl, redirectPath = '/' } = JSON.parse(verifierData) as { verifier: string; haUrl: string; redirectPath?: string }
   
   try {
     const tokenResponse = await exchangeCodeForToken(code, verifier, haUrl)
@@ -148,7 +148,7 @@ export async function handleOAuthCallback(code: string, state: string): Promise<
     const sessionToken = await createSession(user.id)
     await setSessionCookie(sessionToken)
     
-    return { success: true }
+    return { success: true, redirectPath }
   } catch (error) {
     console.error('[OAuth] Callback error:', error)
     return { success: false, error: error instanceof Error ? error.message : 'OAuth exchange failed' }

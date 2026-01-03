@@ -22,7 +22,7 @@ import { useConfigStore } from '@/lib/config/store'
 const navItems = [
   { href: '/', icon: Home, label: 'Home' },
   { href: '/energy', icon: Zap, label: 'Energy' },
-  { href: '/cams', icon: Video, label: 'Surveillance' },
+  { href: '/surveillance', icon: Video, label: 'Surveillance' },
   { href: '/calendar', icon: Calendar, label: 'Calendar' },
   { href: '/secure', icon: Shield, label: 'Security' },
   { href: '/family', icon: Users, label: 'Family' },

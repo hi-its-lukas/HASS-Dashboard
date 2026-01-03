@@ -4,7 +4,7 @@ import { initiateOAuth } from '@/lib/auth/ha-oauth'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { haUrl } = body
+    const { haUrl, redirect } = body
     
     if (!haUrl) {
       return NextResponse.json({ error: 'Home Assistant URL is required' }, { status: 400 })
@@ -15,7 +15,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid Home Assistant URL' }, { status: 400 })
     }
     
-    const authUrl = await initiateOAuth(haUrl)
+    const redirectPath = typeof redirect === 'string' && redirect.startsWith('/') ? redirect : '/'
+    const authUrl = await initiateOAuth(haUrl, redirectPath)
     
     return NextResponse.json({ authUrl })
   } catch (error) {

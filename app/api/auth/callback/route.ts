@@ -19,7 +19,8 @@ export async function GET(request: NextRequest) {
   const result = await handleOAuthCallback(code, state)
   
   if (result.success) {
-    return NextResponse.redirect(new URL('/', request.url))
+    const redirectTo = result.redirectPath && result.redirectPath.startsWith('/') ? result.redirectPath : '/'
+    return NextResponse.redirect(new URL(redirectTo, request.url))
   } else {
     return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(result.error || 'Authentication failed')}`, request.url))
   }

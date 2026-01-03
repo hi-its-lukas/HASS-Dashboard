@@ -37,15 +37,7 @@ export default function RootLayout({
       <body className="antialiased">
         <ConfigProvider>
           <HAProvider>
-            <div className="flex min-h-screen">
-              <Sidebar />
-              <main className="flex-1 pb-20 lg:pb-6 lg:ml-64">
-                {children}
-              </main>
-            </div>
-            <div className="lg:hidden">
-              <BottomNav />
-            </div>
+            {children}
           </HAProvider>
         </ConfigProvider>
       </body>
