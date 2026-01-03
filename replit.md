@@ -14,11 +14,13 @@ Preferred communication style: Simple, everyday language.
 - Settings page includes background upload/preview/delete UI
 - Dashboard displays custom background with dark overlay for readability
 - Calendar page now uses CalendarWeek component with real HA calendar entities
-- More page buttons now call HA scripts with loading states and availability checks
+- More page buttons now configurable via Settings (select HA scripts as buttons)
 - Surveillance page fetches real Frigate events with thumbnails via proxy API
 - Family page PersonCard auto-discovers activity sensors (steps, distance, battery)
 - New API routes: /api/ha/camera/[entityId], /api/ha/frigate/events, /api/ha/frigate/thumbnail/[eventId]
 - Dashboard now displays user-configured entities instead of hardcoded examples
+- Fixed: Background URL persistence when saving settings
+- Fixed: Config store now correctly merges updates with existing values
 - Config store converts simple entity ID arrays into structured objects
 - PersonCard/ApplianceCard show Home Assistant friendly_name when available
 - Rooms are auto-grouped by light entity prefix (e.g., `light.kitchen_main` → "Kitchen")
