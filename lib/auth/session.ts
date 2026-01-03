@@ -3,7 +3,7 @@ import { randomBytes } from 'crypto'
 import prisma from '@/lib/db/client'
 
 const SESSION_COOKIE_NAME = 'ha_session'
-const SESSION_DURATION_DAYS = 30
+const SESSION_DURATION_DAYS = 365
 
 export async function createSession(userId: string): Promise<string> {
   const token = randomBytes(32).toString('hex')
