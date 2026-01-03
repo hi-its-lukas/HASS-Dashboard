@@ -61,10 +61,12 @@ if [ ! -f .env.local ]; then
 # HA Dashboard - Development Configuration
 # For production (Docker), use .env instead
 
+# Only 2 required variables:
 APP_BASE_URL=http://localhost:5000
 ENCRYPTION_KEY=${ENCRYPTION_KEY}
-DATABASE_URL=file:./data/ha-dashboard.db
-NEXT_PUBLIC_USE_MOCK=false
+
+# DATABASE_URL has a default - no need to set it
+# DATABASE_URL=file:./data/ha-dashboard.db
 EOF
     
     echo -e "${GREEN}.env.local erstellt ✓${NC}"

@@ -9,9 +9,9 @@ services:
       - "5000:3000"
     environment:
       - NODE_ENV=production
-      - APP_BASE_URL=${APP_BASE_URL:-http://localhost:5000}
+      - APP_BASE_URL=${APP_BASE_URL:?APP_BASE_URL is required}
       - ENCRYPTION_KEY=${ENCRYPTION_KEY:?ENCRYPTION_KEY is required}
-      - DATABASE_URL=file:/data/ha-dashboard.db
+      - DATABASE_URL=${DATABASE_URL:-file:/data/ha-dashboard.db}
     volumes:
       - ./data:/data
     networks:

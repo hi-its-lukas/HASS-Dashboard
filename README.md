@@ -35,23 +35,22 @@ A modern, mobile-first Progressive Web App (PWA) interface for Home Assistant, f
 
 ### Production (Docker)
 
-Create a `.env` file in the project root:
+Create a `.env` file in the project root with only **2 required variables**:
 
 ```env
-# REQUIRED: Base URL where the dashboard is accessible (no trailing slash)
+# REQUIRED: Base URL where the dashboard is accessible
 APP_BASE_URL=https://dashboard.yourdomain.com
 
 # REQUIRED: 32-byte hex key for encrypting OAuth tokens
 # Generate with: openssl rand -hex 32
 ENCRYPTION_KEY=your-64-character-hex-key
 
-# Database path (Docker uses /data volume)
-DATABASE_URL=file:/data/ha-dashboard.db
-
-# For HTTPS with Caddy
-DOMAIN=dashboard.yourdomain.com
-ACME_EMAIL=your@email.com
+# Optional: For HTTPS with Caddy
+# DOMAIN=dashboard.yourdomain.com
+# ACME_EMAIL=your@email.com
 ```
+
+The database is automatically created at `./data/ha-dashboard.db` - no configuration needed.
 
 ### Development (Local)
 
@@ -60,20 +59,19 @@ Create a `.env.local` file (ignored by git):
 ```env
 APP_BASE_URL=http://localhost:5000
 ENCRYPTION_KEY=your-64-character-hex-key
-DATABASE_URL=file:./data/ha-dashboard.db
-NEXT_PUBLIC_USE_MOCK=true
+# NEXT_PUBLIC_USE_MOCK=true  # Uncomment for mock data
 ```
 
 ### What Goes Where
 
-| Variable | `.env` (Production) | `.env.local` (Dev) | Description |
-|----------|---------------------|---------------------|-------------|
-| `APP_BASE_URL` | Required | Required | Public URL of the dashboard |
-| `ENCRYPTION_KEY` | Required | Required | Token encryption key |
-| `DATABASE_URL` | Required | Required | SQLite database path |
-| `DOMAIN` | For HTTPS | - | Domain for Caddy |
-| `ACME_EMAIL` | For HTTPS | - | Let's Encrypt email |
-| `NEXT_PUBLIC_USE_MOCK` | - | Optional | Use mock data for dev |
+| Variable | Required? | Description |
+|----------|-----------|-------------|
+| `APP_BASE_URL` | **Yes** | Public URL of the dashboard |
+| `ENCRYPTION_KEY` | **Yes** | Token encryption key (openssl rand -hex 32) |
+| `DATABASE_URL` | No | SQLite path (auto-configured) |
+| `DOMAIN` | No | Domain for Caddy HTTPS |
+| `ACME_EMAIL` | No | Let's Encrypt email |
+| `NEXT_PUBLIC_USE_MOCK` | No | Use mock data for dev |
 
 **Important**: User-specific settings (Home Assistant URL, entity mappings, dashboard layout) are stored in the database and configured via the Settings UI - NOT in environment files.
 
