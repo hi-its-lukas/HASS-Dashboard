@@ -71,7 +71,7 @@ Everything else is auto-configured:
 ```bash
 # Clone repository
 git clone https://github.com/hi-its-lukas/hass-dashboard.git
-cd ha-dashboard
+cd hass-dashboard
 
 # Run interactive setup
 ./setup.sh
