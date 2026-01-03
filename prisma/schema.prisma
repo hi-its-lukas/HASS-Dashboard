@@ -65,3 +65,18 @@ model Session {
 
   @@map("sessions")
 }
+
+model SurveillanceEvent {
+  id            String   @id @default(uuid())
+  userId        String   @map("user_id")
+  cameraEntityId String  @map("camera_entity_id")
+  cameraName    String   @map("camera_name")
+  eventType     String   @map("event_type")
+  detectedAt    DateTime @map("detected_at")
+  snapshotPath  String?  @map("snapshot_path")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@index([userId, detectedAt])
+  @@index([userId, eventType])
+  @@map("surveillance_events")
+}

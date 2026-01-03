@@ -61,6 +61,16 @@ export interface IntercomConfig {
   lockEntityId?: string
 }
 
+export interface SurveillanceCameraConfig {
+  cameraEntityId: string
+  cameraName: string
+  detectionTypes: ('person' | 'vehicle' | 'animal' | 'motion')[]
+  personSensorId?: string
+  vehicleSensorId?: string
+  animalSensorId?: string
+  motionSensorId?: string
+}
+
 export interface LightConfig {
   entityId: string
   name?: string
@@ -86,6 +96,7 @@ export interface DashboardConfig {
   intercoms: IntercomConfig[]
   lights: (string | LightConfig)[]
   covers: (string | CoverConfig)[]
+  surveillanceCameras: SurveillanceCameraConfig[]
 }
 
 export const dashboardConfig: DashboardConfig = {
@@ -114,6 +125,7 @@ export const dashboardConfig: DashboardConfig = {
   intercoms: [],
   lights: [],
   covers: [],
+  surveillanceCameras: [],
 }
 
 export default dashboardConfig
