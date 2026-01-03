@@ -9,6 +9,12 @@ HA Dashboard is a modern, mobile-first Progressive Web App (PWA) for Home Assist
 Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (2026-01-03)
+- **AI Surveillance with UniFi Protect** - Configure cameras with detection types (Person, Vehicle, Animal, Motion)
+  - Sensor auto-discovery based on camera name patterns
+  - Automatic snapshot capture on detection events
+  - Event history with filters (time range, detection type)
+  - Snapshots stored per-user in /data/snapshots/{userId}/ with input sanitization
+  - **Limitation**: Client-side tracking requires dashboard to be open in browser
 - **New Lights page** (`/lights`) - Grid view of all configured lights with toggle controls and "All off" button
 - **New Covers page** (`/covers`) - Grid view of all blinds/covers with open/stop/close controls and "All open/close" buttons
 - **New Cameras page** (`/cameras`) - Grid of all camera entities with live feeds, click for fullscreen modal
@@ -75,7 +81,7 @@ Preferred communication style: Simple, everyday language.
 ### Database
 - **SQLite**: Local file-based database via Prisma ORM
 - **Prisma Client**: `@prisma/client` for database operations
-- Schema includes: `User`, `Session`, `OAuthToken`, `DashboardConfig` tables
+- Schema includes: `User`, `Session`, `OAuthToken`, `DashboardConfig`, `SurveillanceEvent` tables
 
 ### Home Assistant
 - OAuth 2.0 authentication with the HA instance
