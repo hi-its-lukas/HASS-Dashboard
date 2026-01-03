@@ -9,14 +9,14 @@ HA Dashboard is a modern, mobile-first Progressive Web App (PWA) for Home Assist
 Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (2026-01-03)
-- Aligned environment variable handling with Docker + Next.js best practices
-- Renamed `NEXT_PUBLIC_APP_URL` to `APP_BASE_URL` for server-only use
-- Changed Prisma to use `DATABASE_URL` instead of `SQLITE_URL`
-- Updated docker-compose.yml with required env validation
-- Removed deprecated `HA_TOKEN` and `NEXT_PUBLIC_HA_WS_URL` - now uses OAuth tokens from database
-- Updated ha/store.ts to fetch HA URL from user's session instead of env vars
-- Updated README.md, DEPLOYMENT.md, setup.sh with clear .env vs .env.local distinction
-- User-specific settings (HA URL, entities) are now stored in database, NOT env files
+- Dashboard now displays user-configured entities instead of hardcoded examples
+- Config store converts simple entity ID arrays into structured objects
+- PersonCard/ApplianceCard show Home Assistant friendly_name when available
+- Rooms are auto-grouped by light entity prefix (e.g., `light.kitchen_main` → "Kitchen")
+- Appliance icons are auto-detected based on entity name (washer, dryer, etc.)
+- Empty configurations show helpful messages with links to Settings page
+- Fixed Prisma version conflict in Docker (uses local v5.22.0 instead of npx v7.x)
+- Fixed docker-entrypoint.sh for database schema initialization
 
 ## System Architecture
 
