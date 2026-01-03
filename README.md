@@ -43,7 +43,7 @@ A modern, mobile-first Progressive Web App (PWA) interface for Home Assistant, f
 
 ```bash
 git clone https://github.com/hi-its-lukas/HASS-Dashboard
-cd ha-dashboard
+cd HASS-Dashboard
 cp .env.example .env.local
 ```
 
