@@ -1,0 +1,26 @@
+# Dependencies
+node_modules
+
+# Build artifacts
+.next
+out
+dist
+
+# Data directory (should not be in image)
+data
+
+# Git
+.git
+.gitignore
+
+# IDE
+.idea
+.vscode
+
+# Misc
+*.log
+*.md
+!README.md
+
+# Nested project copies (prevents stale code issues)
+hass-dashboard
