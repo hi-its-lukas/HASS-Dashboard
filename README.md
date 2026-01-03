@@ -1,278 +1,177 @@
 # HA Dashboard
 
-A modern, mobile-first Progressive Web App (PWA) interface for Home Assistant, featuring a dark neumorphism/glassmorphism design with OAuth authentication and per-user configuration.
+Ein modernes, mobiles Dashboard für Home Assistant mit OAuth-Authentifizierung.
 
 ## Features
 
-- **Login with Home Assistant** - OAuth 2.0 with PKCE for secure authentication
-- **Multi-User Support** - Each user has their own dashboard configuration
-- **Per-User Settings** - Configure entity mappings via Settings UI (not env files)
-- **Secure Token Storage** - OAuth tokens encrypted at rest (AES-256-GCM)
-- **Real-time Updates** - WebSocket-based state synchronization
+- **Login mit Home Assistant** - OAuth 2.0 mit PKCE
+- **Multi-User Support** - Jeder Benutzer hat eigene Einstellungen
+- **Verschlüsselte Token-Speicherung** - AES-256-GCM
+- **Echtzeit-Updates** - WebSocket-Verbindung zu Home Assistant
+- **PWA** - Als App auf iOS/Android installierbar
 
-### Dashboard Pages
+### Dashboard-Seiten
 
-- **Home** - Time, weather, lights count, power usage, alarm status, presence tracking
-- **Energy** - Solar, battery, grid, and house consumption monitoring with trend charts
-- **Security** - Alarm control with Stay/Away/Night/Disarm modes, zone status
-- **Family** - Presence detection with activity data (steps, distance, floors)
-- **Surveillance** - Event feed with person/vehicle detection
-- **PWA Support** - Install as native app on iOS/Android
+| Seite | Beschreibung |
+|-------|-------------|
+| Home | Uhrzeit, Wetter, Lichter, Stromverbrauch, Alarm, Anwesenheit |
+| Energie | Solar, Batterie, Netz, Hausverbrauch mit Diagrammen |
+| Sicherheit | Alarmsteuerung (Stay/Away/Night/Disarm) |
+| Familie | Anwesenheitserkennung mit Aktivitätsdaten |
+| Überwachung | Kamera-Events mit Personen-/Fahrzeugerkennung |
 
-## Tech Stack
+## Installation
 
-- **Framework**: Next.js 14 (App Router) + TypeScript
-- **Styling**: Tailwind CSS
-- **State Management**: Zustand
-- **Database**: SQLite via Prisma ORM
-- **Animations**: Framer Motion
-- **Charts**: Recharts
-- **Icons**: Lucide React
-- **PWA**: next-pwa
+### Voraussetzungen
 
-## Setup
+- Docker & Docker Compose
+- Cloudflare Account (für Tunnel)
+- Home Assistant Installation
 
-**Zero configuration required!** HTTPS is handled by Cloudflare Tunnel.
-
-### Quick Start
+### 1. Repository klonen
 
 ```bash
-# Clone repository
 git clone https://github.com/yourusername/ha-dashboard.git
 cd ha-dashboard
+```
 
-# Run setup (checks Docker)
-./setup.sh
+### 2. Dashboard starten
 
-# Start
+```bash
 docker compose up -d --build
 ```
 
-The app runs on `http://localhost:3000` - expose it via Cloudflare Tunnel.
+Das Dashboard läuft auf `http://localhost:3000`.
 
-### Auto-Configuration
-
-Everything is configured automatically:
-- Encryption keys are generated on first start
-- SQLite database is created in `./data/`
-- OAuth URLs are derived from request headers
-
-### Optional Overrides
-
-| Variable | Description |
-|----------|-------------|
-| `ENCRYPTION_KEY` | Use your own key instead of auto-generated |
-
-**Important**: User-specific settings (Home Assistant URL, entity mappings) are configured in the Settings UI after login - NOT in environment files.
-
-## Cloudflare Tunnel Setup
-
-### Why Cloudflare Tunnel?
-
-- **No open ports** - No port forwarding needed
-- **Automatic HTTPS** - Cloudflare handles TLS
-- **Works behind CGNAT** - No public IP required
-- **DDoS protection** - Built into Cloudflare
-
-### Setup
-
-1. **Install cloudflared** on your server:
-   ```bash
-   # Raspberry Pi / Debian
-   curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-arm64.deb -o cloudflared.deb
-   sudo dpkg -i cloudflared.deb
-   ```
-
-2. **Login to Cloudflare**:
-   ```bash
-   cloudflared tunnel login
-   ```
-
-3. **Create a tunnel**:
-   ```bash
-   cloudflared tunnel create ha-dashboard
-   ```
-
-4. **Configure the tunnel** (`~/.cloudflared/config.yml`):
-   ```yaml
-   tunnel: ha-dashboard
-   credentials-file: /home/pi/.cloudflared/<tunnel-id>.json
-
-   ingress:
-     - hostname: dashboard.yourdomain.com
-       service: http://localhost:3000
-     - service: http_status:404
-   ```
-
-5. **Add DNS record**:
-   ```bash
-   cloudflared tunnel route dns ha-dashboard dashboard.yourdomain.com
-   ```
-
-6. **Run as service**:
-   ```bash
-   sudo cloudflared service install
-   sudo systemctl start cloudflared
-   ```
-
-### Split-DNS for Local Access
-
-To access the dashboard locally without going through Cloudflare:
-
-1. **Local DNS override** (Pi-hole/AdGuard/Router):
-   - `dashboard.yourdomain.com` → `192.168.x.x` (local IP)
-
-2. This ensures OAuth works from both internal and external networks.
-
-### Why Not Let's Encrypt?
-
-This project intentionally does not use Let's Encrypt because:
-- Cloudflare Tunnel provides HTTPS without opening ports
-- No need for ACME challenges (http-01/tls-alpn-01)
-- Simpler setup with no certificate renewal
-
-## Manual Installation (without Docker)
-
-### Linux / Ubuntu / Raspberry Pi
+### 3. Cloudflare Tunnel einrichten
 
 ```bash
-# Install Node.js 20
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo bash -
-sudo apt install -y nodejs
+# cloudflared installieren
+curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-arm64.deb -o cloudflared.deb
+sudo dpkg -i cloudflared.deb
 
-# Clone and install
-git clone https://github.com/yourusername/ha-dashboard.git
-cd ha-dashboard
-npm install
+# Login
+cloudflared tunnel login
 
-# Create environment file
-cp .env.example .env.local
-nano .env.local
+# Tunnel erstellen
+cloudflared tunnel create ha-dashboard
 
-# Setup database
-npx prisma generate
-npx prisma db push
-
-# Build and start
-npm run build
-npm start
+# DNS-Eintrag hinzufügen
+cloudflared tunnel route dns ha-dashboard dashboard.deinedomain.de
 ```
 
-### Autostart with systemd
+Tunnel-Konfiguration (`~/.cloudflared/config.yml`):
+
+```yaml
+tunnel: ha-dashboard
+credentials-file: /home/pi/.cloudflared/<tunnel-id>.json
+
+ingress:
+  - hostname: dashboard.deinedomain.de
+    service: http://localhost:3000
+  - service: http_status:404
+```
+
+Als Service starten:
 
 ```bash
-sudo nano /etc/systemd/system/ha-dashboard.service
+sudo cloudflared service install
+sudo systemctl enable cloudflared
+sudo systemctl start cloudflared
 ```
 
-```ini
-[Unit]
-Description=HA Dashboard
-After=network.target
+### 4. Split-DNS einrichten
 
-[Service]
-Type=simple
-User=your-user
-WorkingDirectory=/opt/ha-dashboard
-ExecStart=/usr/bin/npm start
-Restart=on-failure
-Environment=NODE_ENV=production
+Damit OAuth intern und extern funktioniert:
 
-[Install]
-WantedBy=multi-user.target
+| DNS | Ziel |
+|-----|------|
+| Extern (Cloudflare) | Cloudflare Tunnel |
+| Intern (Pi-hole/Router) | `192.168.x.x` (lokale IP) |
+
+## Konfiguration
+
+### Automatisch konfiguriert
+
+| Was | Wo |
+|-----|-----|
+| Encryption Key | `./data/.encryption_key` |
+| Datenbank | `./data/ha-dashboard.db` |
+| OAuth URLs | Aus Request-Headers |
+
+### Optional (.env)
+
+```env
+ENCRYPTION_KEY=dein-64-zeichen-hex-key
 ```
 
-```bash
-sudo systemctl daemon-reload
-sudo systemctl enable ha-dashboard
-sudo systemctl start ha-dashboard
-```
+### Benutzer-Einstellungen
 
-## Configuration
+Nach dem Login unter **Einstellungen**:
 
-### Settings UI
+- Home Assistant URL eingeben
+- Entities zu Dashboard-Widgets zuordnen
+- Räume und Personen konfigurieren
 
-After logging in, go to **Settings** to configure:
+## Technologie
 
-- **Entity Discovery** - Automatically discovers all your HA entities
-- **Entity Mapping** - Map entities to dashboard widgets
-- **Dashboard Layout** - Configure rooms, persons, and more
+| Komponente | Technologie |
+|------------|-------------|
+| Framework | Next.js 14 (App Router) |
+| Sprache | TypeScript |
+| Styling | Tailwind CSS |
+| State | Zustand |
+| Datenbank | SQLite (Prisma) |
+| Animationen | Framer Motion |
+| Charts | Recharts |
+| Icons | Lucide React |
 
-### Static Configuration (fallback)
+## Sicherheit
 
-For unauthenticated users or development, edit `config/dashboard.ts`.
-
-## Security
-
-### Authentication Flow
-
-1. User clicks "Login with Home Assistant"
-2. Dashboard redirects to Home Assistant OAuth authorize endpoint
-3. User approves access in Home Assistant
-4. HA redirects back with authorization code
-5. Dashboard exchanges code for tokens (server-side)
-6. Tokens are encrypted with AES-256-GCM and stored in SQLite
-7. Session cookie is set (httpOnly, secure, sameSite)
-
-### Security Features
-
-- **No tokens in browser** - All HA API calls go through server-side proxy
-- **Encrypted at rest** - OAuth tokens encrypted with ENCRYPTION_KEY
-- **httpOnly cookies** - Session cookies not accessible via JavaScript
-- **OAuth with PKCE** - Proof Key for Code Exchange prevents interception
-- **Separate nonces** - Each encrypted token uses a unique nonce
-- **30-day sessions** - Sessions expire after 30 days of inactivity
+- **Server-Side Token Storage** - Tokens nie im Browser
+- **AES-256-GCM Verschlüsselung** - Tokens at-rest verschlüsselt
+- **httpOnly Cookies** - Session nicht per JavaScript lesbar
+- **OAuth PKCE** - Schutz vor Interception-Angriffen
+- **365-Tage Sessions** - Lange Login-Dauer
 
 ## Troubleshooting
 
-### OAuth Redirect Issues
+### OAuth funktioniert nicht
 
-- Ensure `APP_BASE_URL` matches exactly how users access the dashboard
-- Check that your Home Assistant is accessible from the dashboard server
-- Verify Split-DNS is configured correctly
+1. Split-DNS korrekt eingerichtet?
+2. Gleiche Domain intern und extern?
+3. Home Assistant erreichbar vom Dashboard-Server?
 
-### "Connection Refused" after HA Login
+### Datenbank zurücksetzen
 
-- The callback URL is pointing to localhost or wrong port
-- Set `APP_BASE_URL` to your actual dashboard URL
-
-### Database Reset
-
-```bash
-rm -rf data/
-npx prisma db push
-```
-
-Or with Docker:
 ```bash
 docker compose down
 rm -rf data/
 docker compose up -d --build
 ```
 
-## Project Structure
+### Logs anzeigen
+
+```bash
+docker logs ha-dashboard -f
+```
+
+## Projektstruktur
 
 ```
 ha-dashboard/
-├── app/
-│   ├── (dashboard)/        # Protected dashboard pages
-│   ├── api/                # API routes
-│   └── login/              # Login page
-├── components/             # React components
-├── config/                 # Static configuration
-├── lib/                    # Utilities and stores
-├── prisma/                 # Database schema
+├── app/                    # Next.js App Router
+│   ├── (dashboard)/        # Geschützte Dashboard-Seiten
+│   ├── api/                # API Routes
+│   └── login/              # Login-Seite
+├── components/             # React Komponenten
+├── lib/                    # Utilities, Stores, Auth
+├── prisma/                 # Datenbank-Schema
+├── data/                   # Persistente Daten (Volume)
 ├── docker-compose.yml
-├── Dockerfile
-└── Caddyfile
+└── Dockerfile
 ```
 
-## Contributing
+## Lizenz
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
-
-## License
-
-MIT License - see LICENSE file for details
+MIT
