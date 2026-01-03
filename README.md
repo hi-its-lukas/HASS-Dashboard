@@ -134,6 +134,15 @@ Nach dem Login unter **Einstellungen**:
 | Animationen | Framer Motion |
 | Charts | Recharts |
 | Icons | Lucide React |
+| Container | Debian Bookworm Slim |
+
+### Warum Debian statt Alpine?
+
+Das Docker-Image verwendet `node:20-bookworm-slim` statt Alpine weil:
+
+- **Prisma + ARM64**: Alpine (musl libc) hat Kompatibilitätsprobleme mit Prisma auf ARM64
+- **OpenSSL 3**: Debian Bookworm enthält OpenSSL 3.x, das Prisma benötigt
+- **Raspberry Pi**: Funktioniert zuverlässig auf ARM64 ohne manuelle Fixes
 
 ## Sicherheit
 

@@ -1,18 +1,19 @@
 # Stage 1: Dependencies
-FROM node:20-alpine AS deps
-RUN apk add --no-cache libc6-compat
+# Using Debian-slim for Prisma + ARM64 + OpenSSL 3 compatibility
+FROM node:20-bookworm-slim AS deps
 WORKDIR /app
 
 COPY package.json package-lock.json* ./
 RUN npm ci
 
 # Stage 2: Builder
-FROM node:20-alpine AS builder
+FROM node:20-bookworm-slim AS builder
 WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# Generate Prisma client for linux-arm64-openssl-3.0.x
 RUN npx prisma generate
 
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -20,18 +21,21 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
 # Stage 3: Runner
-FROM node:20-alpine AS runner
+FROM node:20-bookworm-slim AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Install su-exec for privilege dropping (alpine alternative to gosu)
-RUN apk add --no-cache su-exec
+# Install gosu for privilege dropping (Debian equivalent of su-exec)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gosu \
+    openssl \
+    && rm -rf /var/lib/apt/lists/*
 
 # Create app user (will be used after entrypoint fixes permissions)
-RUN addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 nextjs
+RUN groupadd --system --gid 1001 nodejs && \
+    useradd --system --uid 1001 --gid nodejs nextjs
 
 # Create data directory with correct ownership
 RUN mkdir -p /data && chown nextjs:nodejs /data
@@ -47,7 +51,6 @@ RUN chmod +x ./docker-entrypoint.sh && \
     chown -R nextjs:nodejs /app
 
 # Run as root initially - entrypoint will fix /data permissions then drop to nextjs
-# This ensures mounted volumes work regardless of host permissions
 USER root
 
 EXPOSE 80

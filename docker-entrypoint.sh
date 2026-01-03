@@ -70,7 +70,7 @@ run_app() {
   
   if [ "$(id -u)" = "0" ]; then
     log_info "Dropping privileges to $APP_USER"
-    exec su-exec "$APP_USER" node server.js
+    exec gosu "$APP_USER" node server.js
   else
     exec node server.js
   fi
