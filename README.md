@@ -1,4 +1,4 @@
-# HA Dashboard
+# HASS Dashboard
 
 Ein modernes, mobiles Dashboard für Home Assistant mit OAuth-Authentifizierung.
 
@@ -31,8 +31,8 @@ Ein modernes, mobiles Dashboard für Home Assistant mit OAuth-Authentifizierung.
 ### 1. Repository klonen
 
 ```bash
-git clone https://github.com/yourusername/ha-dashboard.git
-cd ha-dashboard
+git clone https://github.com/yourusername/hass-dashboard.git
+cd hass-dashboard
 ```
 
 ### 2. Dashboard starten
@@ -54,16 +54,16 @@ sudo dpkg -i cloudflared.deb
 cloudflared tunnel login
 
 # Tunnel erstellen
-cloudflared tunnel create ha-dashboard
+cloudflared tunnel create hass-dashboard
 
 # DNS-Eintrag hinzufügen
-cloudflared tunnel route dns ha-dashboard dashboard.deinedomain.de
+cloudflared tunnel route dns hass-dashboard dashboard.deinedomain.de
 ```
 
 Tunnel-Konfiguration (`~/.cloudflared/config.yml`):
 
 ```yaml
-tunnel: ha-dashboard
+tunnel: hass-dashboard
 credentials-file: /home/pi/.cloudflared/<tunnel-id>.json
 
 ingress:
@@ -153,13 +153,13 @@ docker compose up -d --build
 ### Logs anzeigen
 
 ```bash
-docker logs ha-dashboard -f
+docker logs hass-dashboard -f
 ```
 
 ## Projektstruktur
 
 ```
-ha-dashboard/
+hass-dashboard/
 ├── app/                    # Next.js App Router
 │   ├── (dashboard)/        # Geschützte Dashboard-Seiten
 │   ├── api/                # API Routes
