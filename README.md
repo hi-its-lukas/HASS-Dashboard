@@ -67,8 +67,6 @@ Everything is configured automatically:
 
 ## Cloudflare Tunnel Setup
 
-HTTPS is handled externally by Cloudflare Tunnel. No ports need to be opened.
-
 ### Why Cloudflare Tunnel?
 
 - **No open ports** - No port forwarding needed
