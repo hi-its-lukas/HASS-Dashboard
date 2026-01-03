@@ -18,7 +18,10 @@ import {
   ChevronRight,
   Upload,
   Image,
-  Trash2
+  Trash2,
+  Play,
+  Plus,
+  X
 } from 'lucide-react'
 
 interface ConnectionStatus {
@@ -179,10 +182,14 @@ export default function SettingsPage() {
   const saveSettings = async () => {
     setSaving(true)
     try {
+      const layoutConfig = {
+        ...config,
+        backgroundUrl: backgroundUrl || undefined
+      }
       await fetch('/api/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ layoutConfig: config })
+        body: JSON.stringify({ layoutConfig })
       })
     } catch (error) {
       console.error('Failed to save settings:', error)
@@ -382,6 +389,70 @@ export default function SettingsPage() {
                         <span className="text-gray-300">{getFriendlyName(entity)}</span>
                       </label>
                     ))}
+                  </div>
+                )}
+              </div>
+              
+              <div className="border border-white/5 rounded-xl overflow-hidden">
+                <button
+                  onClick={() => toggleSection('buttons')}
+                  className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <Play className="w-5 h-5 text-cyan-400" />
+                    <span className="text-white font-medium">Alexa Buttons ({config.customButtons?.length || 0})</span>
+                  </div>
+                  {expandedSections.buttons ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
+                </button>
+                {expandedSections.buttons && (
+                  <div className="p-4 space-y-3">
+                    <p className="text-sm text-gray-400 mb-3">
+                      Wähle Skripte aus, die als Buttons auf der "Mehr"-Seite angezeigt werden sollen:
+                    </p>
+                    {discovered.scripts.length === 0 ? (
+                      <p className="text-gray-500 text-sm">Keine Skripte gefunden</p>
+                    ) : (
+                      <div className="space-y-2 max-h-64 overflow-y-auto">
+                        {discovered.scripts.map(entity => {
+                          const isSelected = config.customButtons?.some(b => b.entityId === entity.entity_id)
+                          return (
+                            <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() => {
+                                  if (isSelected) {
+                                    setConfig(prev => ({
+                                      ...prev,
+                                      customButtons: prev.customButtons?.filter(b => b.entityId !== entity.entity_id) || []
+                                    }))
+                                  } else {
+                                    const friendlyName = getFriendlyName(entity)
+                                    setConfig(prev => ({
+                                      ...prev,
+                                      customButtons: [
+                                        ...(prev.customButtons || []),
+                                        {
+                                          id: entity.entity_id.replace(/\./g, '_'),
+                                          label: friendlyName,
+                                          icon: 'play',
+                                          domain: 'script',
+                                          service: 'turn_on',
+                                          entityId: entity.entity_id
+                                        }
+                                      ]
+                                    }))
+                                  }
+                                }}
+                                className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500"
+                              />
+                              <span className="text-gray-300">{getFriendlyName(entity)}</span>
+                              <span className="text-xs text-gray-500">{entity.entity_id}</span>
+                            </label>
+                          )
+                        })}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

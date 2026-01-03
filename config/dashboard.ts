@@ -42,6 +42,16 @@ export interface ApplianceConfig {
   icon: string
 }
 
+export interface CustomButtonConfig {
+  id: string
+  label: string
+  icon: string
+  domain: string
+  service: string
+  entityId?: string
+  data?: Record<string, unknown>
+}
+
 export interface DashboardConfig {
   weatherEntityId: string
   lightsGroupEntityId: string
@@ -53,6 +63,7 @@ export interface DashboardConfig {
   rooms: RoomConfig[]
   persons: PersonConfig[]
   appliances: ApplianceConfig[]
+  customButtons: CustomButtonConfig[]
 }
 
 export const dashboardConfig: DashboardConfig = {
@@ -77,6 +88,7 @@ export const dashboardConfig: DashboardConfig = {
   rooms: [],
   persons: [],
   appliances: [],
+  customButtons: [],
 }
 
 export default dashboardConfig

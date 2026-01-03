@@ -1,6 +1,16 @@
 import { create } from 'zustand'
 import { DashboardConfig, dashboardConfig as staticConfig, PersonConfig, RoomConfig, ApplianceConfig } from '@/config/dashboard'
 
+export interface CustomButtonConfig {
+  id: string
+  label: string
+  icon: string
+  domain: string
+  service: string
+  entityId?: string
+  data?: Record<string, unknown>
+}
+
 interface UserLayoutConfig {
   weatherEntityId?: string
   lightsGroupEntityId?: string
@@ -24,6 +34,7 @@ interface UserLayoutConfig {
   lights?: string[]
   covers?: string[]
   appliances?: string[] | ApplianceConfig[]
+  customButtons?: CustomButtonConfig[]
 }
 
 function entityIdToName(entityId: string): string {
@@ -148,6 +159,7 @@ function mergeWithDefaults(userConfig: UserLayoutConfig): DashboardConfig {
     rooms,
     persons,
     appliances,
+    customButtons: userConfig.customButtons || staticConfig.customButtons,
   }
 }
 
@@ -192,15 +204,19 @@ export const useConfigStore = create<ConfigStore>((set, get) => ({
     
     if (!isAuthenticated) return false
     
-    const newLayoutConfig = {
+    const newLayoutConfig: UserLayoutConfig = {
       weatherEntityId: updates.weatherEntityId ?? config.weatherEntityId,
       lightsGroupEntityId: updates.lightsGroupEntityId ?? config.lightsGroupEntityId,
       powerEntityId: updates.powerEntityId ?? config.powerEntityId,
+      backgroundUrl: updates.backgroundUrl ?? config.backgroundUrl,
       energy: updates.energy ?? config.energy,
       security: updates.security ?? config.security,
       rooms: updates.rooms ?? config.rooms,
       persons: updates.persons ?? config.persons,
+      covers: updates.covers,
+      lights: updates.lights,
       appliances: updates.appliances ?? config.appliances,
+      customButtons: updates.customButtons ?? config.customButtons,
     }
     
     try {

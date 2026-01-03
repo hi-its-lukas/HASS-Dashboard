@@ -13,10 +13,12 @@ import {
   Settings,
   Bell,
   Loader2,
+  Play,
 } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import { useHAStore } from '@/lib/ha'
+import { useConfig } from '@/lib/config/store'
 
 interface ActionButtonProps {
   icon: React.ReactNode
@@ -24,14 +26,15 @@ interface ActionButtonProps {
   color?: string
   onClick?: () => void
   loading?: boolean
+  disabled?: boolean
 }
 
-function ActionButton({ icon, label, color = 'text-white', onClick, loading }: ActionButtonProps) {
+function ActionButton({ icon, label, color = 'text-white', onClick, loading, disabled }: ActionButtonProps) {
   return (
     <motion.button
       whileTap={{ scale: 0.95 }}
       onClick={onClick}
-      disabled={loading}
+      disabled={loading || disabled}
       className="card flex flex-col items-center justify-center py-6 px-4 min-h-[100px] disabled:opacity-50"
     >
       {loading ? (
@@ -44,49 +47,23 @@ function ActionButton({ icon, label, color = 'text-white', onClick, loading }: A
   )
 }
 
-interface ScriptButtonConfig {
-  id: string
-  label: string
-  icon: React.ReactNode
-  color: string
-  scriptId: string
-}
-
 export default function MorePage() {
   const [loadingScript, setLoadingScript] = useState<string | null>(null)
   const callService = useHAStore((s) => s.callService)
   const states = useHAStore((s) => s.states)
+  const config = useConfig()
   
   const scripts = Object.keys(states).filter((id) => id.startsWith('script.'))
   
-  const foodReadyButtons: ScriptButtonConfig[] = [
-    { id: 'girls_food', label: 'Girls Food Ready', icon: <Users className="w-6 h-6" />, color: 'text-accent-pink', scriptId: 'script.girls_food_ready' },
-    { id: 'everyone_food', label: 'Everyone Food', icon: <Home className="w-6 h-6" />, color: 'text-accent-cyan', scriptId: 'script.everyone_food_ready' },
-    { id: 'baba_food', label: 'Baba Food Ready', icon: <Users className="w-6 h-6" />, color: 'text-accent-pink', scriptId: 'script.baba_food_ready' },
-    { id: 'girls_down', label: 'Girls Come Down', icon: <ArrowDown className="w-6 h-6" />, color: 'text-accent-cyan', scriptId: 'script.girls_come_down' },
-  ]
-  
-  const individualButtons: ScriptButtonConfig[] = [
-    { id: 'alexandra_down', label: 'Alexandra Down', icon: <ArrowDown className="w-6 h-6" />, color: 'text-accent-cyan', scriptId: 'script.alexandra_come_down' },
-    { id: 'mila_down', label: 'Mila Down', icon: <ArrowDown className="w-6 h-6" />, color: 'text-accent-cyan', scriptId: 'script.mila_come_down' },
-    { id: 'alexandra_room', label: 'Alexandra To Room', icon: <MapPin className="w-6 h-6" />, color: 'text-accent-orange', scriptId: 'script.alexandra_to_room' },
-    { id: 'mila_room', label: 'Mila To Room', icon: <MapPin className="w-6 h-6" />, color: 'text-accent-orange', scriptId: 'script.mila_to_room' },
-  ]
-  
-  const routineButtons: ScriptButtonConfig[] = [
-    { id: 'bedtime', label: 'Bedtime', icon: <Moon className="w-6 h-6" />, color: 'text-accent-purple', scriptId: 'script.bedtime_routine' },
-    { id: 'leave', label: 'Time to Leave', icon: <LogOut className="w-6 h-6" />, color: 'text-accent-cyan', scriptId: 'script.time_to_leave' },
-  ]
-  
-  const handleRunScript = async (scriptId: string, buttonId: string) => {
-    if (!scripts.includes(scriptId)) {
-      console.warn(`Script ${scriptId} not found in HA`)
+  const handleRunScript = async (entityId: string, buttonId: string) => {
+    if (!scripts.includes(entityId)) {
+      console.warn(`Script ${entityId} not found in HA`)
       return
     }
     
     setLoadingScript(buttonId)
     try {
-      await callService('script', 'turn_on', scriptId)
+      await callService('script', 'turn_on', entityId)
     } catch (error) {
       console.error('Failed to run script:', error)
     } finally {
@@ -94,19 +71,7 @@ export default function MorePage() {
     }
   }
   
-  const renderButton = (btn: ScriptButtonConfig) => {
-    const isAvailable = scripts.includes(btn.scriptId)
-    return (
-      <ActionButton
-        key={btn.id}
-        icon={btn.icon}
-        label={btn.label}
-        color={isAvailable ? btn.color : 'text-gray-500'}
-        loading={loadingScript === btn.id}
-        onClick={isAvailable ? () => handleRunScript(btn.scriptId, btn.id) : undefined}
-      />
-    )
-  }
+  const customButtons = config.customButtons || []
 
   return (
     <div className="px-4 py-6 safe-top max-w-7xl mx-auto">
@@ -124,87 +89,89 @@ export default function MorePage() {
         </div>
       </motion.header>
 
-      <div className="lg:grid lg:grid-cols-3 lg:gap-6">
+      {customButtons.length === 0 ? (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center py-12"
+        >
+          <Bell className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+          <p className="text-text-secondary mb-2">Keine Buttons konfiguriert</p>
+          <p className="text-sm text-text-muted mb-4">
+            Wähle in den Einstellungen Skripte aus, die hier als Buttons angezeigt werden sollen.
+          </p>
+          <a 
+            href="/settings" 
+            className="inline-flex items-center gap-2 px-4 py-2 bg-accent-cyan/20 hover:bg-accent-cyan/30 text-accent-cyan rounded-xl transition-colors"
+          >
+            <Settings className="w-4 h-4" />
+            Zu den Einstellungen
+          </a>
+        </motion.div>
+      ) : (
         <motion.section
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="mb-6 lg:mb-0"
+          className="mb-6"
         >
           <h2 className="text-sm font-medium text-text-muted uppercase tracking-wider mb-3">
-            Food Ready
+            Skripte ({customButtons.length})
           </h2>
-          <div className="grid grid-cols-2 gap-3">
-            {foodReadyButtons.map(renderButton)}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            {customButtons.map((btn) => {
+              const isAvailable = btn.entityId ? scripts.includes(btn.entityId) : true
+              return (
+                <ActionButton
+                  key={btn.id}
+                  icon={<Play className="w-6 h-6" />}
+                  label={btn.label}
+                  color={isAvailable ? 'text-accent-cyan' : 'text-gray-500'}
+                  loading={loadingScript === btn.id}
+                  disabled={!isAvailable}
+                  onClick={isAvailable && btn.entityId ? () => handleRunScript(btn.entityId!, btn.id) : undefined}
+                />
+              )
+            })}
           </div>
         </motion.section>
+      )}
 
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="mb-6 lg:mb-0"
-        >
-          <h2 className="text-sm font-medium text-text-muted uppercase tracking-wider mb-3">
-            Individual Calls
-          </h2>
-          <div className="grid grid-cols-2 gap-3">
-            {individualButtons.map(renderButton)}
-          </div>
-        </motion.section>
-
-        <div>
-          <motion.section
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="mb-6"
-          >
-            <h2 className="text-sm font-medium text-text-muted uppercase tracking-wider mb-3">
-              Routines
-            </h2>
-            <div className="grid grid-cols-2 gap-3">
-              {routineButtons.map(renderButton)}
-            </div>
-          </motion.section>
-
-          <motion.section
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-          >
-            <h2 className="text-sm font-medium text-text-muted uppercase tracking-wider mb-3">
-              Quick Access
-            </h2>
-            <div className="space-y-2">
-              <a href="/energy">
-                <Card hoverable className="p-4">
-                  <div className="flex items-center gap-3">
-                    <Zap className="w-5 h-5 text-accent-yellow" />
-                    <span className="font-medium text-white">Energy Dashboard</span>
-                  </div>
-                </Card>
-              </a>
-              <a href="/family">
-                <Card hoverable className="p-4">
-                  <div className="flex items-center gap-3">
-                    <Users className="w-5 h-5 text-accent-cyan" />
-                    <span className="font-medium text-white">Family Tracker</span>
-                  </div>
-                </Card>
-              </a>
-              <a href="/settings">
-                <Card hoverable className="p-4">
-                  <div className="flex items-center gap-3">
-                    <Settings className="w-5 h-5 text-text-muted" />
-                    <span className="font-medium text-white">Settings</span>
-                  </div>
-                </Card>
-              </a>
-            </div>
-          </motion.section>
+      <motion.section
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+      >
+        <h2 className="text-sm font-medium text-text-muted uppercase tracking-wider mb-3">
+          Quick Access
+        </h2>
+        <div className="space-y-2">
+          <a href="/energy">
+            <Card hoverable className="p-4">
+              <div className="flex items-center gap-3">
+                <Zap className="w-5 h-5 text-accent-yellow" />
+                <span className="font-medium text-white">Energy Dashboard</span>
+              </div>
+            </Card>
+          </a>
+          <a href="/family">
+            <Card hoverable className="p-4">
+              <div className="flex items-center gap-3">
+                <Users className="w-5 h-5 text-accent-cyan" />
+                <span className="font-medium text-white">Family Tracker</span>
+              </div>
+            </Card>
+          </a>
+          <a href="/settings">
+            <Card hoverable className="p-4">
+              <div className="flex items-center gap-3">
+                <Settings className="w-5 h-5 text-text-muted" />
+                <span className="font-medium text-white">Settings</span>
+              </div>
+            </Card>
+          </a>
         </div>
-      </div>
+      </motion.section>
     </div>
   )
 }
