@@ -41,7 +41,7 @@ cd hass-dashboard
 docker compose up -d --build
 ```
 
-Das Dashboard läuft auf `http://localhost` (Port 80).
+Das Dashboard läuft auf `https://hoas-dashboard.familie-hengl.de` (intern und extern).
 
 ### Update
 
@@ -78,7 +78,9 @@ credentials-file: /home/pi/.cloudflared/<tunnel-id>.json
 
 ingress:
   - hostname: dashboard.deinedomain.de
-    service: http://localhost:80
+    service: https://localhost:443
+    originRequest:
+      noTLSVerify: true
   - service: http_status:404
 ```
 
@@ -109,7 +111,18 @@ Damit OAuth intern und extern funktioniert:
 | DNS | Ziel |
 |-----|------|
 | Extern (Cloudflare) | Cloudflare Tunnel |
-| Intern (Pi-hole/Router) | `192.168.x.x` (lokale IP) |
+| Intern (Pi-hole/Router/UniFi) | `192.168.x.x` (lokale IP) |
+
+### 6. Selbstsigniertes Zertifikat (intern)
+
+Caddy erstellt automatisch ein selbstsigniertes Zertifikat für `hoas-dashboard.familie-hengl.de`.
+
+Beim ersten Aufruf im Browser erscheint eine Warnung - das ist normal:
+1. **Chrome/Edge**: "Erweitert" → "Weiter zu ... (unsicher)"
+2. **Safari**: "Details einblenden" → "diese Website besuchen"
+3. **Firefox**: "Erweitert" → "Risiko akzeptieren"
+
+Das Zertifikat ist nur für den lokalen Zugriff. Extern über Cloudflare wird das echte Zertifikat verwendet.
 
 ## Konfiguration
 

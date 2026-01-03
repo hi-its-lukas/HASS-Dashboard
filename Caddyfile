@@ -1,0 +1,13 @@
+{
+	auto_https disable_redirects
+}
+
+hoas-dashboard.familie-hengl.de {
+	tls internal
+
+	reverse_proxy app:3000
+}
+
+:80 {
+	redir https://hoas-dashboard.familie-hengl.de{uri} permanent
+}

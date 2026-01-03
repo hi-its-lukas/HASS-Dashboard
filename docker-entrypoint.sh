@@ -66,7 +66,7 @@ init_database() {
 }
 
 run_app() {
-  log_info "Starting HASS Dashboard on port ${PORT:-80}"
+  log_info "Starting HASS Dashboard on port ${PORT:-3000}"
   
   if [ "$(id -u)" = "0" ]; then
     log_info "Dropping privileges to $APP_USER"

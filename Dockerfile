@@ -53,9 +53,9 @@ RUN chmod +x ./docker-entrypoint.sh && \
 # Run as root initially - entrypoint will fix /data permissions then drop to nextjs
 USER root
 
-EXPOSE 80
+EXPOSE 3000
 
-ENV PORT=80
+ENV PORT=3000
 ENV DATABASE_URL="file:/data/hass-dashboard.db"
 
 ENTRYPOINT ["./docker-entrypoint.sh"]
