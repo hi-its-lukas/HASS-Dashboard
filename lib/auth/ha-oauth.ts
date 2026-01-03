@@ -309,11 +309,9 @@ export function getAppBaseUrl(): string {
 }
 
 export function deriveBaseUrlFromRequest(request: Request): string {
-  const url = new URL(request.url)
-  
   const forwardedProto = request.headers.get('x-forwarded-proto')
   const cfVisitor = request.headers.get('cf-visitor')
-  let protocol = forwardedProto || url.protocol.replace(':', '')
+  let protocol = forwardedProto || 'http'
   
   if (cfVisitor) {
     try {
@@ -325,9 +323,20 @@ export function deriveBaseUrlFromRequest(request: Request): string {
   }
   
   const forwardedHost = request.headers.get('x-forwarded-host')
-  const host = forwardedHost || request.headers.get('host') || url.host
+  const host = forwardedHost || request.headers.get('host')
   
-  return `${protocol}://${host}`
+  if (!host || host.includes(':80') || /^[a-f0-9]{12}/.test(host)) {
+    console.warn('[OAuth] Invalid host detected:', host, '- check reverse proxy headers')
+  }
+  
+  let baseUrl = `${protocol}://${host}`
+  
+  if (host && (host.endsWith(':80') || host.endsWith(':443'))) {
+    const cleanHost = host.replace(/:80$/, '').replace(/:443$/, '')
+    baseUrl = `${protocol}://${cleanHost}`
+  }
+  
+  return baseUrl
 }
 
 function getDefaultLayoutConfig() {
