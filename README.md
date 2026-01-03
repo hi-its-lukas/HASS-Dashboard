@@ -46,6 +46,7 @@ Das Dashboard läuft auf `http://localhost` (Port 80).
 ### Update
 
 ```bash
+cd hass-dashboard
 git pull
 docker compose down
 docker compose up -d --build
