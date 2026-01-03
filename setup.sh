@@ -1,123 +1,110 @@
 #!/bin/bash
 
-# HA Dashboard - Setup Script for Linux/Ubuntu/Raspberry Pi
+# HA Dashboard - Setup Script
 # Usage: chmod +x setup.sh && ./setup.sh
 
 set -e
-
-echo "=========================================="
-echo "  HA Dashboard - Linux Setup"
-echo "=========================================="
-echo ""
 
 # Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+CYAN='\033[0;36m'
+NC='\033[0m'
 
-# Check if running as root
-if [ "$EUID" -eq 0 ]; then
-    echo -e "${RED}Bitte nicht als root ausführen!${NC}"
-    exit 1
-fi
+clear
+echo ""
+echo -e "${CYAN}╔══════════════════════════════════════════╗${NC}"
+echo -e "${CYAN}║${NC}        ${GREEN}HA Dashboard Setup${NC}               ${CYAN}║${NC}"
+echo -e "${CYAN}╚══════════════════════════════════════════╝${NC}"
+echo ""
 
-# Check Node.js
-echo -e "${YELLOW}Überprüfe Node.js...${NC}"
-if ! command -v node &> /dev/null; then
-    echo -e "${RED}Node.js nicht gefunden!${NC}"
+# Check Docker
+if ! command -v docker &> /dev/null; then
+    echo -e "${RED}Docker nicht gefunden!${NC}"
     echo ""
-    echo "Installiere Node.js mit:"
-    echo "  curl -fsSL https://deb.nodesource.com/setup_20.x | sudo bash -"
-    echo "  sudo apt install -y nodejs"
+    echo "Installiere Docker mit:"
+    echo "  curl -fsSL https://get.docker.com | sh"
+    echo "  sudo usermod -aG docker \$USER"
     echo ""
     exit 1
 fi
+echo -e "${GREEN}✓${NC} Docker gefunden"
 
-NODE_VERSION=$(node -v | cut -d'v' -f2 | cut -d'.' -f1)
-if [ "$NODE_VERSION" -lt 18 ]; then
-    echo -e "${RED}Node.js Version $NODE_VERSION ist zu alt. Mindestens Version 18 erforderlich.${NC}"
+# Check Docker Compose
+if ! docker compose version &> /dev/null; then
+    echo -e "${RED}Docker Compose nicht gefunden!${NC}"
     exit 1
 fi
-echo -e "${GREEN}Node.js $(node -v) gefunden ✓${NC}"
+echo -e "${GREEN}✓${NC} Docker Compose gefunden"
+echo ""
 
-# Check npm
-echo -e "${YELLOW}Überprüfe npm...${NC}"
-if ! command -v npm &> /dev/null; then
-    echo -e "${RED}npm nicht gefunden!${NC}"
-    exit 1
-fi
-echo -e "${GREEN}npm $(npm -v) gefunden ✓${NC}"
-
-# Create .env.local for development
-if [ ! -f .env.local ]; then
+# Check existing .env
+if [ -f .env ]; then
+    echo -e "${YELLOW}Eine .env Datei existiert bereits.${NC}"
+    read -p "Überschreiben? (j/n): " overwrite
+    if [ "$overwrite" != "j" ] && [ "$overwrite" != "J" ]; then
+        echo ""
+        echo "Setup abgebrochen. Starte mit:"
+        echo -e "  ${CYAN}docker compose up -d --build${NC}"
+        exit 0
+    fi
     echo ""
-    echo -e "${YELLOW}Erstelle Entwicklungs-Konfigurationsdatei...${NC}"
-    
-    # Generate encryption key
-    ENCRYPTION_KEY=$(openssl rand -hex 32 2>/dev/null || head -c 32 /dev/urandom | xxd -p)
-    
-    cat > .env.local << EOF
-# HA Dashboard - Development Configuration
-# For production (Docker), use .env instead
+fi
 
-# Only 2 required variables:
-APP_BASE_URL=http://localhost:5000
-ENCRYPTION_KEY=${ENCRYPTION_KEY}
+# Get Domain
+echo -e "${YELLOW}Schritt 1/2: Domain${NC}"
+echo "Gib deine Domain ein (z.B. dashboard.example.com)"
+echo ""
+read -p "Domain: " domain
 
-# DATABASE_URL has a default - no need to set it
-# DATABASE_URL=file:./data/ha-dashboard.db
+if [ -z "$domain" ]; then
+    echo -e "${RED}Fehler: Domain ist erforderlich!${NC}"
+    exit 1
+fi
+
+# Get Email
+echo ""
+echo -e "${YELLOW}Schritt 2/2: E-Mail für Let's Encrypt${NC}"
+echo "Wird für Zertifikats-Benachrichtigungen verwendet"
+echo ""
+read -p "E-Mail: " email
+
+if [ -z "$email" ]; then
+    echo -e "${RED}Fehler: E-Mail ist erforderlich!${NC}"
+    exit 1
+fi
+
+# Write .env
+cat > .env << EOF
+DOMAIN=$domain
+ACME_EMAIL=$email
 EOF
-    
-    echo -e "${GREEN}.env.local erstellt ✓${NC}"
-    echo ""
-    echo -e "${YELLOW}HINWEIS: .env.local ist nur für lokale Entwicklung.${NC}"
-    echo -e "${YELLOW}Für Docker/Produktion, erstelle eine .env Datei.${NC}"
-    echo ""
-fi
-
-# Install dependencies
-echo -e "${YELLOW}Installiere Abhängigkeiten...${NC}"
-npm ci --legacy-peer-deps
-echo -e "${GREEN}Abhängigkeiten installiert ✓${NC}"
-
-# Generate Prisma client
-echo -e "${YELLOW}Generiere Datenbank-Client...${NC}"
-npx prisma generate
-echo -e "${GREEN}Prisma Client generiert ✓${NC}"
 
 # Create data directory
 mkdir -p data
 
-# Initialize database
-echo -e "${YELLOW}Initialisiere Datenbank...${NC}"
-npx prisma db push
-echo -e "${GREEN}Datenbank initialisiert ✓${NC}"
-
-# Build
 echo ""
-echo -e "${YELLOW}Baue Produktions-Build...${NC}"
-npm run build
-echo -e "${GREEN}Build erfolgreich ✓${NC}"
-
+echo -e "${CYAN}╔══════════════════════════════════════════╗${NC}"
+echo -e "${CYAN}║${NC}        ${GREEN}Setup abgeschlossen!${NC}              ${CYAN}║${NC}"
+echo -e "${CYAN}╚══════════════════════════════════════════╝${NC}"
 echo ""
-echo "=========================================="
-echo -e "${GREEN}  Setup abgeschlossen!${NC}"
-echo "=========================================="
+echo -e "Domain:  ${GREEN}$domain${NC}"
+echo -e "E-Mail:  ${GREEN}$email${NC}"
 echo ""
-echo "Nächste Schritte:"
+echo -e "${YELLOW}Nächste Schritte:${NC}"
 echo ""
-echo "1. Starte das Dashboard:"
-echo "   npm start"
+echo "1. Split-DNS einrichten:"
+echo "   - Öffentliches DNS: $domain → externe IP"
+echo "   - Lokales DNS:      $domain → lokale Server-IP"
 echo ""
-echo "2. Öffne im Browser:"
-echo "   http://localhost:5000"
+echo "2. Port-Forwarding einrichten:"
+echo "   - Port 80  → diesen Server"
+echo "   - Port 443 → diesen Server"
 echo ""
-echo "3. Für dauerhaften Betrieb (mit PM2):"
-echo "   sudo npm install -g pm2"
-echo "   pm2 start npm --name 'ha-dashboard' -- start"
-echo "   pm2 startup"
-echo "   pm2 save"
+echo "3. Dashboard starten:"
+echo -e "   ${CYAN}docker compose up -d --build${NC}"
 echo ""
-echo "Dashboard URL: http://$(hostname -I | awk '{print $1}'):5000"
+echo "4. Im Browser öffnen:"
+echo -e "   ${GREEN}https://$domain${NC}"
 echo ""

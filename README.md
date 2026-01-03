@@ -35,12 +35,22 @@ A modern, mobile-first Progressive Web App (PWA) interface for Home Assistant, f
 
 **HTTPS is always enabled** with automatic Let's Encrypt certificates via Caddy.
 
-### Minimal Configuration
+### Interactive Setup
 
-Only **one variable** is required - your domain:
+Run the setup script - it asks for domain and email:
+
+```bash
+chmod +x setup.sh
+./setup.sh
+```
+
+### Manual Setup
+
+Or create `.env` manually:
 
 ```env
 DOMAIN=dashboard.yourdomain.com
+ACME_EMAIL=your@email.com
 ```
 
 Everything else is auto-configured:
@@ -52,7 +62,6 @@ Everything else is auto-configured:
 
 | Variable | Description |
 |----------|-------------|
-| `ACME_EMAIL` | Email for Let's Encrypt notifications |
 | `ENCRYPTION_KEY` | Use your own key instead of auto-generated |
 
 **Important**: User-specific settings (Home Assistant URL, entity mappings) are configured in the Settings UI after login - NOT in environment files.
@@ -64,15 +73,14 @@ Everything else is auto-configured:
 git clone https://github.com/yourusername/ha-dashboard.git
 cd ha-dashboard
 
-# Create .env with your domain
-cp .env.example .env
-nano .env  # Edit DOMAIN and ACME_EMAIL
+# Run interactive setup
+./setup.sh
 
 # Start
 docker compose up -d --build
 ```
 
-Access the dashboard at `https://dashboard.yourdomain.com`
+Access the dashboard at `https://yourdomain.com`
 
 ## Network Setup for External Access
 

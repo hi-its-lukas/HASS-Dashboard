@@ -24,8 +24,8 @@ services:
       - "80:80"
       - "443:443"
     environment:
-      - DOMAIN=${DOMAIN:?DOMAIN is required - set your domain in .env}
-      - EMAIL=${ACME_EMAIL:-}
+      - DOMAIN=${DOMAIN:?DOMAIN is required - run ./setup.sh}
+      - EMAIL=${ACME_EMAIL:?ACME_EMAIL is required - run ./setup.sh}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
