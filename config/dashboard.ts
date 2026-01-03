@@ -43,12 +43,11 @@ export interface ApplianceConfig {
 }
 
 export interface DashboardConfig {
-  // General
   weatherEntityId: string
   lightsGroupEntityId: string
   powerEntityId: string
+  backgroundUrl?: string
   
-  // Sections
   energy: EnergyConfig
   security: SecurityConfig
   rooms: RoomConfig[]

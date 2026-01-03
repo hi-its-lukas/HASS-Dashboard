@@ -61,12 +61,20 @@ export async function GET() {
     const scripts = states.filter((s: { entity_id: string }) => s.entity_id.startsWith('script.'))
     const scenes = states.filter((s: { entity_id: string }) => s.entity_id.startsWith('scene.'))
     const switches = states.filter((s: { entity_id: string }) => s.entity_id.startsWith('switch.'))
-    const sensors = states.filter((s: { entity_id: string }) => 
-      s.entity_id.startsWith('sensor.') && 
-      (s.entity_id.includes('power') || s.entity_id.includes('energy') || s.entity_id.includes('battery'))
-    )
+    const sensors = states.filter((s: { entity_id: string }) => s.entity_id.startsWith('sensor.'))
+    const binarySensors = states.filter((s: { entity_id: string }) => s.entity_id.startsWith('binary_sensor.'))
     const alarms = states.filter((s: { entity_id: string }) => s.entity_id.startsWith('alarm_control_panel.'))
     const weather = states.filter((s: { entity_id: string }) => s.entity_id.startsWith('weather.'))
+    const cameras = states.filter((s: { entity_id: string }) => s.entity_id.startsWith('camera.'))
+    const calendars = states.filter((s: { entity_id: string }) => s.entity_id.startsWith('calendar.'))
+    const climates = states.filter((s: { entity_id: string }) => s.entity_id.startsWith('climate.'))
+    const locks = states.filter((s: { entity_id: string }) => s.entity_id.startsWith('lock.'))
+    const mediaPlayers = states.filter((s: { entity_id: string }) => s.entity_id.startsWith('media_player.'))
+    const inputBooleans = states.filter((s: { entity_id: string }) => s.entity_id.startsWith('input_boolean.'))
+    const automations = states.filter((s: { entity_id: string }) => s.entity_id.startsWith('automation.'))
+    const deviceTrackers = states.filter((s: { entity_id: string }) => s.entity_id.startsWith('device_tracker.'))
+    const fans = states.filter((s: { entity_id: string }) => s.entity_id.startsWith('fan.'))
+    const vacuums = states.filter((s: { entity_id: string }) => s.entity_id.startsWith('vacuum.'))
     
     return NextResponse.json({
       areas,
@@ -79,8 +87,19 @@ export async function GET() {
         scenes,
         switches,
         sensors,
+        binarySensors,
         alarms,
-        weather
+        weather,
+        cameras,
+        calendars,
+        climates,
+        locks,
+        mediaPlayers,
+        inputBooleans,
+        automations,
+        deviceTrackers,
+        fans,
+        vacuums
       }
     })
   } catch (error) {

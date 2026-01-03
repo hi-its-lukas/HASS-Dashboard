@@ -15,7 +15,10 @@ import {
   Save,
   LogOut,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  Upload,
+  Image,
+  Trash2
 } from 'lucide-react'
 
 interface ConnectionStatus {
@@ -76,6 +79,8 @@ export default function SettingsPage() {
     covers: false,
     buttons: false
   })
+  const [uploadingBackground, setUploadingBackground] = useState(false)
+  const [backgroundUrl, setBackgroundUrl] = useState<string | null>(null)
   
   useEffect(() => {
     checkAuth()
@@ -97,12 +102,49 @@ export default function SettingsPage() {
         const data = await res.json()
         if (data.layoutConfig) {
           setConfig(data.layoutConfig)
+          if (data.layoutConfig.backgroundUrl) {
+            setBackgroundUrl(data.layoutConfig.backgroundUrl)
+          }
         }
       }
     } catch (error) {
       console.error('Failed to load settings:', error)
     } finally {
       setLoading(false)
+    }
+  }
+  
+  const handleBackgroundUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    
+    setUploadingBackground(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      
+      const res = await fetch('/api/upload/background', {
+        method: 'POST',
+        body: formData,
+      })
+      
+      if (res.ok) {
+        const data = await res.json()
+        setBackgroundUrl(data.url)
+      }
+    } catch (error) {
+      console.error('Failed to upload background:', error)
+    } finally {
+      setUploadingBackground(false)
+    }
+  }
+  
+  const handleRemoveBackground = async () => {
+    try {
+      await fetch('/api/upload/background', { method: 'DELETE' })
+      setBackgroundUrl(null)
+    } catch (error) {
+      console.error('Failed to remove background:', error)
     }
   }
   
@@ -353,12 +395,54 @@ export default function SettingsPage() {
           )}
         </div>
         
+        <div className="bg-[#141b2d]/80 backdrop-blur-lg rounded-2xl p-6 border border-white/5 mb-6">
+          <div className="flex items-center gap-3 mb-4">
+            <Image className="w-5 h-5 text-purple-400" />
+            <h2 className="text-lg font-semibold text-white">Hintergrundbild</h2>
+          </div>
+          
+          {backgroundUrl ? (
+            <div className="relative">
+              <img
+                src={backgroundUrl}
+                alt="Background preview"
+                className="w-full h-32 object-cover rounded-xl"
+              />
+              <button
+                onClick={handleRemoveBackground}
+                className="absolute top-2 right-2 p-2 bg-red-500/80 hover:bg-red-500 rounded-lg transition-colors"
+              >
+                <Trash2 className="w-4 h-4 text-white" />
+              </button>
+            </div>
+          ) : (
+            <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-white/10 rounded-xl cursor-pointer hover:border-white/20 transition-colors">
+              {uploadingBackground ? (
+                <Loader2 className="w-8 h-8 text-gray-400 animate-spin" />
+              ) : (
+                <>
+                  <Upload className="w-8 h-8 text-gray-400 mb-2" />
+                  <span className="text-sm text-gray-400">Bild hochladen</span>
+                  <span className="text-xs text-gray-500 mt-1">JPG, PNG, WebP (max 10MB)</span>
+                </>
+              )}
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                onChange={handleBackgroundUpload}
+                className="hidden"
+                disabled={uploadingBackground}
+              />
+            </label>
+          )}
+        </div>
+        
         <div className="text-center">
           <button
             onClick={() => router.push('/')}
             className="text-gray-400 hover:text-white transition-colors"
           >
-            Back to Dashboard
+            Zurück zum Dashboard
           </button>
         </div>
       </div>

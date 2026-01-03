@@ -9,6 +9,10 @@ HA Dashboard is a modern, mobile-first Progressive Web App (PWA) for Home Assist
 Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (2026-01-03)
+- Per-user background image upload with secure file storage in /data/backgrounds
+- Background images served via API with authentication (users can only access their own)
+- Settings page includes background upload/preview/delete UI
+- Dashboard displays custom background with dark overlay for readability
 - Dashboard now displays user-configured entities instead of hardcoded examples
 - Config store converts simple entity ID arrays into structured objects
 - PersonCard/ApplianceCard show Home Assistant friendly_name when available

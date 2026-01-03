@@ -6,6 +6,7 @@ interface UserLayoutConfig {
   lightsGroupEntityId?: string
   powerEntityId?: string
   alarmEntityId?: string
+  backgroundUrl?: string
   energy?: {
     solarEntityId?: string
     batteryEntityId?: string
@@ -131,6 +132,7 @@ function mergeWithDefaults(userConfig: UserLayoutConfig): DashboardConfig {
     weatherEntityId: userConfig.weatherEntityId || staticConfig.weatherEntityId,
     lightsGroupEntityId: userConfig.lightsGroupEntityId || staticConfig.lightsGroupEntityId,
     powerEntityId: userConfig.powerEntityId || staticConfig.powerEntityId,
+    backgroundUrl: userConfig.backgroundUrl,
     energy: {
       solarEntityId: userConfig.energy?.solarEntityId || staticConfig.energy.solarEntityId,
       batteryEntityId: userConfig.energy?.batteryEntityId || staticConfig.energy.batteryEntityId,
