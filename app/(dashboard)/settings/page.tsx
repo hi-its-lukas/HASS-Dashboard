@@ -23,7 +23,12 @@ import {
   Plus,
   X,
   Video,
-  DoorOpen
+  DoorOpen,
+  Eye,
+  User,
+  Car,
+  PawPrint,
+  Activity
 } from 'lucide-react'
 
 interface ConnectionStatus {
@@ -44,6 +49,18 @@ interface DiscoveredEntities {
   sensors: Array<{ entity_id: string; state: string; attributes: Record<string, unknown> }>
   alarms: Array<{ entity_id: string; state: string; attributes: Record<string, unknown> }>
   weather: Array<{ entity_id: string; state: string; attributes: Record<string, unknown> }>
+  cameras: Array<{ entity_id: string; state: string; attributes: Record<string, unknown> }>
+  binarySensors: Array<{ entity_id: string; state: string; attributes: Record<string, unknown> }>
+}
+
+interface SurveillanceCameraConfig {
+  cameraEntityId: string
+  cameraName: string
+  detectionTypes: ('person' | 'vehicle' | 'animal' | 'motion')[]
+  personSensorId?: string
+  vehicleSensorId?: string
+  animalSensorId?: string
+  motionSensorId?: string
 }
 
 interface IntercomConfig {
@@ -69,6 +86,7 @@ interface LayoutConfig {
     data?: Record<string, unknown>
   }>
   intercoms?: IntercomConfig[]
+  surveillanceCameras?: SurveillanceCameraConfig[]
   weatherEntityId?: string
   alarmEntityId?: string
   powerEntityId?: string
@@ -93,7 +111,8 @@ export default function SettingsPage() {
     lights: true,
     covers: false,
     buttons: false,
-    intercoms: false
+    intercoms: false,
+    surveillance: true
   })
   const [newIntercom, setNewIntercom] = useState({ name: '', cameraEntityId: '', speakUrl: '', lockEntityId: '' })
   const [uploadingBackground, setUploadingBackground] = useState(false)
@@ -580,6 +599,164 @@ export default function SettingsPage() {
                   Hinzufügen
                 </button>
               </div>
+            </div>
+          )}
+        </div>
+        
+        <div className="bg-[#141b2d]/80 backdrop-blur-lg rounded-2xl p-6 border border-white/5 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <Eye className="w-5 h-5 text-red-400" />
+              <h2 className="text-lg font-semibold text-white">AI Surveillance</h2>
+            </div>
+            <button
+              onClick={() => toggleSection('surveillance')}
+              className="p-2 hover:bg-white/5 rounded-lg transition-colors"
+            >
+              {expandedSections.surveillance ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
+            </button>
+          </div>
+          
+          {expandedSections.surveillance && (
+            <div className="space-y-4">
+              <p className="text-sm text-gray-400">
+                Wähle Kameras und Erkennungstypen für die AI Surveillance aus.
+              </p>
+              
+              {discovered?.cameras && discovered.cameras.length > 0 ? (
+                <div className="space-y-3">
+                  {discovered.cameras.map(camera => {
+                    const cameraName = (camera.attributes.friendly_name as string) || camera.entity_id.split('.')[1]
+                    const existingConfig = config.surveillanceCameras?.find(c => c.cameraEntityId === camera.entity_id)
+                    const isConfigured = !!existingConfig
+                    
+                    const relatedSensors = discovered.binarySensors?.filter(s => {
+                      const sensorName = s.entity_id.toLowerCase()
+                      const cameraBaseName = camera.entity_id.split('.')[1].toLowerCase().replace(/_medium|_high|_low/g, '')
+                      return sensorName.includes(cameraBaseName) || 
+                             (s.attributes.device_class && ['motion', 'occupancy'].includes(s.attributes.device_class as string))
+                    }) || []
+                    
+                    const personSensor = relatedSensors.find(s => 
+                      s.entity_id.toLowerCase().includes('person') || 
+                      (s.attributes.friendly_name as string)?.toLowerCase().includes('person')
+                    )
+                    const vehicleSensor = relatedSensors.find(s => 
+                      s.entity_id.toLowerCase().includes('vehicle') || s.entity_id.toLowerCase().includes('fahrzeug') ||
+                      (s.attributes.friendly_name as string)?.toLowerCase().includes('fahrzeug')
+                    )
+                    const animalSensor = relatedSensors.find(s => 
+                      s.entity_id.toLowerCase().includes('animal') || s.entity_id.toLowerCase().includes('tier') ||
+                      (s.attributes.friendly_name as string)?.toLowerCase().includes('tier')
+                    )
+                    const motionSensor = relatedSensors.find(s => 
+                      s.entity_id.toLowerCase().includes('motion') || s.entity_id.toLowerCase().includes('bewegung') ||
+                      s.attributes.device_class === 'motion'
+                    )
+                    
+                    return (
+                      <div key={camera.entity_id} className="p-4 bg-white/5 rounded-xl">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            <Video className="w-5 h-5 text-cyan-400" />
+                            <div>
+                              <p className="text-white font-medium">{cameraName}</p>
+                              <p className="text-xs text-gray-500">{camera.entity_id}</p>
+                            </div>
+                          </div>
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <span className="text-sm text-gray-400">Aktiv</span>
+                            <input
+                              type="checkbox"
+                              checked={isConfigured}
+                              onChange={() => {
+                                if (isConfigured) {
+                                  setConfig(prev => ({
+                                    ...prev,
+                                    surveillanceCameras: prev.surveillanceCameras?.filter(c => c.cameraEntityId !== camera.entity_id) || []
+                                  }))
+                                } else {
+                                  setConfig(prev => ({
+                                    ...prev,
+                                    surveillanceCameras: [
+                                      ...(prev.surveillanceCameras || []),
+                                      {
+                                        cameraEntityId: camera.entity_id,
+                                        cameraName,
+                                        detectionTypes: ['person'],
+                                        personSensorId: personSensor?.entity_id,
+                                        vehicleSensorId: vehicleSensor?.entity_id,
+                                        animalSensorId: animalSensor?.entity_id,
+                                        motionSensorId: motionSensor?.entity_id
+                                      }
+                                    ]
+                                  }))
+                                }
+                              }}
+                              className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500"
+                            />
+                          </label>
+                        </div>
+                        
+                        {isConfigured && (
+                          <div className="mt-3 pt-3 border-t border-white/10">
+                            <p className="text-xs text-gray-400 mb-2">Erkennungstypen:</p>
+                            <div className="flex flex-wrap gap-2">
+                              {[
+                                { type: 'person' as const, label: 'Person', icon: User, sensor: personSensor },
+                                { type: 'vehicle' as const, label: 'Fahrzeug', icon: Car, sensor: vehicleSensor },
+                                { type: 'animal' as const, label: 'Tier', icon: PawPrint, sensor: animalSensor },
+                                { type: 'motion' as const, label: 'Bewegung', icon: Activity, sensor: motionSensor }
+                              ].map(({ type, label, icon: Icon, sensor }) => {
+                                const isActive = existingConfig?.detectionTypes.includes(type)
+                                const hasSensor = !!sensor
+                                return (
+                                  <button
+                                    key={type}
+                                    onClick={() => {
+                                      setConfig(prev => ({
+                                        ...prev,
+                                        surveillanceCameras: prev.surveillanceCameras?.map(c => {
+                                          if (c.cameraEntityId !== camera.entity_id) return c
+                                          const newTypes = isActive 
+                                            ? c.detectionTypes.filter(t => t !== type)
+                                            : [...c.detectionTypes, type]
+                                          return { ...c, detectionTypes: newTypes }
+                                        }) || []
+                                      }))
+                                    }}
+                                    disabled={!hasSensor}
+                                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                                      isActive 
+                                        ? 'bg-red-500/20 text-red-400 border border-red-500/30' 
+                                        : hasSensor
+                                          ? 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/10'
+                                          : 'bg-white/5 text-gray-600 border border-white/5 cursor-not-allowed opacity-50'
+                                    }`}
+                                    title={hasSensor ? sensor.entity_id : 'Kein Sensor gefunden'}
+                                  >
+                                    <Icon className="w-3.5 h-3.5" />
+                                    {label}
+                                  </button>
+                                )
+                              })}
+                            </div>
+                            {relatedSensors.length === 0 && (
+                              <p className="text-xs text-yellow-500 mt-2">
+                                Keine passenden Erkennungssensoren gefunden. Bitte prüfe die UniFi Protect Integration.
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              ) : (
+                <p className="text-gray-500 text-sm">
+                  {discovered ? 'Keine Kameras gefunden. Bitte prüfe deine Home Assistant Integration.' : 'Klicke auf "Discover" um verfügbare Kameras zu laden.'}
+                </p>
+              )}
             </div>
           )}
         </div>
