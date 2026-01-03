@@ -5,36 +5,11 @@ services:
       dockerfile: Dockerfile
     container_name: hass-dashboard
     restart: unless-stopped
+    ports:
+      - "80:80"
     environment:
       - NODE_ENV=production
-      - PORT=3000
       - ENCRYPTION_KEY=${ENCRYPTION_KEY:-}
       - DATABASE_URL=${DATABASE_URL:-file:/data/hass-dashboard.db}
     volumes:
       - ./data:/data
-    networks:
-      - internal
-
-  caddy:
-    image: caddy:2-alpine
-    container_name: hass-dashboard-caddy
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
-    networks:
-      - internal
-    depends_on:
-      - app
-
-networks:
-  internal:
-    driver: bridge
-
-volumes:
-  caddy_data:
-  caddy_config:

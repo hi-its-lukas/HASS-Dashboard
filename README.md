@@ -25,7 +25,7 @@ Ein modernes, mobiles Dashboard für Home Assistant mit OAuth-Authentifizierung.
 ### Voraussetzungen
 
 - Docker & Docker Compose
-- Cloudflare Account (für Tunnel)
+- Cloudflare Account (für HTTPS via Tunnel)
 - Home Assistant Installation
 
 ### 1. Repository klonen
@@ -41,7 +41,7 @@ cd hass-dashboard
 docker compose up -d --build
 ```
 
-Das Dashboard läuft auf `https://hoas-dashboard.familie-hengl.de` (intern und extern).
+Das Dashboard läuft auf `http://localhost:80`.
 
 ### Update
 
@@ -55,8 +55,10 @@ docker logs hass-dashboard -f
 
 ### 3. Cloudflare Tunnel einrichten
 
+HTTPS wird über Cloudflare Tunnel bereitgestellt - kein lokales SSL-Zertifikat nötig.
+
 ```bash
-# cloudflared installieren
+# cloudflared installieren (Raspberry Pi / ARM64)
 curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-arm64.deb -o cloudflared.deb
 sudo dpkg -i cloudflared.deb
 
@@ -78,9 +80,7 @@ credentials-file: /home/pi/.cloudflared/<tunnel-id>.json
 
 ingress:
   - hostname: dashboard.deinedomain.de
-    service: https://localhost:443
-    originRequest:
-      noTLSVerify: true
+    service: http://localhost:80
   - service: http_status:404
 ```
 
@@ -92,7 +92,7 @@ sudo systemctl enable cloudflared
 sudo systemctl start cloudflared
 ```
 
-### 4. Cloudflare Tunnel Host Header (wichtig!)
+### 4. Cloudflare Dashboard konfigurieren
 
 Im Cloudflare Zero Trust Dashboard:
 
@@ -102,27 +102,18 @@ Im Cloudflare Zero Trust Dashboard:
 4. **HTTP Host Header**: `dashboard.deinedomain.de` eintragen
 5. Speichern
 
-Dies stellt sicher, dass die App die richtige Domain erkennt.
+Dies stellt sicher, dass die App die richtige Domain für OAuth erkennt.
 
-### 5. Split-DNS einrichten
+### 5. Split-DNS einrichten (optional)
 
-Damit OAuth intern und extern funktioniert:
+Für lokalen Zugriff ohne Cloudflare:
 
 | DNS | Ziel |
 |-----|------|
-| Extern (Cloudflare) | Cloudflare Tunnel |
-| Intern (Pi-hole/Router/UniFi) | `192.168.x.x` (lokale IP) |
+| Extern (Cloudflare) | Cloudflare Tunnel (HTTPS) |
+| Intern (Router/Pi-hole) | Lokale IP des Pi (HTTP) |
 
-### 6. Selbstsigniertes Zertifikat (intern)
-
-Caddy erstellt automatisch ein selbstsigniertes Zertifikat für `hoas-dashboard.familie-hengl.de`.
-
-Beim ersten Aufruf im Browser erscheint eine Warnung - das ist normal:
-1. **Chrome/Edge**: "Erweitert" → "Weiter zu ... (unsicher)"
-2. **Safari**: "Details einblenden" → "diese Website besuchen"
-3. **Firefox**: "Erweitert" → "Risiko akzeptieren"
-
-Das Zertifikat ist nur für den lokalen Zugriff. Extern über Cloudflare wird das echte Zertifikat verwendet.
+**Hinweis:** Intern ist nur HTTP verfügbar. Für lokales HTTPS siehe "Erweitert" unten.
 
 ## Konfiguration
 
@@ -131,7 +122,7 @@ Das Zertifikat ist nur für den lokalen Zugriff. Extern über Cloudflare wird da
 | Was | Wo |
 |-----|-----|
 | Encryption Key | `./data/.encryption_key` |
-| Datenbank | `./data/ha-dashboard.db` |
+| Datenbank | `./data/hass-dashboard.db` |
 | OAuth URLs | Aus Request-Headers |
 
 ### Optional (.env)
@@ -198,8 +189,8 @@ Der Container:
 
 ### OAuth funktioniert nicht
 
-1. Split-DNS korrekt eingerichtet?
-2. Gleiche Domain intern und extern?
+1. HTTP Host Header im Cloudflare Dashboard gesetzt?
+2. Split-DNS korrekt eingerichtet?
 3. Home Assistant erreichbar vom Dashboard-Server?
 
 ### Berechtigungsprobleme mit /data
@@ -217,9 +208,6 @@ sudo chown -R 1001:1001 ./data
 docker compose restart
 ```
 
-Der Container versucht automatisch die Berechtigungen zu fixen.
-Falls das nicht funktioniert, erscheint eine klare Fehlermeldung im Log.
-
 ### Datenbank zurücksetzen
 
 ```bash
@@ -233,6 +221,25 @@ docker compose up -d --build
 ```bash
 docker logs hass-dashboard -f
 ```
+
+## Erweitert: Lokales HTTPS
+
+Für lokales HTTPS (ohne Cloudflare) kann Caddy als Reverse Proxy verwendet werden.
+
+Erstelle `Caddyfile`:
+
+```
+{
+    auto_https disable_redirects
+}
+
+dashboard.deinedomain.de {
+    tls internal
+    reverse_proxy localhost:3000
+}
+```
+
+Und passe `docker-compose.yml` an um Caddy hinzuzufügen. Das selbstsignierte Zertifikat erfordert einmalige Browser-Akzeptanz.
 
 ## Projektstruktur
 
