@@ -31,49 +31,35 @@ A modern, mobile-first Progressive Web App (PWA) interface for Home Assistant, f
 - **PWA**: next-pwa
 - **Reverse Proxy**: Caddy (optional, for HTTPS)
 
-## Environment Variables
+## Zero Configuration
 
-### Production (Docker)
+**No `.env` file required!** The dashboard:
+- Auto-generates encryption keys on first start (stored in `./data/.encryption_key`)
+- Auto-detects the URL from incoming requests
+- Creates the database automatically
 
-Create a `.env` file in the project root with only **2 required variables**:
+### Optional: HTTPS with Caddy
 
-```env
-# REQUIRED: Base URL where the dashboard is accessible
-APP_BASE_URL=https://dashboard.yourdomain.com
-
-# REQUIRED: 32-byte hex key for encrypting OAuth tokens
-# Generate with: openssl rand -hex 32
-ENCRYPTION_KEY=your-64-character-hex-key
-
-# Optional: For HTTPS with Caddy
-# DOMAIN=dashboard.yourdomain.com
-# ACME_EMAIL=your@email.com
-```
-
-The database is automatically created at `./data/ha-dashboard.db` - no configuration needed.
-
-### Development (Local)
-
-Create a `.env.local` file (ignored by git):
+For production with your own domain, create a `.env` file:
 
 ```env
-APP_BASE_URL=http://localhost:5000
-ENCRYPTION_KEY=your-64-character-hex-key
-# NEXT_PUBLIC_USE_MOCK=true  # Uncomment for mock data
+DOMAIN=dashboard.yourdomain.com
+ACME_EMAIL=your@email.com
 ```
 
-### What Goes Where
+Then start with: `docker compose --profile https up -d --build`
 
-| Variable | Required? | Description |
-|----------|-----------|-------------|
-| `APP_BASE_URL` | **Yes** | Public URL of the dashboard |
-| `ENCRYPTION_KEY` | **Yes** | Token encryption key (openssl rand -hex 32) |
-| `DATABASE_URL` | No | SQLite path (auto-configured) |
-| `DOMAIN` | No | Domain for Caddy HTTPS |
-| `ACME_EMAIL` | No | Let's Encrypt email |
-| `NEXT_PUBLIC_USE_MOCK` | No | Use mock data for dev |
+### Optional Overrides
 
-**Important**: User-specific settings (Home Assistant URL, entity mappings, dashboard layout) are stored in the database and configured via the Settings UI - NOT in environment files.
+| Variable | Description |
+|----------|-------------|
+| `APP_BASE_URL` | Override auto-detected URL |
+| `ENCRYPTION_KEY` | Use your own key instead of auto-generated |
+| `DOMAIN` | Domain for Caddy HTTPS |
+| `ACME_EMAIL` | Let's Encrypt email |
+| `NEXT_PUBLIC_USE_MOCK` | Use mock data for development |
+
+**Important**: User-specific settings (Home Assistant URL, entity mappings) are stored in the database and configured via the Settings UI - NOT in environment files.
 
 ## Quick Start with Docker
 
@@ -82,24 +68,22 @@ ENCRYPTION_KEY=your-64-character-hex-key
 git clone https://github.com/yourusername/ha-dashboard.git
 cd ha-dashboard
 
-# Create production environment file
-cp .env.example .env
-
-# Generate encryption key
-openssl rand -hex 32
-# Copy the output to ENCRYPTION_KEY in .env
-
-# Edit .env with your values
-nano .env
-
-# Start without HTTPS (development)
+# Start (no configuration needed!)
 docker compose up -d --build
-
-# OR start with HTTPS (production)
-docker compose --profile https up -d --build
 ```
 
-Access the dashboard at `http://localhost:5000` (or your configured domain).
+Access the dashboard at `http://<your-server-ip>:5000`
+
+### With HTTPS
+
+```bash
+# Create .env with your domain
+echo "DOMAIN=dashboard.yourdomain.com" > .env
+echo "ACME_EMAIL=your@email.com" >> .env
+
+# Start with HTTPS
+docker compose --profile https up -d --build
+```
 
 ## Network Setup for External Access
 

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { initiateOAuth } from '@/lib/auth/ha-oauth'
+import { headers } from 'next/headers'
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,8 +16,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid Home Assistant URL' }, { status: 400 })
     }
     
+    const headersList = await headers()
+    const host = headersList.get('host') || 'localhost:5000'
+    const protocol = headersList.get('x-forwarded-proto') || 'http'
+    const requestBaseUrl = `${protocol}://${host}`
+    
     const redirectPath = typeof redirect === 'string' && redirect.startsWith('/') ? redirect : '/'
-    const authUrl = await initiateOAuth(haUrl, redirectPath)
+    const authUrl = await initiateOAuth(haUrl, redirectPath, requestBaseUrl)
     
     return NextResponse.json({ authUrl })
   } catch (error) {

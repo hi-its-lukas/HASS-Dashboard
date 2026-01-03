@@ -25,12 +25,13 @@ function generateCodeChallenge(verifier: string): string {
   return base64UrlEncode(hash)
 }
 
-export async function initiateOAuth(haUrl: string, redirectPath: string = '/'): Promise<string> {
+export async function initiateOAuth(haUrl: string, redirectPath: string = '/', requestBaseUrl?: string): Promise<string> {
   const state = randomBytes(32).toString('hex')
   const codeVerifier = base64UrlEncode(randomBytes(32))
   const codeChallenge = generateCodeChallenge(codeVerifier)
   
   const normalizedUrl = haUrl.replace(/\/$/, '')
+  const baseUrl = requestBaseUrl || getBaseUrl()
   
   const cookieStore = await cookies()
   
@@ -42,7 +43,12 @@ export async function initiateOAuth(haUrl: string, redirectPath: string = '/'): 
     maxAge: 600
   })
   
-  cookieStore.set(OAUTH_VERIFIER_COOKIE, JSON.stringify({ verifier: codeVerifier, haUrl: normalizedUrl, redirectPath }), {
+  cookieStore.set(OAUTH_VERIFIER_COOKIE, JSON.stringify({ 
+    verifier: codeVerifier, 
+    haUrl: normalizedUrl, 
+    redirectPath,
+    appBaseUrl: baseUrl
+  }), {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
@@ -50,8 +56,8 @@ export async function initiateOAuth(haUrl: string, redirectPath: string = '/'): 
     maxAge: 600
   })
   
-  const clientId = getClientId()
-  const redirectUri = getRedirectUri()
+  const clientId = baseUrl
+  const redirectUri = `${baseUrl}/api/auth/callback`
   
   const authUrl = new URL('/auth/authorize', normalizedUrl)
   authUrl.searchParams.set('client_id', clientId)
@@ -81,10 +87,16 @@ export async function handleOAuthCallback(code: string, state: string): Promise<
     return { success: false, error: 'Missing OAuth verifier' }
   }
   
-  const { verifier, haUrl, redirectPath = '/' } = JSON.parse(verifierData) as { verifier: string; haUrl: string; redirectPath?: string }
+  const { verifier, haUrl, redirectPath = '/', appBaseUrl } = JSON.parse(verifierData) as { 
+    verifier: string
+    haUrl: string
+    redirectPath?: string
+    appBaseUrl?: string 
+  }
   
   try {
-    const tokenResponse = await exchangeCodeForToken(code, verifier, haUrl)
+    const baseUrl = appBaseUrl || getBaseUrl()
+    const tokenResponse = await exchangeCodeForToken(code, verifier, haUrl, baseUrl)
     
     const userInfo = await fetchHAUserInfo(haUrl, tokenResponse.access_token)
     
@@ -162,7 +174,7 @@ interface TokenResponse {
   token_type: string
 }
 
-async function exchangeCodeForToken(code: string, codeVerifier: string, haUrl: string): Promise<TokenResponse> {
+async function exchangeCodeForToken(code: string, codeVerifier: string, haUrl: string, appBaseUrl: string): Promise<TokenResponse> {
   const tokenUrl = new URL('/auth/token', haUrl)
   
   const response = await fetch(tokenUrl.toString(), {
@@ -174,8 +186,8 @@ async function exchangeCodeForToken(code: string, codeVerifier: string, haUrl: s
       grant_type: 'authorization_code',
       code,
       code_verifier: codeVerifier,
-      client_id: getClientId(),
-      redirect_uri: getRedirectUri()
+      client_id: appBaseUrl,
+      redirect_uri: `${appBaseUrl}/api/auth/callback`
     })
   })
   
@@ -288,14 +300,20 @@ async function refreshAccessToken(userId: string, tokenRecord: TokenRecordForRef
   })
 }
 
+function getBaseUrl(): string {
+  return process.env.APP_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:5000'
+}
+
 function getClientId(): string {
-  const baseUrl = process.env.APP_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:5000'
-  return baseUrl
+  return getBaseUrl()
 }
 
 function getRedirectUri(): string {
-  const baseUrl = process.env.APP_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:5000'
-  return `${baseUrl}/api/auth/callback`
+  return `${getBaseUrl()}/api/auth/callback`
+}
+
+export function getAppBaseUrl(): string {
+  return getBaseUrl()
 }
 
 function getDefaultLayoutConfig() {
