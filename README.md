@@ -40,8 +40,6 @@ A modern, mobile-first Progressive Web App (PWA) interface for Home Assistant, f
 
 ### Optional: HTTPS with Caddy
 
-For production with your own domain, create a `.env` file:
-
 ```env
 DOMAIN=dashboard.yourdomain.com
 ACME_EMAIL=your@email.com
