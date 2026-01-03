@@ -90,7 +90,19 @@ sudo systemctl enable cloudflared
 sudo systemctl start cloudflared
 ```
 
-### 4. Split-DNS einrichten
+### 4. Cloudflare Tunnel Host Header (wichtig!)
+
+Im Cloudflare Zero Trust Dashboard:
+
+1. **Networks** → **Tunnels** → Tunnel auswählen
+2. **Configure** → **Public Hostname** Tab
+3. Route bearbeiten → **Additional application settings** aufklappen
+4. **HTTP Host Header**: `dashboard.deinedomain.de` eintragen
+5. Speichern
+
+Dies stellt sicher, dass die App die richtige Domain erkennt.
+
+### 5. Split-DNS einrichten
 
 Damit OAuth intern und extern funktioniert:
 
