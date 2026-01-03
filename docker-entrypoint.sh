@@ -57,8 +57,14 @@ setup_encryption_key() {
 }
 
 init_database() {
-  log_info "Ensuring database schema at $DB_FILE"
-  ./node_modules/.bin/prisma db push --accept-data-loss 2>&1 || log_warn "Database schema sync had warnings"
+  if [ -f "$DB_FILE" ]; then
+    log_info "Existing database found at $DB_FILE"
+    log_info "Running safe schema migrations..."
+    ./node_modules/.bin/prisma migrate deploy 2>&1 || log_warn "Migration had warnings (may be up-to-date)"
+  else
+    log_info "Creating new database at $DB_FILE"
+    ./node_modules/.bin/prisma migrate deploy 2>&1 || log_warn "Initial migration had warnings"
+  fi
   log_info "Database ready"
 }
 
