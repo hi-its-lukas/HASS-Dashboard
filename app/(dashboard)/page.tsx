@@ -103,22 +103,31 @@ export default function HomePage() {
               />
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-              {filteredRooms.map((room, index) => (
-                <motion.div
-                  key={room.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 * index }}
-                >
-                  <RoomCard
-                    name={room.name}
-                    icon={room.icon}
-                    entityIds={room.entityIds}
-                  />
-                </motion.div>
-              ))}
-            </div>
+            {config.rooms.length === 0 ? (
+              <div className="card p-6 text-center">
+                <p className="text-text-secondary mb-2">No rooms configured</p>
+                <a href="/settings" className="text-accent-cyan hover:underline text-sm">
+                  Go to Settings to select your lights and rooms
+                </a>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                {filteredRooms.map((room, index) => (
+                  <motion.div
+                    key={room.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 * index }}
+                  >
+                    <RoomCard
+                      name={room.name}
+                      icon={room.icon}
+                      entityIds={room.entityIds}
+                    />
+                  </motion.div>
+                ))}
+              </div>
+            )}
           </motion.section>
         </div>
 

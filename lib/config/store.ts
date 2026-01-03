@@ -1,10 +1,11 @@
 import { create } from 'zustand'
-import { DashboardConfig, dashboardConfig as staticConfig } from '@/config/dashboard'
+import { DashboardConfig, dashboardConfig as staticConfig, PersonConfig, RoomConfig, ApplianceConfig } from '@/config/dashboard'
 
 interface UserLayoutConfig {
   weatherEntityId?: string
   lightsGroupEntityId?: string
   powerEntityId?: string
+  alarmEntityId?: string
   energy?: {
     solarEntityId?: string
     batteryEntityId?: string
@@ -17,30 +18,75 @@ interface UserLayoutConfig {
     zones?: { id: string; name: string; entityId: string }[]
     dogModeEntityId?: string
   }
-  rooms?: {
-    id: string
-    name: string
-    floor: 'ground' | 'upper'
-    icon: string
-    entityIds: string[]
-  }[]
-  persons?: {
-    id: string
-    name: string
-    entityId: string
-    avatarUrl?: string
-    batteryEntityId?: string
-    stepsEntityId?: string
-    distanceEntityId?: string
-    floorsEntityId?: string
-    activityEntityId?: string
-  }[]
-  appliances?: {
-    id: string
-    name: string
-    entityId: string
-    icon: string
-  }[]
+  rooms?: RoomConfig[]
+  persons?: string[] | PersonConfig[]
+  lights?: string[]
+  covers?: string[]
+  appliances?: string[] | ApplianceConfig[]
+}
+
+function entityIdToName(entityId: string): string {
+  const parts = entityId.split('.')
+  if (parts.length < 2) return entityId
+  return parts[1]
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+}
+
+function convertPersonsArray(persons: string[]): PersonConfig[] {
+  return persons.map((entityId) => ({
+    id: entityId.replace('person.', ''),
+    name: entityIdToName(entityId),
+    entityId,
+  }))
+}
+
+function convertLightsToRooms(lights: string[]): RoomConfig[] {
+  const roomMap: Record<string, string[]> = {}
+  
+  lights.forEach((entityId) => {
+    const parts = entityId.split('.')
+    if (parts.length < 2) return
+    
+    const name = parts[1]
+    const roomMatch = name.match(/^([a-z_]+?)_/)
+    const roomId = roomMatch ? roomMatch[1] : 'other'
+    
+    if (!roomMap[roomId]) {
+      roomMap[roomId] = []
+    }
+    roomMap[roomId].push(entityId)
+  })
+  
+  return Object.entries(roomMap).map(([roomId, entityIds]) => ({
+    id: roomId,
+    name: roomId.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+    floor: 'ground' as const,
+    icon: 'lightbulb',
+    entityIds,
+  }))
+}
+
+function getApplianceIcon(entityId: string): string {
+  const name = entityId.toLowerCase()
+  if (name.includes('washer') || name.includes('washing')) return 'loader'
+  if (name.includes('dryer')) return 'wind'
+  if (name.includes('dishwasher')) return 'droplets'
+  if (name.includes('geyser') || name.includes('water_heater') || name.includes('boiler')) return 'flame'
+  if (name.includes('heater') || name.includes('heating')) return 'thermometer'
+  if (name.includes('ac') || name.includes('aircon') || name.includes('climate')) return 'snowflake'
+  if (name.includes('fan')) return 'fan'
+  if (name.includes('pump')) return 'droplet'
+  return 'zap'
+}
+
+function convertAppliancesArray(appliances: string[]): ApplianceConfig[] {
+  return appliances.map((entityId) => ({
+    id: entityId.replace(/\./g, '_'),
+    name: entityIdToName(entityId),
+    entityId,
+    icon: getApplianceIcon(entityId),
+  }))
 }
 
 interface ConfigStore {
@@ -56,6 +102,31 @@ interface ConfigStore {
 }
 
 function mergeWithDefaults(userConfig: UserLayoutConfig): DashboardConfig {
+  let persons: PersonConfig[] = staticConfig.persons
+  if (userConfig.persons?.length) {
+    if (typeof userConfig.persons[0] === 'string') {
+      persons = convertPersonsArray(userConfig.persons as string[])
+    } else {
+      persons = userConfig.persons as PersonConfig[]
+    }
+  }
+
+  let rooms: RoomConfig[] = staticConfig.rooms
+  if (userConfig.rooms?.length) {
+    rooms = userConfig.rooms
+  } else if (userConfig.lights?.length) {
+    rooms = convertLightsToRooms(userConfig.lights)
+  }
+
+  let appliances: ApplianceConfig[] = staticConfig.appliances
+  if (userConfig.appliances?.length) {
+    if (typeof userConfig.appliances[0] === 'string') {
+      appliances = convertAppliancesArray(userConfig.appliances as string[])
+    } else {
+      appliances = userConfig.appliances as ApplianceConfig[]
+    }
+  }
+
   return {
     weatherEntityId: userConfig.weatherEntityId || staticConfig.weatherEntityId,
     lightsGroupEntityId: userConfig.lightsGroupEntityId || staticConfig.lightsGroupEntityId,
@@ -68,13 +139,13 @@ function mergeWithDefaults(userConfig: UserLayoutConfig): DashboardConfig {
       houseEntityId: userConfig.energy?.houseEntityId || staticConfig.energy.houseEntityId,
     },
     security: {
-      alarmEntityId: userConfig.security?.alarmEntityId || staticConfig.security.alarmEntityId,
+      alarmEntityId: userConfig.security?.alarmEntityId || userConfig.alarmEntityId || staticConfig.security.alarmEntityId,
       zones: userConfig.security?.zones?.length ? userConfig.security.zones : staticConfig.security.zones,
       dogModeEntityId: userConfig.security?.dogModeEntityId || staticConfig.security.dogModeEntityId,
     },
-    rooms: userConfig.rooms?.length ? userConfig.rooms : staticConfig.rooms,
-    persons: userConfig.persons?.length ? userConfig.persons : staticConfig.persons,
-    appliances: userConfig.appliances?.length ? userConfig.appliances : staticConfig.appliances,
+    rooms,
+    persons,
+    appliances,
   }
 }
 

@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Flame, Loader, Wind, Droplets, LucideIcon } from 'lucide-react'
+import { Flame, Loader, Wind, Droplets, Zap, Thermometer, Snowflake, Fan, Droplet, LucideIcon } from 'lucide-react'
 import { Toggle } from '@/components/ui/toggle'
 import { useHAStore } from '@/lib/ha'
 import { cn } from '@/lib/utils'
@@ -17,6 +17,11 @@ const iconMap: Record<string, LucideIcon> = {
   loader: Loader,
   wind: Wind,
   droplets: Droplets,
+  zap: Zap,
+  thermometer: Thermometer,
+  snowflake: Snowflake,
+  fan: Fan,
+  droplet: Droplet,
 }
 
 export function ApplianceCard({ name, entityId, icon }: ApplianceCardProps) {
@@ -24,6 +29,7 @@ export function ApplianceCard({ name, entityId, icon }: ApplianceCardProps) {
   const callService = useHAStore((s) => s.callService)
   
   const isOn = state?.state === 'on'
+  const displayName = (state?.attributes?.friendly_name as string) || name
   const Icon = iconMap[icon] || Flame
 
   const handleToggle = async (checked: boolean) => {
@@ -45,7 +51,7 @@ export function ApplianceCard({ name, entityId, icon }: ApplianceCardProps) {
         )}>
           <Icon className={cn('w-5 h-5', isOn ? 'text-accent-orange' : 'text-text-muted')} />
         </div>
-        <span className="font-medium text-white">{name}</span>
+        <span className="font-medium text-white">{displayName}</span>
       </div>
       <Toggle checked={isOn} onChange={handleToggle} />
     </motion.div>

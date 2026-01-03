@@ -168,25 +168,31 @@ export default function SecurityPage() {
               <h2 className="text-sm font-medium text-text-muted uppercase tracking-wider">Zones</h2>
               <span className="text-xs text-text-secondary">{activeZones.length} active</span>
             </div>
-            <div className="space-y-2">
-              {config.security.zones.map((zone) => {
-                const isActive = states[zone.entityId]?.state === 'on'
-                return (
-                  <Card key={zone.id} className="p-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <HomeIcon className="w-5 h-5 text-text-muted" />
-                        <span className="font-medium text-white">{zone.name}</span>
+            {config.security.zones.length === 0 ? (
+              <div className="card p-4 text-center">
+                <p className="text-text-secondary text-sm">No zones configured</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {config.security.zones.map((zone) => {
+                  const isActive = states[zone.entityId]?.state === 'on'
+                  return (
+                    <Card key={zone.id} className="p-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <HomeIcon className="w-5 h-5 text-text-muted" />
+                          <span className="font-medium text-white">{zone.name}</span>
+                        </div>
+                        <div className={cn(
+                          'w-2 h-2 rounded-full',
+                          isActive ? 'bg-accent-green' : 'bg-text-muted'
+                        )} />
                       </div>
-                      <div className={cn(
-                        'w-2 h-2 rounded-full',
-                        isActive ? 'bg-accent-green' : 'bg-text-muted'
-                      )} />
-                    </div>
-                  </Card>
-                )
-              })}
-            </div>
+                    </Card>
+                  )
+                })}
+              </div>
+            )}
           </motion.section>
         </div>
       </div>

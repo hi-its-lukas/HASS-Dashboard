@@ -18,6 +18,8 @@ export function PersonCard({ person }: PersonCardProps) {
   const personState = states[person.entityId]
   const isHome = personState?.state === 'home'
   
+  const displayName = (personState?.attributes?.friendly_name as string) || person.name
+  
   const battery = person.batteryEntityId ? parseInt(states[person.batteryEntityId]?.state || '0') : null
   const steps = person.stepsEntityId ? parseInt(states[person.stepsEntityId]?.state || '0') : null
   const distance = person.distanceEntityId ? states[person.distanceEntityId]?.state : null
@@ -27,10 +29,10 @@ export function PersonCard({ person }: PersonCardProps) {
   return (
     <Card className="p-4">
       <div className="flex items-center gap-3 mb-3">
-        <Avatar name={person.name} src={person.avatarUrl} size="lg" />
+        <Avatar name={displayName} src={person.avatarUrl} size="lg" />
         <div className="flex-1">
           <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-white">{person.name}</h3>
+            <h3 className="font-semibold text-white">{displayName}</h3>
             {activity && (
               <Badge variant="info" className="text-[10px]">
                 {getActivityIcon(activity)} Focus

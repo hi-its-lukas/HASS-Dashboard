@@ -77,16 +77,22 @@ export default function EnergyPage() {
             <h2 className="text-sm font-medium text-text-muted uppercase tracking-wider mb-3">
               Appliances
             </h2>
-            <div className="space-y-2">
-              {config.appliances.map((appliance) => (
-                <ApplianceCard
-                  key={appliance.id}
-                  name={appliance.name}
-                  entityId={appliance.entityId}
-                  icon={appliance.icon}
-                />
-              ))}
-            </div>
+            {config.appliances.length === 0 ? (
+              <div className="card p-4 text-center">
+                <p className="text-text-secondary text-sm">No appliances configured</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {config.appliances.map((appliance) => (
+                  <ApplianceCard
+                    key={appliance.id}
+                    name={appliance.name}
+                    entityId={appliance.entityId}
+                    icon={appliance.icon}
+                  />
+                ))}
+              </div>
+            )}
           </motion.section>
         </div>
       </div>

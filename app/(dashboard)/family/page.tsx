@@ -72,18 +72,27 @@ export default function FamilyPage() {
         <h2 className="text-sm font-medium text-text-muted uppercase tracking-wider mb-3">
           Activity
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          {config.persons.map((person, index) => (
-            <motion.div
-              key={person.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 * index }}
-            >
-              <PersonCard person={person} />
-            </motion.div>
-          ))}
-        </div>
+        {config.persons.length === 0 ? (
+          <div className="card p-6 text-center">
+            <p className="text-text-secondary mb-2">No family members configured</p>
+            <a href="/settings" className="text-accent-cyan hover:underline text-sm">
+              Go to Settings to select your persons
+            </a>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {config.persons.map((person, index) => (
+              <motion.div
+                key={person.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 * index }}
+              >
+                <PersonCard person={person} />
+              </motion.div>
+            ))}
+          </div>
+        )}
       </motion.section>
     </div>
   )
