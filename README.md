@@ -41,7 +41,7 @@ cd hass-dashboard
 docker compose up -d --build
 ```
 
-Das Dashboard läuft auf `http://localhost:3000`.
+Das Dashboard läuft auf `http://localhost` (Port 80).
 
 ### 3. Cloudflare Tunnel einrichten
 
@@ -68,7 +68,7 @@ credentials-file: /home/pi/.cloudflared/<tunnel-id>.json
 
 ingress:
   - hostname: dashboard.deinedomain.de
-    service: http://localhost:3000
+    service: http://localhost:80
   - service: http_status:404
 ```
 

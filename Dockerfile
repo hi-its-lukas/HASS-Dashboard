@@ -50,10 +50,9 @@ RUN chmod +x ./docker-entrypoint.sh && \
 # This ensures mounted volumes work regardless of host permissions
 USER root
 
-EXPOSE 3000
+EXPOSE 80
 
-ENV PORT=3000
-ENV HOSTNAME="0.0.0.0"
+ENV PORT=80
 ENV DATABASE_URL="file:/data/hass-dashboard.db"
 
 ENTRYPOINT ["./docker-entrypoint.sh"]

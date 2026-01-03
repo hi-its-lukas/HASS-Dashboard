@@ -6,7 +6,7 @@ services:
     container_name: hass-dashboard
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "80:80"
     environment:
       - NODE_ENV=production
       - ENCRYPTION_KEY=${ENCRYPTION_KEY:-}

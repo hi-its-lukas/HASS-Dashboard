@@ -31,7 +31,7 @@ export async function initiateOAuth(haUrl: string, redirectPath: string = '/', r
   const codeChallenge = generateCodeChallenge(codeVerifier)
   
   const normalizedUrl = haUrl.replace(/\/$/, '')
-  const baseUrl = requestBaseUrl || getBaseUrl()
+  const baseUrl = requestBaseUrl || getAppBaseUrl()
   
   const cookieStore = await cookies()
   
@@ -95,7 +95,7 @@ export async function handleOAuthCallback(code: string, state: string): Promise<
   }
   
   try {
-    const baseUrl = appBaseUrl || getBaseUrl()
+    const baseUrl = appBaseUrl || getAppBaseUrl()
     const tokenResponse = await exchangeCodeForToken(code, verifier, haUrl, baseUrl)
     
     const userInfo = await fetchHAUserInfo(haUrl, tokenResponse.access_token)
@@ -300,20 +300,12 @@ async function refreshAccessToken(userId: string, tokenRecord: TokenRecordForRef
   })
 }
 
-function getBaseUrl(): string {
-  return 'http://localhost:5000'
-}
-
 function getClientId(): string {
-  return getBaseUrl()
-}
-
-function getRedirectUri(): string {
-  return `${getBaseUrl()}/api/auth/callback`
+  return process.env.APP_BASE_URL || 'http://localhost:3000'
 }
 
 export function getAppBaseUrl(): string {
-  return getBaseUrl()
+  return process.env.APP_BASE_URL || 'http://localhost:3000'
 }
 
 export function deriveBaseUrlFromRequest(request: Request): string {
