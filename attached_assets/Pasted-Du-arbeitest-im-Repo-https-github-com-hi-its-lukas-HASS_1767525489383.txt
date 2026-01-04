@@ -1,0 +1,216 @@
+Du arbeitest im Repo: https://github.com/hi-its-lukas/HASS-Dashboard/tree/main
+
+Ziel: Home Assistant Automationen sollen ein Popup im selbst programmierten Dashboard auslösen (z. B. “Klingel”), über die HA WebSocket API.
+
+Ausgangslage im Code (wichtig)
+
+Der HA WebSocket Client verarbeitet aktuell nur state_changed Events:
+
+Es gibt nur subscribeToStateChanges() (sendet subscribe_events mit event_type: 'state_changed') 
+
+websocket-client
+
+Bei eingehenden WS-Nachrichten vom Typ event wird fest angenommen, dass event.data.entity_id/new_state/old_state existiert 
+
+websocket-client
+
+
+→ Custom Events wie dashboard_popup (via event.fire) werden damit aktuell nicht korrekt verarbeitet.
+
+Zielbild
+
+Home Assistant Automation feuert ein Custom Event:
+
+action:
+  - event: dashboard_popup
+    event_data:
+      title: "Klingel"
+      message: "Es hat geklingelt!"
+      severity: "info"   # optional: info|warning|critical
+      timeout: 10000     # ms optional
+      tag: "doorbell"    # optional (zum ersetzen statt stapeln)
+
+
+Dashboard subscribed auf dashboard_popup Events und zeigt sofort ein UI-Popup (Modal/Overlay oder Toast).
+
+Anforderungen (Implementierung)
+A) WebSocket Client erweitern: generische Event-Subscriptions + Callbacks
+1) HAWebSocketClient erweitern (lib/ha/websocket-client.ts)
+
+Implementiere:
+
+subscribeToEvents(eventType: string): Promise<void>
+
+sendCommand { type: 'subscribe_events', event_type: eventType }
+
+Rückgabe-Handling analog zu subscribeToStateChanges() 
+
+websocket-client
+
+(Optional) Intern “already subscribed”-Set, damit es nicht doppelt subscribed.
+
+onEvent<T = any>(eventType: string, callback: (data: T, rawEvent: any) => void): () => void
+
+speichere callbacks in Map: eventCallbacks: Map<string, Set<fn>>
+
+2) handleMessage() anpassen
+
+Bei case 'event':
+
+nicht nur state_changed hardcoden (so wie aktuell) 
+
+websocket-client
+
+Stattdessen:
+
+lies event.event_type (HA liefert es bei subscribed events)
+
+route:
+
+wenn event_type === 'state_changed': weiterhin stateChangeCallbacks bedienen (kompatibel lassen!)
+
+sonst: rufe eventCallbacks.get(event_type) auf und gib event.data weiter
+
+Wichtig: Typing so bauen, dass state_changed weiterhin funktioniert, aber Custom Events einfach durchgereicht werden.
+
+B) UI: Globales Popup/Notification-System im Dashboard
+1) Zustand/Store
+
+Erstelle einen kleinen UI-Store (Zustand passt zu eurem Setup, siehe lib/ha/store.ts usage 
+
+store
+
+):
+
+z. B. lib/ui/notifications-store.ts
+
+State:
+
+queue: Notification[] oder current: Notification | null
+
+Notification Felder:
+
+id (uuid)
+
+title: string
+
+message: string
+
+severity?: 'info'|'warning'|'critical'
+
+timeout?: number (default z. B. 10000)
+
+tag?: string (wenn vorhanden: ersetze existierende Notification mit gleichem tag statt zu stapeln)
+
+createdAt
+
+Actions:
+
+show(notification)
+
+dismiss(id)
+
+optional clearAll()
+
+2) Globales UI-Component
+
+Bau ein globales Component, das auf allen Dashboard-Seiten verfügbar ist, z. B.:
+
+components/ui/notification-modal.tsx
+
+UI-Design:
+
+orientiere dich optisch an bestehendem Modal Pattern (z. B. CameraStreamModal nutzt fixed overlay, z-index 50, click outside closes) 
+
+page
+
+Features:
+
+zeigt title und message
+
+close button
+
+auto close nach timeout (wenn gesetzt)
+
+optional severity styling (ohne großen Aufwand)
+
+Mounting:
+
+das Component muss global gerendert werden, z. B. im Dashboard Layout (app/(dashboard)/layout.tsx oder global root layout), damit Popups auch auf jeder Seite auftauchen.
+
+C) Verbindung: HA Event → UI Popup
+1) Beim HA Connect Custom Events subscriben
+
+In lib/ha/store.ts nach erfolgreichem wsClient.connect() und nach state subscription:
+
+zusätzlich await wsClient.subscribeToEvents('dashboard_popup')
+
+dann:
+
+wsClient.onEvent('dashboard_popup', (data) => notificationsStore.show(mapDataToNotification(data)))
+
+Hinweis: Aktuell subscribed der Store nur subscribeToStateChanges() 
+
+store
+
+ — dort ergänzen.
+
+2) Data Validation
+
+Da event_data frei sein kann:
+
+defensiv parsen:
+
+title = typeof data.title === 'string' ? data.title : 'Hinweis'
+
+message = typeof data.message === 'string' ? data.message : JSON.stringify(data)
+
+timeout clamp (z. B. 0–60000)
+
+keine XSS: rein als Text rendern.
+
+D) Bonus (optional, aber sinnvoll): “Bildschirm wach halten” im Kiosk (iMac)
+
+Wenn das Dashboard im iMac-Kiosk läuft und der Bildschirm nicht schlafen soll:
+
+optional implementieren: Screen Wake Lock API
+
+bei App start (oder in Settings togglable) navigator.wakeLock.request('screen')
+
+beim visibilitychange re-request
+
+Beim Empfang von dashboard_popup zusätzlich:
+
+window.focus() (best-effort)
+
+optional document.documentElement.requestFullscreen() NICHT automatisch (blocked by browser), nur wenn User schon im fullscreen ist.
+
+(Das ist optional; Kernanforderung ist Popup.)
+
+Akzeptanzkriterien (Definition of Done)
+
+HA Automation mit event: dashboard_popup erzeugt im Dashboard sofort ein Popup.
+
+State updates laufen weiterhin wie vorher (keine Regression).
+
+Popup ist global (egal auf welcher Seite man ist).
+
+Timeout und manuelles Schließen funktionieren.
+
+Mehrere Events: Queue oder tag-based replace funktioniert nachvollziehbar.
+
+Testplan
+
+Lokal: Dashboard starten, HA verbinden, in HA Developer Tools → Events → Fire Event:
+
+dashboard_popup mit sample data
+
+Prüfen:
+
+Popup erscheint
+
+schließt nach timeout
+
+state_changed updates laufen weiterhin (Lichter togglen etc.)
+
+Reconnect-Test: Dashboard refresh, event erneut fire.
