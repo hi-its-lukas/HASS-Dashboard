@@ -60,12 +60,14 @@ export default function IntercomPage() {
   
   const lockState = intercom.lockEntityId ? states[intercom.lockEntityId] : null
 
+  const hasButtons = intercom.speakUrl || intercom.lockEntityId
+
   return (
-    <div className="px-4 py-6 safe-top max-w-4xl mx-auto">
+    <div className="px-4 py-6 safe-top">
       <motion.header
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between mb-6"
+        className="flex items-center justify-between mb-6 max-w-6xl mx-auto"
       >
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-accent-cyan/20 flex items-center justify-center">
@@ -89,15 +91,16 @@ export default function IntercomPage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
+        className="flex flex-col lg:flex-row gap-4 max-w-6xl mx-auto"
       >
-        <Card className="overflow-hidden mb-6">
-          <div className="aspect-video bg-bg-secondary relative">
+        <Card className="overflow-hidden flex-1">
+          <div className="bg-bg-secondary relative">
             <img
               ref={imgRef}
               key={streamKey}
               src={`/api/ha/stream/${encodeURIComponent(intercom.cameraEntityId)}?t=${streamKey}`}
               alt={intercom.name}
-              className="w-full h-full object-cover"
+              className="w-full h-auto"
               onError={() => {
                 if (imgRef.current) {
                   imgRef.current.src = `/api/ha/camera/${encodeURIComponent(intercom.cameraEntityId)}?t=${Date.now()}`
@@ -109,42 +112,39 @@ export default function IntercomPage() {
             </div>
           </div>
         </Card>
-      </motion.div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="grid grid-cols-2 gap-4"
-      >
-        {intercom.speakUrl && (
-          <button
-            onClick={handleSpeak}
-            className="flex flex-col items-center justify-center p-6 bg-accent-cyan/20 hover:bg-accent-cyan/30 rounded-2xl transition-colors"
-          >
-            <Mic className="w-8 h-8 text-accent-cyan mb-2" />
-            <span className="text-white font-medium">Sprechen</span>
-          </button>
-        )}
-        
-        {intercom.lockEntityId && (
-          <button
-            onClick={handleUnlock}
-            disabled={unlocking}
-            className="flex flex-col items-center justify-center p-6 bg-accent-green/20 hover:bg-accent-green/30 rounded-2xl transition-colors disabled:opacity-50"
-          >
-            {unlocking ? (
-              <Loader2 className="w-8 h-8 text-accent-green mb-2 animate-spin" />
-            ) : (
-              <DoorOpen className="w-8 h-8 text-accent-green mb-2" />
+        {hasButtons && (
+          <div className="flex flex-row lg:flex-col gap-4 lg:w-48 shrink-0">
+            {intercom.speakUrl && (
+              <button
+                onClick={handleSpeak}
+                className="flex-1 flex flex-col items-center justify-center p-6 bg-accent-cyan/20 hover:bg-accent-cyan/30 rounded-2xl transition-colors"
+              >
+                <Mic className="w-8 h-8 text-accent-cyan mb-2" />
+                <span className="text-white font-medium">Sprechen</span>
+              </button>
             )}
-            <span className="text-white font-medium">Tür öffnen</span>
-            {lockState && (
-              <span className="text-xs text-text-muted mt-1">
-                {lockState.state === 'locked' ? 'Verriegelt' : 'Entriegelt'}
-              </span>
+            
+            {intercom.lockEntityId && (
+              <button
+                onClick={handleUnlock}
+                disabled={unlocking}
+                className="flex-1 flex flex-col items-center justify-center p-6 bg-accent-green/20 hover:bg-accent-green/30 rounded-2xl transition-colors disabled:opacity-50"
+              >
+                {unlocking ? (
+                  <Loader2 className="w-8 h-8 text-accent-green mb-2 animate-spin" />
+                ) : (
+                  <DoorOpen className="w-8 h-8 text-accent-green mb-2" />
+                )}
+                <span className="text-white font-medium">Tür öffnen</span>
+                {lockState && (
+                  <span className="text-xs text-text-muted mt-1">
+                    {lockState.state === 'locked' ? 'Verriegelt' : 'Entriegelt'}
+                  </span>
+                )}
+              </button>
             )}
-          </button>
+          </div>
         )}
       </motion.div>
     </div>
