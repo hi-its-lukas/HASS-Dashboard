@@ -75,13 +75,13 @@ export function PersonCard({ person }: PersonCardProps) {
       )}
 
       {sensorValues.length > 0 ? (
-        <div className={`grid gap-2 text-center`} style={{ gridTemplateColumns: `repeat(${Math.min(sensorValues.length, 4)}, 1fr)` }}>
+        <div className="space-y-2">
           {sensorValues.map(sensor => (
-            <div key={sensor.id}>
-              <span className="text-lg font-bold text-accent-cyan">
+            <div key={sensor.id} className="flex justify-between items-start gap-2">
+              <span className="text-[10px] text-text-muted uppercase flex-shrink-0">{sensor.label}</span>
+              <span className="text-sm font-medium text-accent-cyan text-right break-words">
                 {sensor.value}{sensor.unit && sensor.value !== '-' ? sensor.unit : ''}
               </span>
-              <p className="text-[10px] text-text-muted uppercase truncate">{sensor.label}</p>
             </div>
           ))}
         </div>
