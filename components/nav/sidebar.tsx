@@ -15,7 +15,8 @@ import {
   Menu,
   Lightbulb,
   Blinds,
-  Phone
+  Phone,
+  Thermometer
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useConfigStore } from '@/lib/config/store'
@@ -44,6 +45,7 @@ const navItems = [
   { href: '/', icon: Home, label: 'Home' },
   { href: '/lights', icon: Lightbulb, label: 'Lichtquellen' },
   { href: '/covers', icon: Blinds, label: 'Rollos' },
+  { href: '/climate', icon: Thermometer, label: 'Klima' },
   { href: '/cameras', icon: Video, label: 'Kameras' },
   { href: '/energy', icon: Zap, label: 'Energie' },
   { href: '/family', icon: Users, label: 'Familie' },

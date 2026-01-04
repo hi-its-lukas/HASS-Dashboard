@@ -9,6 +9,7 @@ HA Dashboard is a modern, mobile-first Progressive Web App (PWA) for Home Assist
 Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (2026-01-04)
+- **New Climate page** (`/climate`) - Control heating, AC, and fans with temperature adjustment and mode selection
 - **Apple Home Design Overhaul** - Complete visual redesign inspired by Apple Home app
   - New glassmorphism UI with translucent cards and backdrop blur effects
   - Warm gradient background (customizable via user-uploaded images)
