@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { ChevronLeft, ChevronRight, Sun, Cloud, CloudRain, Snowflake, CloudSun } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Sun, Cloud, CloudRain, Snowflake, CloudSun, Wind, CloudFog } from 'lucide-react'
 import { useHAStore } from '@/lib/ha'
 import { cn } from '@/lib/utils'
 
@@ -11,6 +11,7 @@ interface CalendarEvent {
   start: string
   end: string
   allDay?: boolean
+  calendarId?: string
 }
 
 interface DayForecast {
@@ -21,17 +22,28 @@ interface DayForecast {
 }
 
 const weatherIcons: Record<string, React.ReactNode> = {
-  sunny: <Sun className="w-4 h-4 text-yellow-400" />,
-  clear: <Sun className="w-4 h-4 text-yellow-400" />,
-  'clear-night': <Sun className="w-4 h-4 text-yellow-400" />,
-  cloudy: <Cloud className="w-4 h-4 text-gray-400" />,
-  partlycloudy: <CloudSun className="w-4 h-4 text-gray-300" />,
-  rainy: <CloudRain className="w-4 h-4 text-blue-400" />,
-  snowy: <Snowflake className="w-4 h-4 text-blue-200" />,
+  sunny: <Sun className="w-5 h-5 text-yellow-400" />,
+  clear: <Sun className="w-5 h-5 text-yellow-400" />,
+  'clear-night': <Sun className="w-5 h-5 text-yellow-400" />,
+  cloudy: <Cloud className="w-5 h-5 text-gray-400" />,
+  partlycloudy: <CloudSun className="w-5 h-5 text-gray-300" />,
+  rainy: <CloudRain className="w-5 h-5 text-blue-400" />,
+  snowy: <Snowflake className="w-5 h-5 text-blue-200" />,
+  windy: <Wind className="w-5 h-5 text-gray-300" />,
+  fog: <CloudFog className="w-5 h-5 text-gray-400" />,
 }
 
+const eventColors = [
+  'bg-cyan-500/80',
+  'bg-emerald-500/80',
+  'bg-purple-500/80',
+  'bg-orange-500/80',
+  'bg-pink-500/80',
+  'bg-blue-500/80',
+  'bg-yellow-500/80',
+]
+
 const dayNames = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag']
-const dayNamesShort = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa']
 const monthNames = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember']
 
 function getWeekDates(baseDate: Date): Date[] {
@@ -68,12 +80,21 @@ export function CalendarWeek({ calendarEntityIds = [], weatherEntityId }: Calend
   const [weekOffset, setWeekOffset] = useState(0)
   const [events, setEvents] = useState<Record<string, CalendarEvent[]>>({})
   const [forecasts, setForecasts] = useState<DayForecast[]>([])
+  const [calendarColors, setCalendarColors] = useState<Record<string, string>>({})
   const states = useHAStore((s) => s.states)
   
   const baseDate = new Date()
   baseDate.setDate(baseDate.getDate() + weekOffset * 7)
   const weekDates = getWeekDates(baseDate)
   const currentMonth = monthNames[weekDates[0].getMonth()]
+  
+  useEffect(() => {
+    const colors: Record<string, string> = {}
+    calendarEntityIds.forEach((id, idx) => {
+      colors[id] = eventColors[idx % eventColors.length]
+    })
+    setCalendarColors(colors)
+  }, [calendarEntityIds])
   
   useEffect(() => {
     if (weatherEntityId && states[weatherEntityId]) {
@@ -122,20 +143,28 @@ export function CalendarWeek({ calendarEntityIds = [], weatherEntityId }: Calend
     return forecasts.find((f) => f.date.toDateString() === date.toDateString())
   }
   
-  const getEventsForDate = (date: Date): CalendarEvent[] => {
+  const getEventsForDate = (date: Date): (CalendarEvent & { color: string })[] => {
     const dateStr = date.toISOString().split('T')[0]
-    const allEvents: CalendarEvent[] = []
+    const allEvents: (CalendarEvent & { color: string })[] = []
     
-    Object.values(events).forEach((calEvents) => {
+    Object.entries(events).forEach(([calendarId, calEvents]) => {
       calEvents.forEach((event) => {
         const eventDate = event.start.split('T')[0]
         if (eventDate === dateStr) {
-          allEvents.push(event)
+          allEvents.push({
+            ...event,
+            calendarId,
+            color: calendarColors[calendarId] || 'bg-cyan-500/80'
+          })
         }
       })
     })
     
-    return allEvents
+    return allEvents.sort((a, b) => {
+      if (a.allDay && !b.allDay) return -1
+      if (!a.allDay && b.allDay) return 1
+      return new Date(a.start).getTime() - new Date(b.start).getTime()
+    })
   }
   
   return (
@@ -166,7 +195,7 @@ export function CalendarWeek({ calendarEntityIds = [], weatherEntityId }: Calend
         </button>
       </div>
       
-      <div className="space-y-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2">
         {weekDates.map((date, idx) => {
           const forecast = getForecast(date)
           const dayEvents = getEventsForDate(date)
@@ -175,51 +204,60 @@ export function CalendarWeek({ calendarEntityIds = [], weatherEntityId }: Calend
           return (
             <motion.div
               key={date.toISOString()}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: idx * 0.05 }}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.03 }}
               className={cn(
-                'rounded-xl p-3',
-                today ? 'bg-white/10' : 'bg-white/5'
+                'rounded-xl p-3 min-h-[140px] flex flex-col',
+                today ? 'bg-white/15 ring-1 ring-cyan-500/50' : 'bg-white/5'
               )}
             >
               <div className="flex items-start justify-between mb-2">
-                <div className="flex items-baseline gap-2">
+                <div>
                   <span className={cn(
-                    'text-2xl font-bold',
-                    today ? 'text-accent-cyan' : 'text-white'
+                    'text-3xl font-bold block',
+                    today ? 'text-cyan-400' : 'text-white'
                   )}>
                     {date.getDate()}
                   </span>
-                  <span className="text-sm text-text-secondary">
+                  <span className="text-xs text-text-secondary">
                     {formatDayLabel(date)}
                   </span>
                 </div>
                 {forecast && (
-                  <div className="flex items-center gap-2 text-xs text-text-secondary">
-                    <span>{forecast.tempLow.toFixed(1)}°C / {forecast.tempHigh.toFixed(1)}°C</span>
-                    {weatherIcons[forecast.condition] || <Cloud className="w-4 h-4" />}
+                  <div className="flex flex-col items-end gap-0.5">
+                    <span className="text-[10px] text-text-muted">
+                      {forecast.tempLow.toFixed(0)}°C / {forecast.tempHigh.toFixed(0)}°C
+                    </span>
+                    {weatherIcons[forecast.condition] || <Cloud className="w-5 h-5 text-gray-400" />}
                   </div>
                 )}
               </div>
               
-              {dayEvents.length > 0 ? (
-                <div className="space-y-1">
-                  {dayEvents.map((event, i) => (
+              <div className="flex-1 space-y-1 overflow-hidden">
+                {dayEvents.length > 0 ? (
+                  dayEvents.slice(0, 3).map((event, i) => (
                     <div
                       key={i}
-                      className="bg-white/10 rounded-lg px-3 py-2 text-sm"
+                      className={cn(
+                        'rounded px-2 py-1 text-xs truncate',
+                        event.color
+                      )}
                     >
-                      <span className="text-text-muted text-xs">
-                        {event.allDay ? 'Ganztägig' : new Date(event.start).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                      <p className="text-white font-medium truncate">{event.summary}</p>
+                      {event.allDay ? (
+                        <span className="text-white font-medium">{event.summary}</span>
+                      ) : (
+                        <span className="text-white font-medium">{event.summary}</span>
+                      )}
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-xs text-text-muted">Keine Termine</p>
-              )}
+                  ))
+                ) : (
+                  <p className="text-[10px] text-text-muted">Keine Termine</p>
+                )}
+                {dayEvents.length > 3 && (
+                  <p className="text-[10px] text-text-muted">+{dayEvents.length - 3} weitere</p>
+                )}
+              </div>
             </motion.div>
           )
         })}
