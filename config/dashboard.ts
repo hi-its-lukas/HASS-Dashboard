@@ -85,6 +85,7 @@ export interface PersonDetailConfig {
 
 export interface DashboardConfig {
   weatherEntityId: string
+  temperatureSensorId?: string
   lightsGroupEntityId: string
   powerEntityId: string
   backgroundUrl?: string

@@ -119,6 +119,7 @@ interface LayoutConfig {
   }>
   intercoms?: IntercomConfig[]
   weatherEntityId?: string
+  temperatureSensorId?: string
   alarmEntityId?: string
   powerEntityId?: string
 }
@@ -767,27 +768,56 @@ export default function SettingsPage() {
                       <p className="text-sm text-gray-500">Keine Kalender gefunden. Klicke auf "Discover" um Kalender zu laden.</p>
                     )}
                     
-                    <div className="pt-4 border-t border-white/10 mt-4">
-                      <label className="flex items-center gap-2 text-sm text-gray-300 mb-2">
-                        <CloudSun className="w-4 h-4 text-yellow-400" />
-                        Wetter-Vorhersage für Kalender
-                      </label>
-                      <select
-                        value={config.weatherEntityId || ''}
-                        onChange={(e) => setConfig(prev => ({
-                          ...prev,
-                          weatherEntityId: e.target.value || undefined
-                        }))}
-                        className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
-                      >
-                        <option value="" className="bg-gray-800">Kein Wetter anzeigen</option>
-                        {discovered?.weather?.map(entity => (
-                          <option key={entity.entity_id} value={entity.entity_id} className="bg-gray-800">
-                            {getFriendlyName(entity)} ({entity.entity_id})
-                          </option>
-                        ))}
-                      </select>
-                      <p className="text-xs text-gray-500 mt-1">Zeigt Temperatur und Wetter-Icon für jeden Tag im Kalender</p>
+                    <div className="pt-4 border-t border-white/10 mt-4 space-y-4">
+                      <div>
+                        <label className="flex items-center gap-2 text-sm text-gray-300 mb-2">
+                          <CloudSun className="w-4 h-4 text-yellow-400" />
+                          Wetter-Vorhersage (Außentemperatur)
+                        </label>
+                        <select
+                          value={config.weatherEntityId || ''}
+                          onChange={(e) => setConfig(prev => ({
+                            ...prev,
+                            weatherEntityId: e.target.value || undefined
+                          }))}
+                          className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                        >
+                          <option value="" className="bg-gray-800">Kein Wetter anzeigen</option>
+                          {discovered?.weather?.map(entity => (
+                            <option key={entity.entity_id} value={entity.entity_id} className="bg-gray-800">
+                              {getFriendlyName(entity)} ({entity.entity_id})
+                            </option>
+                          ))}
+                        </select>
+                        <p className="text-xs text-gray-500 mt-1">Zeigt Wetter-Widget auf der Startseite mit Vorhersage</p>
+                      </div>
+                      
+                      <div>
+                        <label className="flex items-center gap-2 text-sm text-gray-300 mb-2">
+                          <Thermometer className="w-4 h-4 text-orange-400" />
+                          Innentemperatur-Sensor
+                        </label>
+                        <select
+                          value={(config as { temperatureSensorId?: string }).temperatureSensorId || ''}
+                          onChange={(e) => setConfig(prev => ({
+                            ...prev,
+                            temperatureSensorId: e.target.value || undefined
+                          } as typeof prev))}
+                          className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                        >
+                          <option value="" className="bg-gray-800">Kein Innensensor</option>
+                          {discovered?.sensors?.filter(s => 
+                            s.attributes.device_class === 'temperature' ||
+                            s.entity_id.includes('temperature') ||
+                            s.entity_id.includes('temp')
+                          ).map(entity => (
+                            <option key={entity.entity_id} value={entity.entity_id} className="bg-gray-800">
+                              {getFriendlyName(entity)} ({entity.entity_id})
+                            </option>
+                          ))}
+                        </select>
+                        <p className="text-xs text-gray-500 mt-1">Zum Vergleich: Zeigt Innentemperatur neben Außentemperatur</p>
+                      </div>
                     </div>
                   </div>
                 )}

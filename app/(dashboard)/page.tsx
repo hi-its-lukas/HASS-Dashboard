@@ -1,8 +1,8 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { PersonLocationMap } from '@/components/cards/person-location-map'
-import { Avatar } from '@/components/ui/avatar'
+import { PersonMiniCard } from '@/components/cards/person-mini-card'
+import { WeatherWidget } from '@/components/cards/weather-widget'
 import {
   useHAStore,
   useConnectionStatus,
@@ -33,6 +33,9 @@ export default function HomePage() {
     const state = states[p.entityId]
     return state?.state === 'home'
   }).length
+  
+  const weatherEntityId = configStore.config.weatherEntityId || config.weatherEntityId
+  const temperatureSensorId = configStore.config.temperatureSensorId
 
   return (
     <div className="min-h-screen pb-24">
@@ -60,6 +63,18 @@ export default function HomePage() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.05 }}
+          className="mb-4"
+        >
+          <WeatherWidget 
+            weatherEntityId={weatherEntityId} 
+            temperatureSensorId={temperatureSensorId}
+          />
+        </motion.div>
+        
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
           className="grid grid-cols-2 gap-3 mb-4"
         >
           <Link href="/lights" className="glass-tile p-4">
@@ -114,7 +129,7 @@ export default function HomePage() {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
+          transition={{ delay: 0.15 }}
           className="mb-4"
         >
           <Link href="/family" className="flex items-center justify-between mb-3">
@@ -135,35 +150,15 @@ export default function HomePage() {
             </div>
           ) : (
             <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4">
-              {config.persons.map((person) => {
-                const state = states[person.entityId]
-                const isHome = state?.state === 'home'
-                const displayName = (state?.attributes?.friendly_name as string) || person.name
-                
-                return (
-                  <div key={person.id} className="glass-tile flex-shrink-0 flex-col items-center text-center p-3 min-w-[80px]">
-                    <div className="relative mb-1">
-                      <Avatar name={displayName} size="md" />
-                      <div 
-                        className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 ${isHome ? 'bg-accent-green' : 'bg-gray-500'}`}
-                        style={{ borderColor: 'rgba(28, 28, 30, 0.8)' }}
-                      />
-                    </div>
-                    <p className="font-medium text-white text-xs truncate max-w-[70px]">{displayName}</p>
-                  </div>
-                )
-              })}
+              {config.persons.map((person) => (
+                <PersonMiniCard 
+                  key={person.id} 
+                  entityId={person.entityId} 
+                  name={person.name} 
+                />
+              ))}
             </div>
           )}
-        </motion.div>
-        
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-          className="h-[200px] rounded-2xl overflow-hidden"
-        >
-          <PersonLocationMap />
         </motion.div>
       </div>
     </div>
