@@ -98,6 +98,7 @@ export interface DashboardConfig {
   lightsGroupEntityId: string
   powerEntityId: string
   backgroundUrl?: string
+  calendars?: string[]
   
   energy: EnergyConfig
   security: SecurityConfig
