@@ -1,8 +1,10 @@
 'use client'
 
-import { useState, Suspense } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Home, AlertCircle, Loader2 } from 'lucide-react'
+
+const HA_URL_STORAGE_KEY = 'ha-dashboard-instance-url'
 
 function LoginForm() {
   const router = useRouter()
@@ -14,10 +16,19 @@ function LoginForm() {
   const [error, setError] = useState<string | null>(errorMessage)
   const redirectPath = searchParams.get('redirect') || '/'
   
+  useEffect(() => {
+    const savedUrl = localStorage.getItem(HA_URL_STORAGE_KEY)
+    if (savedUrl) {
+      setHaUrl(savedUrl)
+    }
+  }, [])
+  
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
+    
+    localStorage.setItem(HA_URL_STORAGE_KEY, haUrl)
     
     try {
       const response = await fetch('/api/auth/login', {
