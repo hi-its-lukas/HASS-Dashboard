@@ -28,7 +28,11 @@ import {
   User,
   Car,
   PawPrint,
-  Activity
+  Activity,
+  Sun,
+  Battery,
+  Home,
+  PlugZap
 } from 'lucide-react'
 
 interface ConnectionStatus {
@@ -86,11 +90,21 @@ interface PersonDetailConfig {
   sensors: PersonSensorConfig[]
 }
 
+interface EnergyConfig {
+  solarEntityId?: string
+  batteryEntityId?: string
+  batteryLevelEntityId?: string
+  gridEntityId?: string
+  houseEntityId?: string
+}
+
 interface LayoutConfig {
   persons: string[]
   personDetails?: PersonDetailConfig[]
   lights: string[]
   covers: string[]
+  appliances?: string[]
+  energy?: EnergyConfig
   customButtons: Array<{
     id: string
     label: string
@@ -119,6 +133,8 @@ export default function SettingsPage() {
     persons: [],
     lights: [],
     covers: [],
+    appliances: [],
+    energy: {},
     customButtons: [],
   })
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
@@ -126,6 +142,8 @@ export default function SettingsPage() {
     personDetails: true,
     lights: true,
     covers: false,
+    energy: true,
+    appliances: false,
     buttons: false,
     intercoms: false,
     surveillance: true
@@ -155,7 +173,12 @@ export default function SettingsPage() {
       if (res.ok) {
         const data = await res.json()
         if (data.layoutConfig) {
-          setConfig(data.layoutConfig)
+          setConfig(prev => ({
+            ...prev,
+            ...data.layoutConfig,
+            appliances: data.layoutConfig.appliances || [],
+            energy: data.layoutConfig.energy || {},
+          }))
           if (data.layoutConfig.backgroundUrl) {
             setBackgroundUrl(data.layoutConfig.backgroundUrl)
           }
@@ -254,13 +277,16 @@ export default function SettingsPage() {
     router.push('/login')
   }
   
-  const toggleEntity = (type: 'persons' | 'lights' | 'covers', entityId: string) => {
-    setConfig(prev => ({
-      ...prev,
-      [type]: prev[type].includes(entityId)
-        ? prev[type].filter(id => id !== entityId)
-        : [...prev[type], entityId]
-    }))
+  const toggleEntity = (type: 'persons' | 'lights' | 'covers' | 'appliances', entityId: string) => {
+    setConfig(prev => {
+      const current = prev[type] || []
+      return {
+        ...prev,
+        [type]: current.includes(entityId)
+          ? current.filter((id: string) => id !== entityId)
+          : [...current, entityId]
+      }
+    })
   }
   
   const toggleSection = (section: string) => {
@@ -630,6 +656,196 @@ export default function SettingsPage() {
                         <span className="text-gray-300">{getFriendlyName(entity)}</span>
                       </label>
                     ))}
+                  </div>
+                )}
+              </div>
+              
+              <div className="border border-white/5 rounded-xl overflow-hidden">
+                <button
+                  onClick={() => toggleSection('energy')}
+                  className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <Zap className="w-5 h-5 text-green-400" />
+                    <span className="text-white font-medium">Energy Dashboard</span>
+                  </div>
+                  {expandedSections.energy ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
+                </button>
+                {expandedSections.energy && (
+                  <div className="p-4 space-y-4">
+                    <p className="text-sm text-gray-400 mb-3">
+                      Konfiguriere die Sensoren für das Energy Dashboard:
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="flex items-center gap-2 text-xs text-gray-400 mb-1">
+                          <Sun className="w-4 h-4 text-yellow-400" />
+                          Solar (Produktion)
+                        </label>
+                        <select
+                          value={config.energy?.solarEntityId || ''}
+                          onChange={(e) => setConfig(prev => ({
+                            ...prev,
+                            energy: { ...prev.energy, solarEntityId: e.target.value || undefined }
+                          }))}
+                          className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                        >
+                          <option value="">Nicht konfiguriert</option>
+                          {discovered?.sensors.filter(s => 
+                            s.entity_id.includes('solar') || 
+                            s.entity_id.includes('pv') || 
+                            s.attributes.device_class === 'power'
+                          ).map(s => (
+                            <option key={s.entity_id} value={s.entity_id}>{getFriendlyName(s)}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="flex items-center gap-2 text-xs text-gray-400 mb-1">
+                          <Battery className="w-4 h-4 text-blue-400" />
+                          Batterie (Leistung)
+                        </label>
+                        <select
+                          value={config.energy?.batteryEntityId || ''}
+                          onChange={(e) => setConfig(prev => ({
+                            ...prev,
+                            energy: { ...prev.energy, batteryEntityId: e.target.value || undefined }
+                          }))}
+                          className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                        >
+                          <option value="">Nicht konfiguriert</option>
+                          {discovered?.sensors.filter(s => 
+                            s.attributes.device_class === 'power' || s.entity_id.includes('battery')
+                          ).map(s => (
+                            <option key={s.entity_id} value={s.entity_id}>{getFriendlyName(s)}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="flex items-center gap-2 text-xs text-gray-400 mb-1">
+                          <Battery className="w-4 h-4 text-emerald-400" />
+                          Batterie (Ladestand %)
+                        </label>
+                        <select
+                          value={config.energy?.batteryLevelEntityId || ''}
+                          onChange={(e) => setConfig(prev => ({
+                            ...prev,
+                            energy: { ...prev.energy, batteryLevelEntityId: e.target.value || undefined }
+                          }))}
+                          className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                        >
+                          <option value="">Nicht konfiguriert</option>
+                          {discovered?.sensors.filter(s => 
+                            s.attributes.device_class === 'battery' || 
+                            s.entity_id.includes('battery') && (s.entity_id.includes('level') || s.entity_id.includes('soc'))
+                          ).map(s => (
+                            <option key={s.entity_id} value={s.entity_id}>{getFriendlyName(s)}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="flex items-center gap-2 text-xs text-gray-400 mb-1">
+                          <PlugZap className="w-4 h-4 text-orange-400" />
+                          Netz (Import/Export)
+                        </label>
+                        <select
+                          value={config.energy?.gridEntityId || ''}
+                          onChange={(e) => setConfig(prev => ({
+                            ...prev,
+                            energy: { ...prev.energy, gridEntityId: e.target.value || undefined }
+                          }))}
+                          className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                        >
+                          <option value="">Nicht konfiguriert</option>
+                          {discovered?.sensors.filter(s => 
+                            s.entity_id.includes('grid') || 
+                            s.entity_id.includes('netz') ||
+                            s.attributes.device_class === 'power'
+                          ).map(s => (
+                            <option key={s.entity_id} value={s.entity_id}>{getFriendlyName(s)}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="flex items-center gap-2 text-xs text-gray-400 mb-1">
+                          <Home className="w-4 h-4 text-purple-400" />
+                          Hausverbrauch
+                        </label>
+                        <select
+                          value={config.energy?.houseEntityId || ''}
+                          onChange={(e) => setConfig(prev => ({
+                            ...prev,
+                            energy: { ...prev.energy, houseEntityId: e.target.value || undefined }
+                          }))}
+                          className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                        >
+                          <option value="">Nicht konfiguriert</option>
+                          {discovered?.sensors.filter(s => 
+                            s.entity_id.includes('house') || 
+                            s.entity_id.includes('consumption') ||
+                            s.entity_id.includes('verbrauch') ||
+                            s.attributes.device_class === 'power'
+                          ).map(s => (
+                            <option key={s.entity_id} value={s.entity_id}>{getFriendlyName(s)}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              <div className="border border-white/5 rounded-xl overflow-hidden">
+                <button
+                  onClick={() => toggleSection('appliances')}
+                  className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <PlugZap className="w-5 h-5 text-orange-400" />
+                    <span className="text-white font-medium">Geräte / Appliances ({config.appliances?.length || 0})</span>
+                  </div>
+                  {expandedSections.appliances ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
+                </button>
+                {expandedSections.appliances && (
+                  <div className="p-4 space-y-3">
+                    <p className="text-sm text-gray-400 mb-3">
+                      Wähle Geräte aus, die auf der Energy-Seite angezeigt werden sollen:
+                    </p>
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                      {discovered?.sensors.filter(s => 
+                        s.attributes.device_class === 'power' ||
+                        s.entity_id.includes('washer') ||
+                        s.entity_id.includes('dryer') ||
+                        s.entity_id.includes('dishwasher') ||
+                        s.entity_id.includes('heater') ||
+                        s.entity_id.includes('boiler') ||
+                        s.entity_id.includes('geyser') ||
+                        s.entity_id.includes('pump')
+                      ).map(entity => (
+                        <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={config.appliances?.includes(entity.entity_id) || false}
+                            onChange={() => toggleEntity('appliances', entity.entity_id)}
+                            className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500"
+                          />
+                          <span className="text-gray-300">{getFriendlyName(entity)}</span>
+                          <span className="text-xs text-gray-500">{entity.entity_id}</span>
+                        </label>
+                      ))}
+                      {discovered?.switches.map(entity => (
+                        <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={config.appliances?.includes(entity.entity_id) || false}
+                            onChange={() => toggleEntity('appliances', entity.entity_id)}
+                            className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500"
+                          />
+                          <span className="text-gray-300">{getFriendlyName(entity)}</span>
+                          <span className="text-xs text-gray-500">{entity.entity_id}</span>
+                        </label>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
