@@ -4,6 +4,7 @@ import { getStoredToken } from '@/lib/auth/ha-oauth'
 import prisma from '@/lib/db/client'
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 
 export async function GET(
   request: NextRequest,
@@ -43,13 +44,21 @@ export async function GET(
     if (!response.ok) {
       return NextResponse.json({ error: 'Failed to get stream' }, { status: response.status })
     }
+
+    const readable = response.body
+    if (!readable) {
+      return NextResponse.json({ error: 'No stream body' }, { status: 500 })
+    }
     
-    const contentType = response.headers.get('content-type') || 'multipart/x-mixed-replace'
+    const contentType = response.headers.get('content-type') || 'multipart/x-mixed-replace; boundary=frame'
     
-    return new NextResponse(response.body, {
+    return new Response(readable as unknown as ReadableStream, {
       headers: {
         'Content-Type': contentType,
         'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Connection': 'keep-alive',
+        'Pragma': 'no-cache',
+        'Expires': '0',
       },
     })
   } catch (error) {

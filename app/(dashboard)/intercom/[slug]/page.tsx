@@ -91,16 +91,16 @@ export default function IntercomPage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="flex flex-col lg:flex-row gap-4 max-w-6xl mx-auto"
+        className="flex flex-col lg:flex-row lg:items-start gap-4 max-w-4xl mx-auto"
       >
-        <Card className="overflow-hidden flex-1">
+        <Card className="overflow-hidden lg:flex-1">
           <div className="bg-bg-secondary relative">
             <img
               ref={imgRef}
               key={streamKey}
               src={`/api/ha/stream/${encodeURIComponent(intercom.cameraEntityId)}?t=${streamKey}`}
               alt={intercom.name}
-              className="w-full h-auto"
+              className="w-full h-auto max-h-[60vh] object-contain"
               onError={() => {
                 if (imgRef.current) {
                   imgRef.current.src = `/api/ha/camera/${encodeURIComponent(intercom.cameraEntityId)}?t=${Date.now()}`
@@ -114,14 +114,14 @@ export default function IntercomPage() {
         </Card>
 
         {hasButtons && (
-          <div className="flex flex-row lg:flex-col gap-4 lg:w-48 shrink-0">
+          <div className="flex flex-row lg:flex-col gap-3 lg:w-40 shrink-0">
             {intercom.speakUrl && (
               <button
                 onClick={handleSpeak}
-                className="flex-1 flex flex-col items-center justify-center p-6 bg-accent-cyan/20 hover:bg-accent-cyan/30 rounded-2xl transition-colors"
+                className="flex-1 flex flex-col items-center justify-center p-4 bg-accent-cyan/20 hover:bg-accent-cyan/30 rounded-2xl transition-colors"
               >
-                <Mic className="w-8 h-8 text-accent-cyan mb-2" />
-                <span className="text-white font-medium">Sprechen</span>
+                <Mic className="w-6 h-6 text-accent-cyan mb-1" />
+                <span className="text-white font-medium text-sm">Sprechen</span>
               </button>
             )}
             
@@ -129,16 +129,16 @@ export default function IntercomPage() {
               <button
                 onClick={handleUnlock}
                 disabled={unlocking}
-                className="flex-1 flex flex-col items-center justify-center p-6 bg-accent-green/20 hover:bg-accent-green/30 rounded-2xl transition-colors disabled:opacity-50"
+                className="flex-1 flex flex-col items-center justify-center p-4 bg-accent-green/20 hover:bg-accent-green/30 rounded-2xl transition-colors disabled:opacity-50"
               >
                 {unlocking ? (
-                  <Loader2 className="w-8 h-8 text-accent-green mb-2 animate-spin" />
+                  <Loader2 className="w-6 h-6 text-accent-green mb-1 animate-spin" />
                 ) : (
-                  <DoorOpen className="w-8 h-8 text-accent-green mb-2" />
+                  <DoorOpen className="w-6 h-6 text-accent-green mb-1" />
                 )}
-                <span className="text-white font-medium">Tür öffnen</span>
+                <span className="text-white font-medium text-sm">Tür öffnen</span>
                 {lockState && (
-                  <span className="text-xs text-text-muted mt-1">
+                  <span className="text-xs text-text-muted">
                     {lockState.state === 'locked' ? 'Verriegelt' : 'Entriegelt'}
                   </span>
                 )}
