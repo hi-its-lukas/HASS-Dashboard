@@ -52,9 +52,21 @@ function LoginForm() {
   
   return (
     <div className="w-full max-w-md">
-      <div className="bg-[#141b2d]/80 backdrop-blur-lg rounded-3xl p-8 border border-white/5">
+      <div 
+        className="rounded-3xl p-8"
+        style={{
+          background: 'rgba(44, 44, 46, 0.8)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+        }}
+      >
         <div className="flex items-center justify-center mb-8">
-          <div className="w-16 h-16 bg-emerald-500 rounded-2xl flex items-center justify-center">
+          <div 
+            className="w-16 h-16 rounded-2xl flex items-center justify-center"
+            style={{ background: 'linear-gradient(135deg, #ff9f0a 0%, #ff375f 100%)' }}
+          >
             <Home className="w-8 h-8 text-white" />
           </div>
         </div>
@@ -62,20 +74,23 @@ function LoginForm() {
         <h1 className="text-2xl font-bold text-white text-center mb-2">
           HA Dashboard
         </h1>
-        <p className="text-gray-400 text-center mb-8">
-          Login with your Home Assistant account
+        <p className="text-center mb-8" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+          Mit Home Assistant anmelden
         </p>
         
         {error && (
-          <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 mb-6 flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-            <p className="text-red-400 text-sm">{error}</p>
+          <div 
+            className="rounded-xl p-4 mb-6 flex items-start gap-3"
+            style={{ background: 'rgba(255, 69, 58, 0.15)', border: '1px solid rgba(255, 69, 58, 0.3)' }}
+          >
+            <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: '#ff453a' }} />
+            <p className="text-sm" style={{ color: '#ff453a' }}>{error}</p>
           </div>
         )}
         
         <form onSubmit={handleLogin} className="space-y-6">
           <div>
-            <label htmlFor="haUrl" className="block text-sm font-medium text-gray-300 mb-2">
+            <label htmlFor="haUrl" className="block text-sm font-medium mb-2" style={{ color: 'rgba(255, 255, 255, 0.8)' }}>
               Home Assistant URL
             </label>
             <input
@@ -85,32 +100,37 @@ function LoginForm() {
               onChange={(e) => setHaUrl(e.target.value)}
               placeholder="https://your-home-assistant.local:8123"
               required
-              className="w-full px-4 py-3 bg-[#1a2235] border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50"
+              className="w-full px-4 py-3 rounded-xl text-white focus:outline-none focus:ring-2"
+              style={{
+                background: 'rgba(255, 255, 255, 0.08)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+              }}
             />
-            <p className="mt-2 text-xs text-gray-500">
-              Enter the URL where your Home Assistant is accessible
+            <p className="mt-2 text-xs" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+              Gib die URL deiner Home Assistant-Instanz ein
             </p>
           </div>
           
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 px-4 bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-500/50 text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
+            className="w-full py-3 px-4 text-white font-medium rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+            style={{ background: 'linear-gradient(135deg, #30d158 0%, #34c759 100%)' }}
           >
             {loading ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
-                Connecting...
+                Verbinden...
               </>
             ) : (
-              'Login with Home Assistant'
+              'Mit Home Assistant anmelden'
             )}
           </button>
         </form>
         
-        <div className="mt-8 pt-6 border-t border-white/5">
-          <p className="text-xs text-gray-500 text-center">
-            Your credentials are never stored. Authentication is handled directly by Home Assistant using OAuth.
+        <div className="mt-8 pt-6" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
+          <p className="text-xs text-center" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>
+            Deine Zugangsdaten werden nie gespeichert. Die Authentifizierung erfolgt direkt über Home Assistant mit OAuth.
           </p>
         </div>
       </div>
@@ -121,8 +141,16 @@ function LoginForm() {
 function LoginFormFallback() {
   return (
     <div className="w-full max-w-md">
-      <div className="bg-[#141b2d]/80 backdrop-blur-lg rounded-3xl p-8 border border-white/5 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
+      <div 
+        className="rounded-3xl p-8 flex items-center justify-center"
+        style={{
+          background: 'rgba(44, 44, 46, 0.8)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+        }}
+      >
+        <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#30d158' }} />
       </div>
     </div>
   )
@@ -130,7 +158,10 @@ function LoginFormFallback() {
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen bg-[#0a0f1a] flex items-center justify-center p-4">
+    <div 
+      className="min-h-screen flex items-center justify-center p-4"
+      style={{ background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)' }}
+    >
       <Suspense fallback={<LoginFormFallback />}>
         <LoginForm />
       </Suspense>
