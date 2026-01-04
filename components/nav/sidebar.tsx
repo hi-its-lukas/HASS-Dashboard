@@ -22,12 +22,12 @@ import { useConfigStore } from '@/lib/config/store'
 
 const navItems = [
   { href: '/', icon: Home, label: 'Home' },
-  { href: '/lights', icon: Lightbulb, label: 'Lights' },
-  { href: '/covers', icon: Blinds, label: 'Covers' },
-  { href: '/cameras', icon: Video, label: 'Cameras' },
-  { href: '/energy', icon: Zap, label: 'Energy' },
-  { href: '/family', icon: Users, label: 'Family' },
-  { href: '/more', icon: Menu, label: 'More' },
+  { href: '/lights', icon: Lightbulb, label: 'Lichtquellen' },
+  { href: '/covers', icon: Blinds, label: 'Rollos' },
+  { href: '/cameras', icon: Video, label: 'Kameras' },
+  { href: '/energy', icon: Zap, label: 'Energie' },
+  { href: '/family', icon: Users, label: 'Familie' },
+  { href: '/more', icon: Menu, label: 'Mehr' },
 ]
 
 export function Sidebar() {
@@ -64,9 +64,15 @@ export function Sidebar() {
       initial={false}
       animate={{ width: collapsed ? 80 : 256 }}
       transition={{ duration: 0.2, ease: 'easeInOut' }}
-      className="hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0 bg-[#0d1321] border-r border-gray-800/50"
+      className="hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0"
+      style={{
+        background: 'rgba(28, 28, 30, 0.8)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        borderRight: '1px solid rgba(255, 255, 255, 0.1)',
+      }}
     >
-      <div className="flex items-center justify-between px-4 py-5 border-b border-gray-800/50">
+      <div className="flex items-center justify-between px-4 py-5" style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
         <AnimatePresence mode="wait">
           {!collapsed && (
             <motion.div
@@ -75,12 +81,12 @@ export function Sidebar() {
               exit={{ opacity: 0 }}
               className="flex items-center gap-3"
             >
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-cyan-500 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #ff9f0a 0%, #ff375f 100%)' }}>
                 <Home className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h1 className="font-bold text-white text-sm">HA Dashboard</h1>
-                <p className="text-xs text-gray-500">Home Assistant</p>
+                <h1 className="font-semibold text-white text-sm">Zuhause</h1>
+                <p className="text-xs text-text-muted">Home Assistant</p>
               </div>
             </motion.div>
           )}
@@ -88,7 +94,7 @@ export function Sidebar() {
         
         {collapsed && (
           <div className="w-full flex justify-center">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-cyan-500 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #ff9f0a 0%, #ff375f 100%)' }}>
               <Home className="w-5 h-5 text-white" />
             </div>
           </div>
@@ -105,11 +111,12 @@ export function Sidebar() {
               className={cn(
                 'flex items-center gap-3 px-3 py-3 rounded-xl transition-all group relative',
                 active 
-                  ? 'bg-emerald-500/10 text-emerald-400' 
-                  : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                  ? 'text-white' 
+                  : 'text-text-secondary hover:text-white'
               )}
+              style={active ? { background: 'rgba(255, 255, 255, 0.12)' } : undefined}
             >
-              <Icon className={cn('w-5 h-5 flex-shrink-0', active && 'text-emerald-400')} />
+              <Icon className="w-5 h-5 flex-shrink-0" />
               <AnimatePresence mode="wait">
                 {!collapsed && (
                   <motion.span
@@ -124,17 +131,12 @@ export function Sidebar() {
               </AnimatePresence>
               
               {collapsed && (
-                <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-sm rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">
+                <div 
+                  className="absolute left-full ml-2 px-3 py-1.5 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none"
+                  style={{ background: 'rgba(44, 44, 46, 0.95)', backdropFilter: 'blur(8px)' }}
+                >
                   {label}
                 </div>
-              )}
-              
-              {active && (
-                <motion.div
-                  layoutId="sidebar-active"
-                  className="absolute left-0 w-1 h-8 bg-emerald-400 rounded-r-full"
-                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                />
               )}
             </Link>
           )
@@ -144,7 +146,7 @@ export function Sidebar() {
           <>
             {!collapsed && (
               <div className="pt-4 pb-2 px-3">
-                <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Intercoms</span>
+                <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">Intercoms</span>
               </div>
             )}
             {intercoms.map((intercom) => {
@@ -157,11 +159,12 @@ export function Sidebar() {
                   className={cn(
                     'flex items-center gap-3 px-3 py-3 rounded-xl transition-all group relative',
                     active 
-                      ? 'bg-emerald-500/10 text-emerald-400' 
-                      : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                      ? 'text-white' 
+                      : 'text-text-secondary hover:text-white'
                   )}
+                  style={active ? { background: 'rgba(255, 255, 255, 0.12)' } : undefined}
                 >
-                  <Phone className={cn('w-5 h-5 flex-shrink-0', active && 'text-emerald-400')} />
+                  <Phone className="w-5 h-5 flex-shrink-0" />
                   <AnimatePresence mode="wait">
                     {!collapsed && (
                       <motion.span
@@ -176,17 +179,12 @@ export function Sidebar() {
                   </AnimatePresence>
                   
                   {collapsed && (
-                    <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-sm rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">
+                    <div 
+                      className="absolute left-full ml-2 px-3 py-1.5 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none"
+                      style={{ background: 'rgba(44, 44, 46, 0.95)', backdropFilter: 'blur(8px)' }}
+                    >
                       {intercom.name}
                     </div>
-                  )}
-                  
-                  {active && (
-                    <motion.div
-                      layoutId="sidebar-intercom-active"
-                      className="absolute left-0 w-1 h-8 bg-emerald-400 rounded-r-full"
-                      transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                    />
                   )}
                 </Link>
               )
@@ -195,15 +193,16 @@ export function Sidebar() {
         )}
       </nav>
       
-      <div className="border-t border-gray-800/50 p-3">
+      <div className="p-3" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
         <Link
           href="/settings"
           className={cn(
             'flex items-center gap-3 px-3 py-3 rounded-xl transition-all',
             pathname === '/settings'
-              ? 'bg-emerald-500/10 text-emerald-400'
-              : 'text-gray-400 hover:bg-white/5 hover:text-white'
+              ? 'text-white'
+              : 'text-text-secondary hover:text-white'
           )}
+          style={pathname === '/settings' ? { background: 'rgba(255, 255, 255, 0.12)' } : undefined}
         >
           <Settings className="w-5 h-5 flex-shrink-0" />
           <AnimatePresence mode="wait">
@@ -214,7 +213,7 @@ export function Sidebar() {
                 exit={{ opacity: 0, x: -10 }}
                 className="font-medium text-sm"
               >
-                Settings
+                Einstellungen
               </motion.span>
             )}
           </AnimatePresence>
@@ -222,14 +221,15 @@ export function Sidebar() {
         
         <button
           onClick={toggleCollapsed}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 mt-2 rounded-xl text-gray-500 hover:bg-white/5 hover:text-white transition-all"
+          className="w-full flex items-center justify-center gap-2 px-3 py-2 mt-2 rounded-xl text-text-muted hover:text-white transition-all"
+          style={{ background: 'transparent' }}
         >
           {collapsed ? (
             <ChevronRight className="w-5 h-5" />
           ) : (
             <>
               <ChevronLeft className="w-5 h-5" />
-              <span className="text-sm">Collapse</span>
+              <span className="text-sm">Einklappen</span>
             </>
           )}
         </button>

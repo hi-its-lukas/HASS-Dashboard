@@ -2,15 +2,15 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Video, Calendar, Menu } from 'lucide-react'
+import { Home, Video, Lightbulb, Menu } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
 const navItems = [
-  { href: '/', icon: Home, label: 'HOME' },
-  { href: '/cameras', icon: Video, label: 'CAMS' },
-  { href: '/calendar', icon: Calendar, label: 'CALENDAR' },
-  { href: '/more', icon: Menu, label: 'MORE' },
+  { href: '/', icon: Home, label: 'Home' },
+  { href: '/lights', icon: Lightbulb, label: 'Lichter' },
+  { href: '/cameras', icon: Video, label: 'Kameras' },
+  { href: '/more', icon: Menu, label: 'Mehr' },
 ]
 
 export function BottomNav() {
@@ -22,7 +22,15 @@ export function BottomNav() {
   }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-bg-primary/90 backdrop-blur-lg border-t border-gray-800/50 safe-bottom">
+    <nav 
+      className="fixed bottom-0 left-0 right-0 z-50 safe-bottom"
+      style={{
+        background: 'rgba(28, 28, 30, 0.85)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+      }}
+    >
       <div className="max-w-lg mx-auto flex items-center justify-around py-2 px-4">
         {navItems.map(({ href, icon: Icon, label }) => {
           const active = isActive(href)
@@ -31,25 +39,23 @@ export function BottomNav() {
               key={href}
               href={href}
               className={cn(
-                'flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all',
-                active ? 'nav-active' : 'text-text-muted hover:text-text-secondary'
+                'flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-all',
+                active ? 'text-white' : 'text-text-muted'
               )}
             >
               <motion.div
                 whileTap={{ scale: 0.9 }}
                 className="relative"
               >
-                <Icon className="w-6 h-6" strokeWidth={active ? 2.5 : 2} />
-                {active && (
-                  <motion.div
-                    layoutId="nav-glow"
-                    className="absolute -inset-2 bg-accent-cyan/20 rounded-full blur-md -z-10"
-                    initial={false}
-                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                  />
-                )}
+                <Icon 
+                  className={cn('w-6 h-6', active && 'text-accent-cyan')} 
+                  strokeWidth={active ? 2.5 : 2} 
+                />
               </motion.div>
-              <span className="text-[10px] font-medium tracking-wide">{label}</span>
+              <span className={cn(
+                'text-[10px] font-medium',
+                active && 'text-accent-cyan'
+              )}>{label}</span>
             </Link>
           )
         })}
