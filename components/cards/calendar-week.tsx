@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { ChevronLeft, ChevronRight, Sun, Cloud, CloudRain, Snowflake, CloudSun, Wind, CloudFog } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Sun, Cloud, CloudRain, Snowflake, CloudSun, Wind, CloudFog, Calendar } from 'lucide-react'
 import { useHAStore } from '@/lib/ha'
 import { cn } from '@/lib/utils'
 
@@ -22,28 +22,28 @@ interface DayForecast {
 }
 
 const weatherIcons: Record<string, React.ReactNode> = {
-  sunny: <Sun className="w-5 h-5 text-yellow-400" />,
-  clear: <Sun className="w-5 h-5 text-yellow-400" />,
-  'clear-night': <Sun className="w-5 h-5 text-yellow-400" />,
-  cloudy: <Cloud className="w-5 h-5 text-gray-400" />,
-  partlycloudy: <CloudSun className="w-5 h-5 text-gray-300" />,
-  rainy: <CloudRain className="w-5 h-5 text-blue-400" />,
-  snowy: <Snowflake className="w-5 h-5 text-blue-200" />,
-  windy: <Wind className="w-5 h-5 text-gray-300" />,
-  fog: <CloudFog className="w-5 h-5 text-gray-400" />,
+  sunny: <Sun className="w-4 h-4 text-yellow-400" />,
+  clear: <Sun className="w-4 h-4 text-yellow-400" />,
+  'clear-night': <Sun className="w-4 h-4 text-yellow-400" />,
+  cloudy: <Cloud className="w-4 h-4 text-gray-400" />,
+  partlycloudy: <CloudSun className="w-4 h-4 text-gray-300" />,
+  rainy: <CloudRain className="w-4 h-4 text-blue-400" />,
+  snowy: <Snowflake className="w-4 h-4 text-blue-200" />,
+  windy: <Wind className="w-4 h-4 text-gray-300" />,
+  fog: <CloudFog className="w-4 h-4 text-gray-400" />,
 }
 
 const eventColors = [
-  'bg-cyan-500/80',
-  'bg-emerald-500/80',
-  'bg-purple-500/80',
-  'bg-orange-500/80',
-  'bg-pink-500/80',
-  'bg-blue-500/80',
-  'bg-yellow-500/80',
+  'bg-cyan-500',
+  'bg-emerald-500',
+  'bg-purple-500',
+  'bg-orange-500',
+  'bg-pink-500',
+  'bg-blue-500',
+  'bg-yellow-500',
 ]
 
-const dayNames = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag']
+const dayNamesShort = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa']
 const monthNames = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember']
 
 function getWeekDates(baseDate: Date): Date[] {
@@ -63,12 +63,9 @@ function isToday(date: Date): boolean {
   return date.toDateString() === today.toDateString()
 }
 
-function formatDayLabel(date: Date): string {
-  if (isToday(date)) return 'Heute'
-  const tomorrow = new Date()
-  tomorrow.setDate(tomorrow.getDate() + 1)
-  if (date.toDateString() === tomorrow.toDateString()) return 'Morgen'
-  return dayNames[date.getDay()]
+function formatTime(dateStr: string): string {
+  const date = new Date(dateStr)
+  return date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
 }
 
 interface CalendarWeekProps {
@@ -81,12 +78,14 @@ export function CalendarWeek({ calendarEntityIds = [], weatherEntityId }: Calend
   const [events, setEvents] = useState<Record<string, CalendarEvent[]>>({})
   const [forecasts, setForecasts] = useState<DayForecast[]>([])
   const [calendarColors, setCalendarColors] = useState<Record<string, string>>({})
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const states = useHAStore((s) => s.states)
   
   const baseDate = new Date()
   baseDate.setDate(baseDate.getDate() + weekOffset * 7)
   const weekDates = getWeekDates(baseDate)
-  const currentMonth = monthNames[weekDates[0].getMonth()]
+  const currentMonth = monthNames[weekDates[3].getMonth()]
+  const currentYear = weekDates[3].getFullYear()
   
   useEffect(() => {
     const colors: Record<string, string> = {}
@@ -162,7 +161,7 @@ export function CalendarWeek({ calendarEntityIds = [], weatherEntityId }: Calend
           allEvents.push({
             ...event,
             calendarId,
-            color: calendarColors[calendarId] || 'bg-cyan-500/80'
+            color: calendarColors[calendarId] || 'bg-cyan-500'
           })
         }
       })
@@ -175,97 +174,137 @@ export function CalendarWeek({ calendarEntityIds = [], weatherEntityId }: Calend
     })
   }
   
+  const allWeekEvents = weekDates.flatMap((date) => {
+    const dayEvents = getEventsForDate(date)
+    return dayEvents.map((event) => ({ ...event, date }))
+  })
+  
+  const displayDate = selectedDate || new Date()
+  const selectedEvents = selectedDate ? getEventsForDate(selectedDate) : allWeekEvents.slice(0, 5)
+  
   return (
-    <div className="card p-4 h-full">
-      <div className="flex items-center justify-between mb-4">
-        <button
-          onClick={() => setWeekOffset(weekOffset - 1)}
-          className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-        >
-          <ChevronLeft className="w-5 h-5 text-text-muted" />
-        </button>
-        <div className="flex items-center gap-2">
-          <span className="text-lg font-semibold text-white">{currentMonth}</span>
+    <div className="card p-5">
+      <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center gap-3">
+          <Calendar className="w-5 h-5 text-accent-cyan" />
+          <div>
+            <span className="text-lg font-semibold text-white">{currentMonth} {currentYear}</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => setWeekOffset(weekOffset - 1)}
+            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+          >
+            <ChevronLeft className="w-4 h-4 text-text-muted" />
+          </button>
           {weekOffset !== 0 && (
             <button
-              onClick={() => setWeekOffset(0)}
-              className="text-xs text-accent-cyan hover:underline"
+              onClick={() => { setWeekOffset(0); setSelectedDate(null); }}
+              className="px-3 py-1 text-xs bg-accent-cyan/20 text-accent-cyan rounded-lg hover:bg-accent-cyan/30 transition-colors"
             >
               Heute
             </button>
           )}
+          <button
+            onClick={() => setWeekOffset(weekOffset + 1)}
+            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+          >
+            <ChevronRight className="w-4 h-4 text-text-muted" />
+          </button>
         </div>
-        <button
-          onClick={() => setWeekOffset(weekOffset + 1)}
-          className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-        >
-          <ChevronRight className="w-5 h-5 text-text-muted" />
-        </button>
       </div>
       
-      <div className="grid grid-cols-7 gap-3">
+      <div className="grid grid-cols-7 gap-2 mb-5">
         {weekDates.map((date, idx) => {
           const forecast = getForecast(date)
           const dayEvents = getEventsForDate(date)
           const today = isToday(date)
+          const isSelected = selectedDate?.toDateString() === date.toDateString()
           
           return (
-            <motion.div
+            <motion.button
               key={date.toISOString()}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.03 }}
+              transition={{ delay: idx * 0.02 }}
+              onClick={() => setSelectedDate(isSelected ? null : date)}
               className={cn(
-                'rounded-xl p-4 min-h-[180px] flex flex-col',
-                today ? 'bg-white/15 ring-2 ring-cyan-500/60' : 'bg-white/5'
+                'rounded-2xl p-3 flex flex-col items-center transition-all',
+                today && !isSelected && 'bg-accent-cyan/20',
+                isSelected && 'bg-white/20 ring-2 ring-white/30',
+                !today && !isSelected && 'bg-white/5 hover:bg-white/10'
               )}
             >
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-baseline gap-2">
-                  <span className={cn(
-                    'text-4xl font-bold',
-                    today ? 'text-cyan-400' : 'text-white'
-                  )}>
-                    {date.getDate()}
-                  </span>
-                  <span className="text-sm text-gray-300">
-                    {formatDayLabel(date)}
-                  </span>
-                </div>
-                {forecast && (
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-xs text-gray-400">
-                      {forecast.tempLow.toFixed(0)}°C / {forecast.tempHigh.toFixed(0)}°C
-                    </span>
-                    {weatherIcons[forecast.condition] || <Cloud className="w-5 h-5 text-gray-400" />}
-                  </div>
-                )}
-              </div>
+              <span className="text-xs text-text-muted mb-1">{dayNamesShort[date.getDay()]}</span>
+              <span className={cn(
+                'text-2xl font-bold mb-1',
+                today ? 'text-accent-cyan' : 'text-white'
+              )}>
+                {date.getDate()}
+              </span>
               
-              <div className="flex-1 space-y-1.5 overflow-y-auto">
-                {dayEvents.length > 0 ? (
-                  dayEvents.slice(0, 3).map((event, i) => (
+              {forecast && (
+                <div className="flex items-center gap-1 mb-1">
+                  {weatherIcons[forecast.condition] || <Cloud className="w-4 h-4 text-gray-400" />}
+                  <span className="text-[10px] text-text-muted">{forecast.tempHigh.toFixed(0)}°</span>
+                </div>
+              )}
+              
+              {dayEvents.length > 0 && (
+                <div className="flex gap-0.5 mt-1">
+                  {dayEvents.slice(0, 3).map((_, i) => (
                     <div
                       key={i}
-                      className={cn(
-                        'rounded-md px-2 py-1 text-xs',
-                        event.color
-                      )}
-                      title={event.summary}
-                    >
-                      <span className="text-white font-medium block break-words leading-tight">{event.summary}</span>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-xs text-gray-500">Keine Termine</p>
-                )}
-                {dayEvents.length > 3 && (
-                  <p className="text-xs text-gray-400">+{dayEvents.length - 3} weitere</p>
-                )}
-              </div>
-            </motion.div>
+                      className={cn('w-1.5 h-1.5 rounded-full', dayEvents[i]?.color || 'bg-accent-cyan')}
+                    />
+                  ))}
+                  {dayEvents.length > 3 && (
+                    <span className="text-[8px] text-text-muted ml-0.5">+{dayEvents.length - 3}</span>
+                  )}
+                </div>
+              )}
+            </motion.button>
           )
         })}
+      </div>
+      
+      <div className="border-t border-white/10 pt-4">
+        <h3 className="text-sm font-medium text-text-muted mb-3">
+          {selectedDate 
+            ? `${dayNamesShort[selectedDate.getDay()]}, ${selectedDate.getDate()}. ${monthNames[selectedDate.getMonth()]}`
+            : 'Kommende Termine'
+          }
+        </h3>
+        
+        <div className="space-y-2 max-h-[200px] overflow-y-auto">
+          {selectedEvents.length > 0 ? (
+            selectedEvents.map((event, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.05 }}
+                className="flex items-start gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors"
+              >
+                <div className={cn('w-1 h-full min-h-[40px] rounded-full', event.color)} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-white">{event.summary}</p>
+                  <p className="text-xs text-text-muted mt-0.5">
+                    {event.allDay ? 'Ganztägig' : formatTime(event.start)}
+                    {'date' in event && (
+                      <span className="ml-2 text-text-muted">
+                        {(event as any).date.getDate()}. {monthNames[(event as any).date.getMonth()]}
+                      </span>
+                    )}
+                  </p>
+                </div>
+              </motion.div>
+            ))
+          ) : (
+            <p className="text-sm text-text-muted text-center py-4">Keine Termine</p>
+          )}
+        </div>
       </div>
     </div>
   )
