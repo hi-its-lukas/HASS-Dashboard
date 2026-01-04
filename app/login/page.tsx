@@ -111,8 +111,11 @@ function LoginForm() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 px-4 text-white font-medium rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-            style={{ background: 'linear-gradient(135deg, #30d158 0%, #34c759 100%)' }}
+            className="w-full py-3.5 px-4 font-semibold rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 hover:opacity-90 active:scale-[0.98]"
+            style={{ 
+              background: 'rgba(255, 255, 255, 0.95)',
+              color: '#1c1c1e'
+            }}
           >
             {loading ? (
               <>
@@ -147,7 +150,7 @@ function LoginFormFallback() {
           border: '1px solid rgba(255, 255, 255, 0.1)',
         }}
       >
-        <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#30d158' }} />
+        <Loader2 className="w-8 h-8 animate-spin" style={{ color: 'rgba(255, 255, 255, 0.6)' }} />
       </div>
     </div>
   )
