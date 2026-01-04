@@ -2,8 +2,18 @@
 
 import { useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
+import L from 'leaflet'
 import { useHAStore } from '@/lib/ha'
 import { useConfig } from '@/lib/config/store'
+
+if (typeof window !== 'undefined') {
+  delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: unknown })._getIconUrl
+  L.Icon.Default.mergeOptions({
+    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+  })
+}
 
 const MapContainer = dynamic(
   () => import('react-leaflet').then((mod) => mod.MapContainer),

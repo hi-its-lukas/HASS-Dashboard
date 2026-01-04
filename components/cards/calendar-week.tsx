@@ -242,24 +242,25 @@ export function CalendarWeek({ calendarEntityIds = [], weatherEntityId }: Calend
                 )}
               </div>
               
-              <div className="flex-1 space-y-1.5">
+              <div className="flex-1 space-y-1.5 overflow-y-auto">
                 {dayEvents.length > 0 ? (
-                  dayEvents.slice(0, 4).map((event, i) => (
+                  dayEvents.slice(0, 3).map((event, i) => (
                     <div
                       key={i}
                       className={cn(
-                        'rounded-md px-2.5 py-1.5 text-sm',
+                        'rounded-md px-2 py-1 text-xs',
                         event.color
                       )}
+                      title={event.summary}
                     >
-                      <span className="text-white font-medium block truncate">{event.summary}</span>
+                      <span className="text-white font-medium block break-words leading-tight">{event.summary}</span>
                     </div>
                   ))
                 ) : (
-                  <p className="text-sm text-gray-500">Keine Termine</p>
+                  <p className="text-xs text-gray-500">Keine Termine</p>
                 )}
-                {dayEvents.length > 4 && (
-                  <p className="text-xs text-gray-400">+{dayEvents.length - 4} weitere</p>
+                {dayEvents.length > 3 && (
+                  <p className="text-xs text-gray-400">+{dayEvents.length - 3} weitere</p>
                 )}
               </div>
             </motion.div>
