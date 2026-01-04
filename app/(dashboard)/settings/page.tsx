@@ -55,6 +55,7 @@ interface DiscoveredEntities {
   weather: Array<{ entity_id: string; state: string; attributes: Record<string, unknown> }>
   cameras: Array<{ entity_id: string; state: string; attributes: Record<string, unknown> }>
   binarySensors: Array<{ entity_id: string; state: string; attributes: Record<string, unknown> }>
+  locks: Array<{ entity_id: string; state: string; attributes: Record<string, unknown> }>
 }
 
 interface SurveillanceCameraConfig {
@@ -968,13 +969,18 @@ export default function SettingsPage() {
                   onChange={(e) => setNewIntercom(prev => ({ ...prev, name: e.target.value }))}
                   className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                 />
-                <input
-                  type="text"
-                  placeholder="Kamera Entity ID (z.B. camera.haustuere)"
+                <select
                   value={newIntercom.cameraEntityId}
                   onChange={(e) => setNewIntercom(prev => ({ ...prev, cameraEntityId: e.target.value }))}
-                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
-                />
+                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                >
+                  <option value="" className="bg-gray-800">Kamera auswählen...</option>
+                  {discovered?.cameras?.map(cam => (
+                    <option key={cam.entity_id} value={cam.entity_id} className="bg-gray-800">
+                      {getFriendlyName(cam)} ({cam.entity_id})
+                    </option>
+                  ))}
+                </select>
                 <input
                   type="text"
                   placeholder="Sprechen URL (optional)"
@@ -982,13 +988,18 @@ export default function SettingsPage() {
                   onChange={(e) => setNewIntercom(prev => ({ ...prev, speakUrl: e.target.value }))}
                   className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                 />
-                <input
-                  type="text"
-                  placeholder="Lock Entity ID (z.B. lock.haustuere)"
+                <select
                   value={newIntercom.lockEntityId}
                   onChange={(e) => setNewIntercom(prev => ({ ...prev, lockEntityId: e.target.value }))}
-                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
-                />
+                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                >
+                  <option value="" className="bg-gray-800">Lock auswählen (optional)...</option>
+                  {discovered?.locks?.map(lock => (
+                    <option key={lock.entity_id} value={lock.entity_id} className="bg-gray-800">
+                      {getFriendlyName(lock)} ({lock.entity_id})
+                    </option>
+                  ))}
+                </select>
                 <button
                   onClick={() => {
                     if (newIntercom.name.trim() && newIntercom.cameraEntityId.trim()) {
