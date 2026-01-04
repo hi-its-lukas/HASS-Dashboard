@@ -1,10 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Bell, BellOff, Send, Loader2, AlertCircle, CheckCircle } from 'lucide-react'
+import { Bell, BellOff, Send, Loader2, AlertCircle, CheckCircle, User } from 'lucide-react'
 import { Card } from '@/components/ui/card'
-
-const PUSH_USER_KEY = 'ha-dashboard-push-user'
 
 function urlBase64ToUint8Array(base64String: string): ArrayBuffer {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
@@ -22,7 +20,8 @@ function urlBase64ToUint8Array(base64String: string): ArrayBuffer {
 }
 
 export function PushSettings() {
-  const [selectedUser, setSelectedUser] = useState<string>('')
+  const [currentUser, setCurrentUser] = useState<string | null>(null)
+  const [isLoadingUser, setIsLoadingUser] = useState(true)
   const [isSubscribed, setIsSubscribed] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
@@ -30,10 +29,15 @@ export function PushSettings() {
   const [permissionState, setPermissionState] = useState<NotificationPermission | 'unsupported'>('default')
   
   useEffect(() => {
-    const savedUser = localStorage.getItem(PUSH_USER_KEY)
-    if (savedUser) {
-      setSelectedUser(savedUser)
-    }
+    fetch('/api/auth/me')
+      .then(res => res.json())
+      .then(data => {
+        if (data.name) {
+          setCurrentUser(data.name.toLowerCase())
+        }
+      })
+      .catch(console.error)
+      .finally(() => setIsLoadingUser(false))
     
     if (!('Notification' in window) || !('serviceWorker' in navigator)) {
       setPermissionState('unsupported')
@@ -64,15 +68,9 @@ export function PushSettings() {
     }
   }
   
-  const handleUserChange = (user: string) => {
-    setSelectedUser(user)
-    localStorage.setItem(PUSH_USER_KEY, user)
-    setStatus(null)
-  }
-  
   const handleSubscribe = async () => {
-    if (!selectedUser) {
-      setStatus({ type: 'error', message: 'Bitte wähle zuerst einen Benutzer aus.' })
+    if (!currentUser) {
+      setStatus({ type: 'error', message: 'Benutzer konnte nicht ermittelt werden.' })
       return
     }
     
@@ -109,14 +107,14 @@ export function PushSettings() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId: selectedUser,
+          userId: currentUser,
           subscription: subscription.toJSON(),
         }),
       })
       
       if (response.ok) {
         setIsSubscribed(true)
-        setStatus({ type: 'success', message: `Push-Benachrichtigungen für ${selectedUser} aktiviert!` })
+        setStatus({ type: 'success', message: `Push-Benachrichtigungen aktiviert!` })
       } else {
         const data = await response.json()
         setStatus({ type: 'error', message: data.error || 'Fehler beim Aktivieren.' })
@@ -142,7 +140,7 @@ export function PushSettings() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            userId: selectedUser,
+            userId: currentUser,
             endpoint: subscription.endpoint,
           }),
         })
@@ -161,8 +159,8 @@ export function PushSettings() {
   }
   
   const handleTestPush = async () => {
-    if (!selectedUser) {
-      setStatus({ type: 'error', message: 'Bitte wähle zuerst einen Benutzer aus.' })
+    if (!currentUser) {
+      setStatus({ type: 'error', message: 'Benutzer konnte nicht ermittelt werden.' })
       return
     }
     
@@ -173,7 +171,7 @@ export function PushSettings() {
       const response = await fetch('/api/push/test', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: selectedUser }),
+        body: JSON.stringify({ userId: currentUser }),
       })
       
       if (response.ok) {
@@ -219,23 +217,14 @@ export function PushSettings() {
       </div>
       
       <div className="space-y-4">
-        <div>
-          <label className="block text-sm text-text-secondary mb-2">Ich bin:</label>
-          <div className="flex gap-2">
-            {['lukas', 'simon'].map((user) => (
-              <button
-                key={user}
-                onClick={() => handleUserChange(user)}
-                className={`px-4 py-2 rounded-xl font-medium capitalize transition-all ${
-                  selectedUser === user
-                    ? 'bg-accent-cyan text-black'
-                    : 'bg-white/10 text-white hover:bg-white/20'
-                }`}
-              >
-                {user}
-              </button>
-            ))}
-          </div>
+        <div className="flex items-center gap-2 p-3 rounded-lg bg-white/5 border border-white/10">
+          <User className="w-4 h-4 text-accent-cyan" />
+          <span className="text-sm text-text-secondary">Eingeloggt als:</span>
+          {isLoadingUser ? (
+            <Loader2 className="w-4 h-4 animate-spin text-white" />
+          ) : (
+            <span className="text-white font-medium capitalize">{currentUser || 'Unbekannt'}</span>
+          )}
         </div>
         
         <div className="flex flex-wrap gap-2">
@@ -255,7 +244,7 @@ export function PushSettings() {
           ) : (
             <button
               onClick={handleSubscribe}
-              disabled={isLoading || !selectedUser}
+              disabled={isLoading || !currentUser}
               className="flex items-center gap-2 px-4 py-2 bg-accent-green/20 hover:bg-accent-green/30 text-accent-green rounded-xl transition-colors disabled:opacity-50"
             >
               {isLoading ? (
