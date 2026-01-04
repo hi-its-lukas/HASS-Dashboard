@@ -108,7 +108,22 @@ export function PushSettings() {
         return
       }
       
-      const registration = await navigator.serviceWorker.ready
+      const registrationPromise = navigator.serviceWorker.ready
+      const timeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('Service Worker timeout')), 10000)
+      )
+      
+      let registration: ServiceWorkerRegistration
+      try {
+        registration = await Promise.race([registrationPromise, timeoutPromise])
+      } catch (e) {
+        setStatus({ 
+          type: 'error', 
+          message: 'Service Worker nicht bereit. Bitte App zum Homescreen hinzufügen (PWA installieren).' 
+        })
+        setIsLoading(false)
+        return
+      }
       
       let subscription = await registration.pushManager.getSubscription()
       
