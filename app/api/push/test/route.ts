@@ -2,16 +2,30 @@ import { NextRequest, NextResponse } from 'next/server'
 import webpush from 'web-push'
 import { getSubscriptionsForUsers, removeSubscriptionByEndpoint } from '@/lib/push/subscriptions'
 
-const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY
-const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY
-const VAPID_SUBJECT = process.env.VAPID_SUBJECT || 'mailto:admin@example.com'
+let vapidConfigured = false
 
-if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
-  webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY)
+function configureVapid() {
+  if (vapidConfigured) return true
+  
+  const publicKey = process.env.VAPID_PUBLIC_KEY
+  const privateKey = process.env.VAPID_PRIVATE_KEY
+  const subject = process.env.VAPID_SUBJECT || 'mailto:admin@example.com'
+  
+  if (publicKey && privateKey) {
+    try {
+      webpush.setVapidDetails(subject, publicKey, privateKey)
+      vapidConfigured = true
+      return true
+    } catch (e) {
+      console.error('[Push] VAPID configuration error:', e)
+      return false
+    }
+  }
+  return false
 }
 
 export async function POST(request: NextRequest) {
-  if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
+  if (!configureVapid()) {
     return NextResponse.json(
       { error: 'VAPID keys not configured' },
       { status: 500 }
