@@ -38,19 +38,11 @@ export function PushSettings() {
     const savedName = localStorage.getItem(PUSH_USER_KEY)
     if (savedName) {
       setCustomName(savedName)
+      setIsLoadingUser(false)
+    } else {
+      setIsEditing(true)
+      setIsLoadingUser(false)
     }
-    
-    fetch('/api/auth/me')
-      .then(res => res.json())
-      .then(data => {
-        if (data.name && data.name !== 'User') {
-          setCurrentUser(data.name.toLowerCase())
-        } else if (!savedName) {
-          setIsEditing(true)
-        }
-      })
-      .catch(console.error)
-      .finally(() => setIsLoadingUser(false))
     
     if (!('Notification' in window) || !('serviceWorker' in navigator)) {
       setPermissionState('unsupported')

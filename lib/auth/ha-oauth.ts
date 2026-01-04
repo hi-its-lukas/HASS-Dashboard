@@ -205,74 +205,10 @@ interface HAUserInfo {
 }
 
 async function fetchHAUserInfo(haUrl: string, accessToken: string): Promise<HAUserInfo> {
-  console.log('[OAuth] Fetching current user from HA via WebSocket')
-  
-  try {
-    const wsUrl = haUrl.replace(/^https:/, 'wss:').replace(/^http:/, 'ws:') + '/api/websocket'
-    console.log('[OAuth] Connecting to WebSocket:', wsUrl)
-    
-    const userInfo = await new Promise<HAUserInfo>((resolve, reject) => {
-      const WebSocket = require('ws')
-      const ws = new WebSocket(wsUrl)
-      let msgId = 1
-      
-      const timeout = setTimeout(() => {
-        ws.close()
-        reject(new Error('WebSocket timeout'))
-      }, 10000)
-      
-      ws.on('open', () => {
-        console.log('[OAuth] WebSocket connected')
-      })
-      
-      ws.on('message', (data: Buffer) => {
-        try {
-          const msg = JSON.parse(data.toString())
-          console.log('[OAuth] WS message:', msg.type)
-          
-          if (msg.type === 'auth_required') {
-            ws.send(JSON.stringify({
-              type: 'auth',
-              access_token: accessToken
-            }))
-          } else if (msg.type === 'auth_ok') {
-            ws.send(JSON.stringify({
-              id: msgId++,
-              type: 'auth/current_user'
-            }))
-          } else if (msg.type === 'auth_invalid') {
-            clearTimeout(timeout)
-            ws.close()
-            reject(new Error('Invalid auth'))
-          } else if (msg.type === 'result' && msg.success && msg.result) {
-            clearTimeout(timeout)
-            ws.close()
-            console.log('[OAuth] Got user info:', msg.result)
-            resolve({
-              id: msg.result.id,
-              name: msg.result.name || 'User'
-            })
-          }
-        } catch (e) {
-          console.error('[OAuth] WS parse error:', e)
-        }
-      })
-      
-      ws.on('error', (err: Error) => {
-        clearTimeout(timeout)
-        reject(err)
-      })
-    })
-    
-    return userInfo
-  } catch (error) {
-    console.error('[OAuth] WebSocket user fetch failed:', error)
-    
-    const userId = accessToken.substring(0, 32)
-    return { 
-      id: userId, 
-      name: 'User' 
-    }
+  const userId = accessToken.substring(0, 32)
+  return { 
+    id: userId, 
+    name: 'User' 
   }
 }
 
