@@ -12,6 +12,7 @@ export interface CustomButtonConfig {
 }
 
 interface UserLayoutConfig {
+  dashboardTitle?: string
   weatherEntityId?: string
   lightsGroupEntityId?: string
   powerEntityId?: string

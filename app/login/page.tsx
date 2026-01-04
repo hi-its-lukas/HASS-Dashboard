@@ -2,9 +2,10 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Home, AlertCircle, Loader2 } from 'lucide-react'
+import { AlertCircle, Loader2 } from 'lucide-react'
 
 const HA_URL_STORAGE_KEY = 'ha-dashboard-instance-url'
+const DASHBOARD_TITLE_KEY = 'ha-dashboard-title'
 
 function LoginForm() {
   const router = useRouter()
@@ -14,12 +15,17 @@ function LoginForm() {
   const [haUrl, setHaUrl] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(errorMessage)
+  const [dashboardTitle, setDashboardTitle] = useState('HA Dashboard')
   const redirectPath = searchParams.get('redirect') || '/'
   
   useEffect(() => {
     const savedUrl = localStorage.getItem(HA_URL_STORAGE_KEY)
     if (savedUrl) {
       setHaUrl(savedUrl)
+    }
+    const savedTitle = localStorage.getItem(DASHBOARD_TITLE_KEY)
+    if (savedTitle) {
+      setDashboardTitle(savedTitle)
     }
   }, [])
   
@@ -62,17 +68,8 @@ function LoginForm() {
           boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
         }}
       >
-        <div className="flex items-center justify-center mb-8">
-          <div 
-            className="w-16 h-16 rounded-2xl flex items-center justify-center"
-            style={{ background: 'linear-gradient(135deg, #ff9f0a 0%, #ff375f 100%)' }}
-          >
-            <Home className="w-8 h-8 text-white" />
-          </div>
-        </div>
-        
-        <h1 className="text-2xl font-bold text-white text-center mb-2">
-          HA Dashboard
+        <h1 className="text-2xl font-bold text-white text-center mb-2 mt-4">
+          {dashboardTitle}
         </h1>
         <p className="text-center mb-8" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
           Mit Home Assistant anmelden

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -19,6 +19,26 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useConfigStore } from '@/lib/config/store'
+
+const DASHBOARD_TITLE_KEY = 'ha-dashboard-title'
+
+function DashboardTitle() {
+  const [title, setTitle] = useState('Zuhause')
+  
+  useEffect(() => {
+    const savedTitle = localStorage.getItem(DASHBOARD_TITLE_KEY)
+    if (savedTitle) {
+      setTitle(savedTitle)
+    }
+  }, [])
+  
+  return (
+    <div>
+      <h1 className="font-semibold text-white text-lg">{title}</h1>
+      <p className="text-xs text-text-muted">Home Assistant</p>
+    </div>
+  )
+}
 
 const navItems = [
   { href: '/', icon: Home, label: 'Home' },
@@ -79,24 +99,16 @@ export function Sidebar() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="flex items-center gap-3"
+              className="flex items-center"
             >
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #ff9f0a 0%, #ff375f 100%)' }}>
-                <Home className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h1 className="font-semibold text-white text-sm">Zuhause</h1>
-                <p className="text-xs text-text-muted">Home Assistant</p>
-              </div>
+              <DashboardTitle />
             </motion.div>
           )}
         </AnimatePresence>
         
         {collapsed && (
           <div className="w-full flex justify-center">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #ff9f0a 0%, #ff375f 100%)' }}>
-              <Home className="w-5 h-5 text-white" />
-            </div>
+            <span className="text-white font-bold text-lg">H</span>
           </div>
         )}
       </div>

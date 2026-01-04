@@ -151,6 +151,7 @@ export default function SettingsPage() {
   const [editingIntercomIndex, setEditingIntercomIndex] = useState<number | null>(null)
   const [uploadingBackground, setUploadingBackground] = useState(false)
   const [backgroundUrl, setBackgroundUrl] = useState<string | null>(null)
+  const [dashboardTitle, setDashboardTitle] = useState('HA Dashboard')
   
   useEffect(() => {
     checkAuth()
@@ -180,6 +181,9 @@ export default function SettingsPage() {
           }))
           if (data.layoutConfig.backgroundUrl) {
             setBackgroundUrl(data.layoutConfig.backgroundUrl)
+          }
+          if (data.layoutConfig.dashboardTitle) {
+            setDashboardTitle(data.layoutConfig.dashboardTitle)
           }
         }
       }
@@ -257,7 +261,8 @@ export default function SettingsPage() {
     try {
       const layoutConfig = {
         ...config,
-        backgroundUrl: backgroundUrl || undefined
+        backgroundUrl: backgroundUrl || undefined,
+        dashboardTitle: dashboardTitle || 'HA Dashboard'
       }
       await fetch('/api/settings', {
         method: 'POST',
@@ -1198,6 +1203,27 @@ export default function SettingsPage() {
               </div>
             </div>
           )}
+        </div>
+        
+        <div className="bg-[#141b2d]/80 backdrop-blur-lg rounded-2xl p-6 border border-white/5 mb-6">
+          <div className="flex items-center gap-3 mb-4">
+            <Pencil className="w-5 h-5 text-blue-400" />
+            <h2 className="text-lg font-semibold text-white">Dashboard-Titel</h2>
+          </div>
+          
+          <input
+            type="text"
+            value={dashboardTitle}
+            onChange={(e) => {
+              setDashboardTitle(e.target.value)
+              localStorage.setItem('ha-dashboard-title', e.target.value)
+            }}
+            placeholder="HA Dashboard"
+            className="w-full px-4 py-3 bg-[#1a2235] border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+          />
+          <p className="text-xs text-gray-500 mt-2">
+            Der Titel wird in der Sidebar und auf der Login-Seite angezeigt
+          </p>
         </div>
         
         <div className="bg-[#141b2d]/80 backdrop-blur-lg rounded-2xl p-6 border border-white/5 mb-6">
