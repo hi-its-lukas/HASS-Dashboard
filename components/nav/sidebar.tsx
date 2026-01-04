@@ -15,7 +15,8 @@ import {
   ChevronRight,
   Menu,
   Lightbulb,
-  Blinds
+  Blinds,
+  Phone
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useConfigStore } from '@/lib/config/store'
@@ -36,6 +37,7 @@ export function Sidebar() {
   const sidebarState = useConfigStore((s) => s.sidebarState)
   const setSidebarState = useConfigStore((s) => s.setSidebarState)
   const isLoaded = useConfigStore((s) => s.isLoaded)
+  const intercoms = useConfigStore((s) => s.config.intercoms)
   
   const collapsed = sidebarState === 'collapsed'
   
@@ -139,6 +141,60 @@ export function Sidebar() {
             </Link>
           )
         })}
+        
+        {intercoms && intercoms.length > 0 && (
+          <>
+            {!collapsed && (
+              <div className="pt-4 pb-2 px-3">
+                <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Intercoms</span>
+              </div>
+            )}
+            {intercoms.map((intercom) => {
+              const href = `/intercom/${intercom.slug}`
+              const active = pathname === href
+              return (
+                <Link
+                  key={intercom.id}
+                  href={href}
+                  className={cn(
+                    'flex items-center gap-3 px-3 py-3 rounded-xl transition-all group relative',
+                    active 
+                      ? 'bg-emerald-500/10 text-emerald-400' 
+                      : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                  )}
+                >
+                  <Phone className={cn('w-5 h-5 flex-shrink-0', active && 'text-emerald-400')} />
+                  <AnimatePresence mode="wait">
+                    {!collapsed && (
+                      <motion.span
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -10 }}
+                        className="font-medium text-sm truncate"
+                      >
+                        {intercom.name}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                  
+                  {collapsed && (
+                    <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-sm rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">
+                      {intercom.name}
+                    </div>
+                  )}
+                  
+                  {active && (
+                    <motion.div
+                      layoutId="sidebar-intercom-active"
+                      className="absolute left-0 w-1 h-8 bg-emerald-400 rounded-r-full"
+                      transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                    />
+                  )}
+                </Link>
+              )
+            })}
+          </>
+        )}
       </nav>
       
       <div className="border-t border-gray-800/50 p-3">
