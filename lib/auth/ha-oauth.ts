@@ -205,11 +205,10 @@ interface HAUserInfo {
 }
 
 async function fetchHAUserInfo(haUrl: string, accessToken: string): Promise<HAUserInfo> {
-  const url = new URL('/api/', haUrl).toString()
-  console.log('[OAuth] Fetching user info from:', url)
+  console.log('[OAuth] Fetching current user from HA')
   
   try {
-    const response = await fetch(url, {
+    const response = await fetch(new URL('/api/auth/current_user', haUrl).toString(), {
       headers: {
         'Authorization': `Bearer ${accessToken}`
       }
@@ -217,19 +216,16 @@ async function fetchHAUserInfo(haUrl: string, accessToken: string): Promise<HAUs
     
     if (!response.ok) {
       const text = await response.text()
-      console.error('[OAuth] API check failed:', response.status, text)
-      throw new Error(`Failed to connect to Home Assistant: ${response.status}`)
+      console.error('[OAuth] Current user fetch failed:', response.status, text)
+      throw new Error(`Failed to get current user: ${response.status}`)
     }
     
-    const apiInfo = await response.json()
-    console.log('[OAuth] API response:', apiInfo)
-    
-    const userIdMatch = accessToken.substring(0, 32)
-    console.log('[OAuth] Using token-derived user identifier')
+    const userInfo = await response.json()
+    console.log('[OAuth] Current user response:', userInfo)
     
     return { 
-      id: userIdMatch, 
-      name: apiInfo.location_name || 'Home Assistant User' 
+      id: userInfo.id, 
+      name: userInfo.name || 'User' 
     }
   } catch (error) {
     console.error('[OAuth] User info fetch error:', error)
