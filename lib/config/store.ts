@@ -34,6 +34,7 @@ interface UserLayoutConfig {
   personDetails?: PersonDetailConfig[]
   lights?: string[]
   covers?: string[]
+  calendars?: string[]
   appliances?: string[] | ApplianceConfig[]
   customButtons?: CustomButtonConfig[]
   intercoms?: IntercomConfig[]

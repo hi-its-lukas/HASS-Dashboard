@@ -28,7 +28,9 @@ export default function HomePage() {
     .flatMap((r) => r.entityIds)
     .filter((id) => id.startsWith('cover.'))
   
-  const calendarEntityIds = Object.keys(states).filter((id) => id.startsWith('calendar.'))
+  const calendarEntityIds = configStore.config.calendars && configStore.config.calendars.length > 0
+    ? configStore.config.calendars
+    : Object.keys(states).filter((id) => id.startsWith('calendar.'))
   
   const backgroundUrl = configStore.config.backgroundUrl
   
