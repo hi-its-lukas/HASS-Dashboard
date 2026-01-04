@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import { useParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Video, Mic, DoorOpen, Loader2, RefreshCw } from 'lucide-react'
@@ -14,16 +14,16 @@ export default function IntercomPage() {
   const config = useConfig()
   const states = useHAStore((s) => s.states)
   const callService = useHAStore((s) => s.callService)
+  const imgRef = useRef<HTMLImageElement>(null)
   
   const [unlocking, setUnlocking] = useState(false)
-  const [refreshKey, setRefreshKey] = useState(0)
+  const [streamKey, setStreamKey] = useState(Date.now())
   
   const intercom = config.intercoms?.find((i) => i.slug === slug)
   
-  useEffect(() => {
-    const interval = setInterval(() => setRefreshKey((k) => k + 1), 5000)
-    return () => clearInterval(interval)
-  }, [])
+  const refreshStream = () => {
+    setStreamKey(Date.now())
+  }
   
   if (!intercom) {
     return (
@@ -78,7 +78,7 @@ export default function IntercomPage() {
         </div>
         
         <button
-          onClick={() => setRefreshKey((k) => k + 1)}
+          onClick={refreshStream}
           className="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
         >
           <RefreshCw className="w-5 h-5 text-white" />
@@ -93,15 +93,18 @@ export default function IntercomPage() {
         <Card className="overflow-hidden mb-6">
           <div className="aspect-video bg-bg-secondary relative">
             <img
-              key={refreshKey}
-              src={`/api/ha/camera/${encodeURIComponent(intercom.cameraEntityId)}?t=${refreshKey}`}
+              ref={imgRef}
+              key={streamKey}
+              src={`/api/ha/stream/${encodeURIComponent(intercom.cameraEntityId)}?t=${streamKey}`}
               alt={intercom.name}
               className="w-full h-full object-cover"
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = 'none'
+              onError={() => {
+                if (imgRef.current) {
+                  imgRef.current.src = `/api/ha/camera/${encodeURIComponent(intercom.cameraEntityId)}?t=${Date.now()}`
+                }
               }}
             />
-            <div className="absolute bottom-2 right-2 px-2 py-1 bg-black/50 rounded text-xs text-white">
+            <div className="absolute bottom-2 right-2 px-2 py-1 bg-red-600 rounded text-xs text-white font-medium animate-pulse">
               LIVE
             </div>
           </div>
