@@ -195,7 +195,7 @@ export function CalendarWeek({ calendarEntityIds = [], weatherEntityId }: Calend
         </button>
       </div>
       
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2">
+      <div className="grid grid-cols-7 gap-3">
         {weekDates.map((date, idx) => {
           const forecast = getForecast(date)
           const dayEvents = getEventsForDate(date)
@@ -208,25 +208,25 @@ export function CalendarWeek({ calendarEntityIds = [], weatherEntityId }: Calend
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.03 }}
               className={cn(
-                'rounded-xl p-3 min-h-[140px] flex flex-col',
-                today ? 'bg-white/15 ring-1 ring-cyan-500/50' : 'bg-white/5'
+                'rounded-xl p-4 min-h-[180px] flex flex-col',
+                today ? 'bg-white/15 ring-2 ring-cyan-500/60' : 'bg-white/5'
               )}
             >
-              <div className="flex items-start justify-between mb-2">
-                <div>
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-baseline gap-2">
                   <span className={cn(
-                    'text-3xl font-bold block',
+                    'text-4xl font-bold',
                     today ? 'text-cyan-400' : 'text-white'
                   )}>
                     {date.getDate()}
                   </span>
-                  <span className="text-xs text-text-secondary">
+                  <span className="text-sm text-gray-300">
                     {formatDayLabel(date)}
                   </span>
                 </div>
                 {forecast && (
-                  <div className="flex flex-col items-end gap-0.5">
-                    <span className="text-[10px] text-text-muted">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs text-gray-400">
                       {forecast.tempLow.toFixed(0)}°C / {forecast.tempHigh.toFixed(0)}°C
                     </span>
                     {weatherIcons[forecast.condition] || <Cloud className="w-5 h-5 text-gray-400" />}
@@ -234,28 +234,24 @@ export function CalendarWeek({ calendarEntityIds = [], weatherEntityId }: Calend
                 )}
               </div>
               
-              <div className="flex-1 space-y-1 overflow-hidden">
+              <div className="flex-1 space-y-1.5">
                 {dayEvents.length > 0 ? (
-                  dayEvents.slice(0, 3).map((event, i) => (
+                  dayEvents.slice(0, 4).map((event, i) => (
                     <div
                       key={i}
                       className={cn(
-                        'rounded px-2 py-1 text-xs truncate',
+                        'rounded-md px-2.5 py-1.5 text-sm',
                         event.color
                       )}
                     >
-                      {event.allDay ? (
-                        <span className="text-white font-medium">{event.summary}</span>
-                      ) : (
-                        <span className="text-white font-medium">{event.summary}</span>
-                      )}
+                      <span className="text-white font-medium block truncate">{event.summary}</span>
                     </div>
                   ))
                 ) : (
-                  <p className="text-[10px] text-text-muted">Keine Termine</p>
+                  <p className="text-sm text-gray-500">Keine Termine</p>
                 )}
-                {dayEvents.length > 3 && (
-                  <p className="text-[10px] text-text-muted">+{dayEvents.length - 3} weitere</p>
+                {dayEvents.length > 4 && (
+                  <p className="text-xs text-gray-400">+{dayEvents.length - 4} weitere</p>
                 )}
               </div>
             </motion.div>
