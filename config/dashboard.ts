@@ -89,6 +89,7 @@ export interface DashboardConfig {
   powerEntityId: string
   backgroundUrl?: string
   calendars?: string[]
+  climates?: string[]
   
   energy: EnergyConfig
   security: SecurityConfig

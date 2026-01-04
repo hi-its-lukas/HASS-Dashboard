@@ -1,11 +1,13 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Thermometer, Fan, Snowflake, Flame, Power, Settings, ChevronDown, ChevronRight, Plus, Minus } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { useHAStore } from '@/lib/ha'
+import { useConfigStore } from '@/lib/config/store'
 import { cn } from '@/lib/utils'
+import Link from 'next/link'
 
 interface ClimateDevice {
   entityId: string
@@ -16,16 +18,23 @@ export default function ClimatePage() {
   const states = useHAStore((s) => s.states)
   const callService = useHAStore((s) => s.callService)
   const getEntityArea = useHAStore((s) => s.getEntityArea)
+  const climates = useConfigStore((s) => s.climates)
+  const fetchConfig = useConfigStore((s) => s.fetchConfig)
   const [toggling, setToggling] = useState<string | null>(null)
   const [collapsedRooms, setCollapsedRooms] = useState<Record<string, boolean>>({})
   
-  const climateEntities = Object.keys(states).filter(id => id.startsWith('climate.'))
-  const fanEntities = Object.keys(states).filter(id => id.startsWith('fan.'))
+  useEffect(() => {
+    fetchConfig()
+  }, [fetchConfig])
   
-  const allDevices: ClimateDevice[] = [
-    ...climateEntities.map(id => ({ entityId: id, type: 'climate' as const })),
-    ...fanEntities.map(id => ({ entityId: id, type: 'fan' as const })),
-  ]
+  const configuredClimateIds = climates || []
+  
+  const allDevices: ClimateDevice[] = configuredClimateIds
+    .filter(id => states[id])
+    .map(id => ({
+      entityId: id,
+      type: id.startsWith('fan.') ? 'fan' as const : 'climate' as const
+    }))
   
   const roomGroups = useMemo(() => {
     const groups: Record<string, ClimateDevice[]> = {}
@@ -98,14 +107,12 @@ export default function ClimatePage() {
   const handleAllOff = async () => {
     setToggling('all')
     try {
-      for (const entityId of climateEntities) {
-        if (states[entityId]?.state !== 'off') {
-          await callService('climate', 'turn_off', entityId)
-        }
-      }
-      for (const entityId of fanEntities) {
-        if (states[entityId]?.state === 'on') {
-          await callService('fan', 'turn_off', entityId)
+      for (const device of allDevices) {
+        const state = states[device.entityId]?.state
+        if (device.type === 'climate' && state !== 'off') {
+          await callService('climate', 'turn_off', device.entityId)
+        } else if (device.type === 'fan' && state === 'on') {
+          await callService('fan', 'turn_off', device.entityId)
         }
       }
     } catch (error) {
@@ -190,10 +197,17 @@ export default function ClimatePage() {
           className="text-center py-12"
         >
           <Thermometer className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-          <p className="text-text-secondary mb-2">Keine Klimageräte gefunden</p>
-          <p className="text-text-muted text-sm">
-            Klimaanlagen, Heizungen und Ventilatoren werden automatisch erkannt
+          <p className="text-text-secondary mb-2">Keine Klimageräte konfiguriert</p>
+          <p className="text-text-muted text-sm mb-4">
+            Wähle in den Einstellungen aus, welche Geräte hier angezeigt werden sollen.
           </p>
+          <Link
+            href="/settings"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-accent-orange/20 hover:bg-accent-orange/30 text-accent-orange rounded-xl transition-colors"
+          >
+            <Settings className="w-4 h-4" />
+            Einstellungen öffnen
+          </Link>
         </motion.div>
       ) : (
         <div className="space-y-6">

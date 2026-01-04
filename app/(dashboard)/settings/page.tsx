@@ -36,7 +36,9 @@ import {
   Pencil,
   Check,
   Calendar,
-  CloudSun
+  CloudSun,
+  Thermometer,
+  Fan
 } from 'lucide-react'
 
 interface ConnectionStatus {
@@ -61,6 +63,8 @@ interface DiscoveredEntities {
   binarySensors: Array<{ entity_id: string; state: string; attributes: Record<string, unknown> }>
   locks: Array<{ entity_id: string; state: string; attributes: Record<string, unknown> }>
   calendars: Array<{ entity_id: string; state: string; attributes: Record<string, unknown> }>
+  climates: Array<{ entity_id: string; state: string; attributes: Record<string, unknown> }>
+  fans: Array<{ entity_id: string; state: string; attributes: Record<string, unknown> }>
 }
 
 interface IntercomConfig {
@@ -99,6 +103,7 @@ interface LayoutConfig {
   personDetails?: PersonDetailConfig[]
   lights: string[]
   covers: string[]
+  climates?: string[]
   appliances?: string[]
   calendars?: string[]
   energy?: EnergyConfig
@@ -129,6 +134,7 @@ export default function SettingsPage() {
     persons: [],
     lights: [],
     covers: [],
+    climates: [],
     appliances: [],
     calendars: [],
     energy: {},
@@ -139,6 +145,7 @@ export default function SettingsPage() {
     personDetails: true,
     lights: true,
     covers: false,
+    climates: false,
     calendars: false,
     energy: true,
     appliances: false,
@@ -175,6 +182,7 @@ export default function SettingsPage() {
           setConfig(prev => ({
             ...prev,
             ...data.layoutConfig,
+            climates: data.layoutConfig.climates || [],
             appliances: data.layoutConfig.appliances || [],
             calendars: data.layoutConfig.calendars || [],
             energy: data.layoutConfig.energy || {},
@@ -281,7 +289,7 @@ export default function SettingsPage() {
     router.push('/login')
   }
   
-  const toggleEntity = (type: 'persons' | 'lights' | 'covers' | 'appliances' | 'calendars', entityId: string) => {
+  const toggleEntity = (type: 'persons' | 'lights' | 'covers' | 'climates' | 'appliances' | 'calendars', entityId: string) => {
     setConfig(prev => {
       const current = prev[type] || []
       return {
@@ -660,6 +668,67 @@ export default function SettingsPage() {
                         <span className="text-gray-300">{getFriendlyName(entity)}</span>
                       </label>
                     ))}
+                  </div>
+                )}
+              </div>
+              
+              <div className="border border-white/5 rounded-xl overflow-hidden">
+                <button
+                  onClick={() => toggleSection('climates')}
+                  className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <Thermometer className="w-5 h-5 text-orange-400" />
+                    <span className="text-white font-medium">Klima / Heizung ({(discovered.climates?.length || 0) + (discovered.fans?.length || 0)})</span>
+                  </div>
+                  {expandedSections.climates ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
+                </button>
+                {expandedSections.climates && (
+                  <div className="p-4 space-y-2 max-h-64 overflow-y-auto">
+                    <p className="text-sm text-gray-400 mb-3">
+                      Wähle die Klimageräte und Ventilatoren aus, die auf der Klima-Seite angezeigt werden sollen:
+                    </p>
+                    {discovered.climates?.length > 0 && (
+                      <div className="mb-3">
+                        <p className="text-xs text-gray-500 mb-2 flex items-center gap-2">
+                          <Thermometer className="w-3 h-3" /> Klimageräte / Heizung
+                        </p>
+                        {discovered.climates.map(entity => (
+                          <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={config.climates?.includes(entity.entity_id) || false}
+                              onChange={() => toggleEntity('climates', entity.entity_id)}
+                              className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500"
+                            />
+                            <span className="text-gray-300">{getFriendlyName(entity)}</span>
+                            <span className="text-xs text-gray-500">{entity.entity_id}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                    {discovered.fans?.length > 0 && (
+                      <div>
+                        <p className="text-xs text-gray-500 mb-2 flex items-center gap-2">
+                          <Fan className="w-3 h-3" /> Ventilatoren
+                        </p>
+                        {discovered.fans.map(entity => (
+                          <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={config.climates?.includes(entity.entity_id) || false}
+                              onChange={() => toggleEntity('climates', entity.entity_id)}
+                              className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500"
+                            />
+                            <span className="text-gray-300">{getFriendlyName(entity)}</span>
+                            <span className="text-xs text-gray-500">{entity.entity_id}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                    {(!discovered.climates?.length && !discovered.fans?.length) && (
+                      <p className="text-sm text-gray-500">Keine Klimageräte oder Ventilatoren gefunden.</p>
+                    )}
                   </div>
                 )}
               </div>

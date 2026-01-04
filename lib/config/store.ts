@@ -35,6 +35,7 @@ interface UserLayoutConfig {
   personDetails?: PersonDetailConfig[]
   lights?: string[]
   covers?: string[]
+  climates?: string[]
   calendars?: string[]
   appliances?: string[] | ApplianceConfig[]
   customButtons?: CustomButtonConfig[]
@@ -110,8 +111,11 @@ interface ConfigStore {
   isLoaded: boolean
   isAuthenticated: boolean
   sidebarState: 'expanded' | 'collapsed'
+  climates: string[]
+  calendars: string[]
   
   loadConfig: () => Promise<void>
+  fetchConfig: () => Promise<void>
   updateConfig: (updates: Partial<UserLayoutConfig>) => Promise<boolean>
   setSidebarState: (state: 'expanded' | 'collapsed') => Promise<void>
   reset: () => void
@@ -168,6 +172,7 @@ function mergeWithDefaults(userConfig: UserLayoutConfig): DashboardConfig {
     intercoms: userConfig.intercoms || staticConfig.intercoms,
     lights: userConfig.lights || staticConfig.lights,
     covers: userConfig.covers || staticConfig.covers,
+    climates: userConfig.climates || [],
   }
 }
 
@@ -176,6 +181,8 @@ export const useConfigStore = create<ConfigStore>((set, get) => ({
   isLoaded: false,
   isAuthenticated: false,
   sidebarState: 'expanded',
+  climates: [],
+  calendars: [],
 
   loadConfig: async () => {
     try {
@@ -199,11 +206,20 @@ export const useConfigStore = create<ConfigStore>((set, get) => ({
         config: mergedConfig,
         isLoaded: true,
         isAuthenticated: true,
-        sidebarState: data.sidebarState || 'expanded'
+        sidebarState: data.sidebarState || 'expanded',
+        climates: data.layoutConfig?.climates || [],
+        calendars: data.layoutConfig?.calendars || []
       })
     } catch (error) {
       console.error('[ConfigStore] Error loading config:', error)
       set({ isLoaded: true, isAuthenticated: false })
+    }
+  },
+
+  fetchConfig: async () => {
+    const { isLoaded } = get()
+    if (!isLoaded) {
+      await get().loadConfig()
     }
   },
 
