@@ -326,7 +326,7 @@ export default function SettingsPage() {
               ) : (
                 <XCircle className="w-6 h-6 text-red-400" />
               )}
-              <div>
+              <div className="flex-1">
                 <p className={status.connected ? 'text-emerald-400' : 'text-red-400'}>
                   {status.connected ? 'Connected' : 'Not Connected'}
                 </p>
@@ -337,6 +337,15 @@ export default function SettingsPage() {
                   <p className="text-sm text-red-400">{status.error}</p>
                 )}
               </div>
+              {!status.connected && (
+                <button
+                  onClick={() => router.push('/login?refresh=true')}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors text-sm font-medium"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  Token erneuern
+                </button>
+              )}
             </div>
           )}
         </div>
