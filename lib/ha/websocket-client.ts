@@ -3,6 +3,7 @@
 import { HAState, HAMessage, HAServiceCall, HAIncomingMessage } from './types'
 
 type StateChangeCallback = (entityId: string, newState: HAState, oldState: HAState | null) => void
+type EventCallback<T = unknown> = (data: T, rawEvent: unknown) => void
 
 export interface HAArea {
   area_id: string
@@ -41,6 +42,8 @@ export class HAWebSocketClient {
   private messageId = 1
   private pendingRequests = new Map<number, { resolve: RequestResolve; reject: RequestReject }>()
   private stateChangeCallbacks: StateChangeCallback[] = []
+  private eventCallbacks = new Map<string, Set<EventCallback>>()
+  private subscribedEventTypes = new Set<string>()
   private reconnectAttempts = 0
   private maxReconnectAttempts = 10
   private reconnectDelay = 1000
@@ -129,10 +132,24 @@ export class HAWebSocketClient {
           break
 
         case 'event':
-          const eventMsg = message as { event: { data: { entity_id?: string; new_state?: HAState; old_state?: HAState } } }
-          const { entity_id, new_state, old_state } = eventMsg.event.data
-          if (entity_id && new_state) {
-            this.stateChangeCallbacks.forEach((cb) => cb(entity_id, new_state, old_state || null))
+          const eventMsg = message as { 
+            event: { 
+              event_type?: string
+              data: { entity_id?: string; new_state?: HAState; old_state?: HAState; [key: string]: unknown } 
+            } 
+          }
+          const eventType = eventMsg.event.event_type
+          
+          if (eventType === 'state_changed') {
+            const { entity_id, new_state, old_state } = eventMsg.event.data
+            if (entity_id && new_state) {
+              this.stateChangeCallbacks.forEach((cb) => cb(entity_id, new_state, old_state || null))
+            }
+          } else if (eventType) {
+            const callbacks = this.eventCallbacks.get(eventType)
+            if (callbacks) {
+              callbacks.forEach((cb) => cb(eventMsg.event.data, eventMsg.event))
+            }
           }
           break
 
@@ -207,6 +224,32 @@ export class HAWebSocketClient {
     this.stateChangeCallbacks.push(callback)
     return () => {
       this.stateChangeCallbacks = this.stateChangeCallbacks.filter((cb) => cb !== callback)
+    }
+  }
+
+  async subscribeToEvents(eventType: string): Promise<void> {
+    if (this.subscribedEventTypes.has(eventType)) {
+      return
+    }
+    await this.sendCommand({
+      type: 'subscribe_events',
+      event_type: eventType,
+    })
+    this.subscribedEventTypes.add(eventType)
+  }
+
+  onEvent<T = unknown>(eventType: string, callback: EventCallback<T>): () => void {
+    if (!this.eventCallbacks.has(eventType)) {
+      this.eventCallbacks.set(eventType, new Set())
+    }
+    const callbacks = this.eventCallbacks.get(eventType)!
+    callbacks.add(callback as EventCallback)
+    
+    return () => {
+      callbacks.delete(callback as EventCallback)
+      if (callbacks.size === 0) {
+        this.eventCallbacks.delete(eventType)
+      }
     }
   }
 
