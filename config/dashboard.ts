@@ -9,16 +9,21 @@ export interface RoomConfig {
   entityIds: string[]
 }
 
+export interface PersonSensorConfig {
+  id: string
+  label: string
+  entityId: string
+  unit?: string
+  icon?: string
+}
+
 export interface PersonConfig {
   id: string
   name: string
   entityId: string
   avatarUrl?: string
   batteryEntityId?: string
-  stepsEntityId?: string
-  distanceEntityId?: string
-  floorsEntityId?: string
-  activityEntityId?: string
+  sensors: PersonSensorConfig[]
 }
 
 export interface EnergyConfig {
@@ -81,6 +86,13 @@ export interface CoverConfig {
   name?: string
 }
 
+export interface PersonDetailConfig {
+  entityId: string
+  name: string
+  batteryEntityId?: string
+  sensors: PersonSensorConfig[]
+}
+
 export interface DashboardConfig {
   weatherEntityId: string
   lightsGroupEntityId: string
@@ -91,6 +103,7 @@ export interface DashboardConfig {
   security: SecurityConfig
   rooms: RoomConfig[]
   persons: PersonConfig[]
+  personDetails?: PersonDetailConfig[]
   appliances: ApplianceConfig[]
   customButtons: CustomButtonConfig[]
   intercoms: IntercomConfig[]

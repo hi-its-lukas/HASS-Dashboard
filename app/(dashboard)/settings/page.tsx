@@ -72,8 +72,23 @@ interface IntercomConfig {
   lockEntityId?: string
 }
 
+interface PersonSensorConfig {
+  id: string
+  label: string
+  entityId: string
+  unit?: string
+}
+
+interface PersonDetailConfig {
+  entityId: string
+  name: string
+  batteryEntityId?: string
+  sensors: PersonSensorConfig[]
+}
+
 interface LayoutConfig {
   persons: string[]
+  personDetails?: PersonDetailConfig[]
   lights: string[]
   covers: string[]
   customButtons: Array<{
@@ -108,12 +123,15 @@ export default function SettingsPage() {
   })
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     persons: true,
+    personDetails: true,
     lights: true,
     covers: false,
     buttons: false,
     intercoms: false,
     surveillance: true
   })
+  const [editingPerson, setEditingPerson] = useState<string | null>(null)
+  const [newSensor, setNewSensor] = useState({ label: '', entityId: '', unit: '' })
   const [newIntercom, setNewIntercom] = useState({ name: '', cameraEntityId: '', speakUrl: '', lockEntityId: '' })
   const [uploadingBackground, setUploadingBackground] = useState(false)
   const [backgroundUrl, setBackgroundUrl] = useState<string | null>(null)
@@ -366,6 +384,187 @@ export default function SettingsPage() {
                   </div>
                 )}
               </div>
+              
+              {config.persons.length > 0 && (
+                <div className="border border-white/5 rounded-xl overflow-hidden">
+                  <button
+                    onClick={() => toggleSection('personDetails')}
+                    className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <User className="w-5 h-5 text-cyan-400" />
+                      <span className="text-white font-medium">Personen-Sensoren konfigurieren</span>
+                    </div>
+                    {expandedSections.personDetails ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
+                  </button>
+                  {expandedSections.personDetails && (
+                    <div className="p-4 space-y-4">
+                      <p className="text-sm text-gray-400">
+                        Wähle für jede Person die Sensoren aus, die angezeigt werden sollen.
+                      </p>
+                      {config.persons.map(personEntityId => {
+                        const personEntity = discovered?.persons.find(p => p.entity_id === personEntityId)
+                        const personName = personEntity ? getFriendlyName(personEntity) : personEntityId.split('.')[1]
+                        const personDetail = config.personDetails?.find(p => p.entityId === personEntityId) || {
+                          entityId: personEntityId,
+                          name: personName,
+                          sensors: []
+                        }
+                        const isEditing = editingPerson === personEntityId
+                        
+                        return (
+                          <div key={personEntityId} className="p-4 bg-white/5 rounded-xl">
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
+                                  <span className="text-blue-400 font-bold">{personName.charAt(0).toUpperCase()}</span>
+                                </div>
+                                <div>
+                                  <p className="text-white font-medium">{personName}</p>
+                                  <p className="text-xs text-gray-500">{personEntityId}</p>
+                                </div>
+                              </div>
+                              <button
+                                onClick={() => setEditingPerson(isEditing ? null : personEntityId)}
+                                className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${isEditing ? 'bg-cyan-500/20 text-cyan-400' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
+                              >
+                                {isEditing ? 'Fertig' : 'Bearbeiten'}
+                              </button>
+                            </div>
+                            
+                            {personDetail.sensors.length > 0 && (
+                              <div className="flex flex-wrap gap-2 mb-3">
+                                {personDetail.sensors.map(sensor => (
+                                  <span key={sensor.id} className="flex items-center gap-1.5 px-2 py-1 bg-white/10 rounded-lg text-sm text-gray-300">
+                                    {sensor.label}{sensor.unit && ` (${sensor.unit})`}
+                                    {isEditing && (
+                                      <button
+                                        onClick={() => {
+                                          setConfig(prev => ({
+                                            ...prev,
+                                            personDetails: (prev.personDetails || []).map(p => 
+                                              p.entityId === personEntityId 
+                                                ? { ...p, sensors: p.sensors.filter(s => s.id !== sensor.id) }
+                                                : p
+                                            ).filter(p => p.sensors.length > 0 || p.batteryEntityId)
+                                          }))
+                                        }}
+                                        className="ml-1 text-red-400 hover:text-red-300"
+                                      >
+                                        <X className="w-3 h-3" />
+                                      </button>
+                                    )}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                            
+                            {isEditing && (
+                              <div className="mt-3 pt-3 border-t border-white/10 space-y-3">
+                                <div>
+                                  <label className="text-xs text-gray-400 mb-1 block">Batterie-Sensor (optional)</label>
+                                  <select
+                                    value={personDetail.batteryEntityId || ''}
+                                    onChange={(e) => {
+                                      const batteryEntityId = e.target.value || undefined
+                                      setConfig(prev => {
+                                        const existing = prev.personDetails?.find(p => p.entityId === personEntityId)
+                                        if (existing) {
+                                          return {
+                                            ...prev,
+                                            personDetails: prev.personDetails?.map(p => 
+                                              p.entityId === personEntityId ? { ...p, batteryEntityId } : p
+                                            )
+                                          }
+                                        } else {
+                                          return {
+                                            ...prev,
+                                            personDetails: [...(prev.personDetails || []), { entityId: personEntityId, name: personName, batteryEntityId, sensors: [] }]
+                                          }
+                                        }
+                                      })
+                                    }}
+                                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                                  >
+                                    <option value="">Kein Batterie-Sensor</option>
+                                    {discovered?.sensors.filter(s => 
+                                      s.entity_id.includes('battery') || s.attributes.device_class === 'battery'
+                                    ).map(s => (
+                                      <option key={s.entity_id} value={s.entity_id}>{getFriendlyName(s)}</option>
+                                    ))}
+                                  </select>
+                                </div>
+                                
+                                <p className="text-xs text-gray-400">Neuen Sensor hinzufügen:</p>
+                                <div className="grid grid-cols-3 gap-2">
+                                  <input
+                                    type="text"
+                                    placeholder="Label (z.B. Schritte)"
+                                    value={newSensor.label}
+                                    onChange={(e) => setNewSensor(prev => ({ ...prev, label: e.target.value }))}
+                                    className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                                  />
+                                  <select
+                                    value={newSensor.entityId}
+                                    onChange={(e) => setNewSensor(prev => ({ ...prev, entityId: e.target.value }))}
+                                    className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                                  >
+                                    <option value="">Sensor wählen...</option>
+                                    {discovered?.sensors.map(s => (
+                                      <option key={s.entity_id} value={s.entity_id}>{getFriendlyName(s)} ({s.entity_id})</option>
+                                    ))}
+                                  </select>
+                                  <input
+                                    type="text"
+                                    placeholder="Einheit (optional)"
+                                    value={newSensor.unit}
+                                    onChange={(e) => setNewSensor(prev => ({ ...prev, unit: e.target.value }))}
+                                    className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                                  />
+                                </div>
+                                <button
+                                  onClick={() => {
+                                    if (newSensor.label.trim() && newSensor.entityId) {
+                                      const sensor: PersonSensorConfig = {
+                                        id: `sensor_${Date.now()}`,
+                                        label: newSensor.label.trim(),
+                                        entityId: newSensor.entityId,
+                                        ...(newSensor.unit.trim() && { unit: newSensor.unit.trim() })
+                                      }
+                                      setConfig(prev => {
+                                        const existing = prev.personDetails?.find(p => p.entityId === personEntityId)
+                                        if (existing) {
+                                          return {
+                                            ...prev,
+                                            personDetails: prev.personDetails?.map(p => 
+                                              p.entityId === personEntityId ? { ...p, sensors: [...p.sensors, sensor] } : p
+                                            )
+                                          }
+                                        } else {
+                                          return {
+                                            ...prev,
+                                            personDetails: [...(prev.personDetails || []), { entityId: personEntityId, name: personName, sensors: [sensor] }]
+                                          }
+                                        }
+                                      })
+                                      setNewSensor({ label: '', entityId: '', unit: '' })
+                                    }
+                                  }}
+                                  disabled={!newSensor.label.trim() || !newSensor.entityId}
+                                  className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  <Plus className="w-4 h-4" />
+                                  Sensor hinzufügen
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
               
               <div className="border border-white/5 rounded-xl overflow-hidden">
                 <button
