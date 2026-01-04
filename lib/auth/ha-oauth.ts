@@ -208,7 +208,7 @@ async function fetchHAUserInfo(haUrl: string, accessToken: string): Promise<HAUs
   console.log('[OAuth] Fetching current user from HA via WebSocket')
   
   try {
-    const wsUrl = haUrl.replace(/^http/, 'ws') + '/api/websocket'
+    const wsUrl = haUrl.replace(/^https:/, 'wss:').replace(/^http:/, 'ws:') + '/api/websocket'
     console.log('[OAuth] Connecting to WebSocket:', wsUrl)
     
     const userInfo = await new Promise<HAUserInfo>((resolve, reject) => {
