@@ -9,6 +9,14 @@ HA Dashboard is a modern, mobile-first Progressive Web App (PWA) for Home Assist
 Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (2026-01-04)
+- **Apple Home Design Overhaul** - Complete visual redesign inspired by Apple Home app
+  - New glassmorphism UI with translucent cards and backdrop blur effects
+  - Warm gradient background (customizable via user-uploaded images)
+  - Updated color palette with Apple-style accent colors (orange, green, cyan)
+  - German translations for UI elements
+  - Glass-effect navigation sidebar and bottom nav
+  - Status pills for lights/covers count on dashboard
+  - Room-based grouping with chevron headers
 - **Removed AI Surveillance feature** - Surveillance page, API routes, and settings removed
 - **Intercoms in sidebar navigation** - Configured intercoms now appear in sidebar with phone icon
 - **Live camera streams for intercoms** - MJPEG streaming via `/api/ha/stream/[entityId]`
@@ -55,7 +63,7 @@ Preferred communication style: Simple, everyday language.
 
 ### Frontend Architecture
 - **Framework**: Next.js 14 with App Router and TypeScript in strict mode
-- **Styling**: Tailwind CSS with custom design tokens for dark theme (neumorphism/glassmorphism aesthetic)
+- **Styling**: Tailwind CSS with Apple Home-inspired glassmorphism design (translucent surfaces, backdrop blur, warm gradients)
 - **State Management**: Zustand for both HA connection state (`lib/ha/store.ts`) and configuration state (`lib/config/store.ts`)
 - **Animations**: Framer Motion for smooth UI transitions
 - **Charts**: Recharts for energy monitoring visualizations
