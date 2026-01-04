@@ -205,55 +205,74 @@ interface HAUserInfo {
 }
 
 async function fetchHAUserInfo(haUrl: string, accessToken: string): Promise<HAUserInfo> {
-  console.log('[OAuth] Fetching current user from HA')
+  console.log('[OAuth] Fetching current user from HA via WebSocket')
   
   try {
-    const response = await fetch(new URL('/api/', haUrl).toString(), {
-      headers: {
-        'Authorization': `Bearer ${accessToken}`
-      }
-    })
+    const wsUrl = haUrl.replace(/^http/, 'ws') + '/api/websocket'
+    console.log('[OAuth] Connecting to WebSocket:', wsUrl)
     
-    if (response.ok) {
-      const apiInfo = await response.json()
-      console.log('[OAuth] API response:', apiInfo)
+    const userInfo = await new Promise<HAUserInfo>((resolve, reject) => {
+      const WebSocket = require('ws')
+      const ws = new WebSocket(wsUrl)
+      let msgId = 1
       
-      if (apiInfo.user_id && apiInfo.user_name) {
-        return { 
-          id: apiInfo.user_id, 
-          name: apiInfo.user_name 
+      const timeout = setTimeout(() => {
+        ws.close()
+        reject(new Error('WebSocket timeout'))
+      }, 10000)
+      
+      ws.on('open', () => {
+        console.log('[OAuth] WebSocket connected')
+      })
+      
+      ws.on('message', (data: Buffer) => {
+        try {
+          const msg = JSON.parse(data.toString())
+          console.log('[OAuth] WS message:', msg.type)
+          
+          if (msg.type === 'auth_required') {
+            ws.send(JSON.stringify({
+              type: 'auth',
+              access_token: accessToken
+            }))
+          } else if (msg.type === 'auth_ok') {
+            ws.send(JSON.stringify({
+              id: msgId++,
+              type: 'auth/current_user'
+            }))
+          } else if (msg.type === 'auth_invalid') {
+            clearTimeout(timeout)
+            ws.close()
+            reject(new Error('Invalid auth'))
+          } else if (msg.type === 'result' && msg.success && msg.result) {
+            clearTimeout(timeout)
+            ws.close()
+            console.log('[OAuth] Got user info:', msg.result)
+            resolve({
+              id: msg.result.id,
+              name: msg.result.name || 'User'
+            })
+          }
+        } catch (e) {
+          console.error('[OAuth] WS parse error:', e)
         }
-      }
-    }
-  } catch (error) {
-    console.log('[OAuth] API info fetch failed:', error)
-  }
-  
-  try {
-    const configResponse = await fetch(new URL('/api/config', haUrl).toString(), {
-      headers: {
-        'Authorization': `Bearer ${accessToken}`
-      }
+      })
+      
+      ws.on('error', (err: Error) => {
+        clearTimeout(timeout)
+        reject(err)
+      })
     })
     
-    if (configResponse.ok) {
-      const config = await configResponse.json()
-      console.log('[OAuth] Config response:', config)
-      
-      const userId = accessToken.substring(0, 32)
-      return { 
-        id: userId, 
-        name: config.location_name || 'User' 
-      }
+    return userInfo
+  } catch (error) {
+    console.error('[OAuth] WebSocket user fetch failed:', error)
+    
+    const userId = accessToken.substring(0, 32)
+    return { 
+      id: userId, 
+      name: 'User' 
     }
-  } catch (configError) {
-    console.error('[OAuth] Config fetch failed:', configError)
-  }
-  
-  const userId = accessToken.substring(0, 32)
-  return { 
-    id: userId, 
-    name: 'User' 
   }
 }
 
