@@ -1,7 +1,7 @@
 'use client'
 
 import { Sidebar } from '@/components/nav/sidebar'
-import { BottomNav } from '@/components/nav/bottom-nav'
+import { MobileNav } from '@/components/nav/mobile-nav'
 import { NotificationModal } from '@/components/ui/notification-modal'
 import { useConfigStore } from '@/lib/config/store'
 import { useEffect, useState } from 'react'
@@ -30,13 +30,11 @@ export default function DashboardLayout({
       />
       <div className="flex min-h-screen relative">
         <Sidebar />
-        <main className="flex-1 pb-20 lg:pb-6 lg:ml-64">
+        <main className="flex-1 pb-6 lg:ml-64">
           {children}
         </main>
       </div>
-      <div className="lg:hidden">
-        <BottomNav />
-      </div>
+      <MobileNav />
       <NotificationModal />
     </>
   )
