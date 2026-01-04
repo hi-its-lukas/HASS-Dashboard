@@ -23,7 +23,7 @@ export interface PersonConfig {
   entityId: string
   avatarUrl?: string
   batteryEntityId?: string
-  sensors: PersonSensorConfig[]
+  sensors?: PersonSensorConfig[]
 }
 
 export interface EnergyConfig {
