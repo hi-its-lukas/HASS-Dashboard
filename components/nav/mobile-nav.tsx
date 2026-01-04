@@ -71,12 +71,12 @@ export function MobileNav() {
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="lg:hidden fixed top-4 left-4 z-40 p-2 rounded-xl"
+        className="lg:hidden fixed bottom-6 left-4 z-40 p-3 rounded-full shadow-lg"
         style={{
-          background: 'rgba(28, 28, 30, 0.8)',
+          background: 'rgba(28, 28, 30, 0.9)',
           backdropFilter: 'blur(12px)',
           WebkitBackdropFilter: 'blur(12px)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
+          border: '1px solid rgba(255, 255, 255, 0.15)',
         }}
         aria-label="Menü öffnen"
       >
