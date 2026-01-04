@@ -40,6 +40,7 @@ import {
   Thermometer,
   Fan
 } from 'lucide-react'
+import { PushSettings } from '@/components/settings/push-settings'
 
 interface ConnectionStatus {
   connected: boolean
@@ -1335,6 +1336,10 @@ export default function SettingsPage() {
               />
             </label>
           )}
+        </div>
+        
+        <div className="mb-6">
+          <PushSettings />
         </div>
         
         <div className="text-center">
