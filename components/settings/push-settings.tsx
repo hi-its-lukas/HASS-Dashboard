@@ -38,17 +38,11 @@ export function PushSettings() {
     const savedName = localStorage.getItem(PUSH_USER_KEY)
     if (savedName) {
       setCustomName(savedName)
+      setIsLoadingUser(false)
+    } else {
+      setIsEditing(true)
+      setIsLoadingUser(false)
     }
-    
-    fetch('/api/auth/me')
-      .then(res => res.json())
-      .then(data => {
-        if (data.name) {
-          setCurrentUser(data.name.toLowerCase())
-        }
-      })
-      .catch(console.error)
-      .finally(() => setIsLoadingUser(false))
     
     if (!('Notification' in window) || !('serviceWorker' in navigator)) {
       setPermissionState('unsupported')
@@ -275,7 +269,7 @@ export function PushSettings() {
             )}
           </div>
           <p className="text-xs text-text-muted mt-2">
-            Dieser Name wird für Push-Benachrichtigungen verwendet. Muss mit dem Namen in Home Assistant übereinstimmen.
+            Gib deinen HA-Benutzernamen ein (z.B. "lukas" oder "simon"). Muss mit dem Namen in deinen HA-Automationen übereinstimmen.
           </p>
         </div>
         
