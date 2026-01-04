@@ -2,13 +2,19 @@
 
 ## Overview
 
-HA Dashboard is a modern, mobile-first Progressive Web App (PWA) for Home Assistant. It provides a sleek interface with dark neumorphism/glassmorphism design for controlling smart home devices, monitoring energy usage, security systems, family presence, and AI surveillance feeds. The application uses OAuth authentication with Home Assistant instances and stores user configurations server-side.
+HA Dashboard is a modern, mobile-first Progressive Web App (PWA) for Home Assistant. It provides a sleek interface with dark neumorphism/glassmorphism design for controlling smart home devices, monitoring energy usage, security systems, and family presence. The application uses OAuth authentication with Home Assistant instances and stores user configurations server-side.
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (2026-01-04)
+- **Removed AI Surveillance feature** - Surveillance page, API routes, and settings removed
+- **Intercoms in sidebar navigation** - Configured intercoms now appear in sidebar with phone icon
+- **Live camera streams for intercoms** - MJPEG streaming via `/api/ha/stream/[entityId]`
+- **Improved intercom layout** - Buttons positioned next to video, original aspect ratio preserved
+- **Calendar events readable** - Event text no longer truncated, uses word-wrap
+- **Fixed map marker icons** - Leaflet icons now load correctly from CDN
 - **Dashboard Popup Notifications** - Real-time popups triggered by Home Assistant events
   - WebSocket client extended with generic event subscriptions (`subscribeToEvents`, `onEvent`)
   - Notifications store with queue management, tag-based deduplication, severity levels
@@ -19,12 +25,6 @@ Preferred communication style: Simple, everyday language.
   - Weather entity selector added to Settings under Calendar section
 
 ## Recent Changes (2026-01-03)
-- **AI Surveillance with UniFi Protect** - Configure cameras with detection types (Person, Vehicle, Animal, Motion)
-  - Sensor auto-discovery based on camera name patterns
-  - Automatic snapshot capture on detection events
-  - Event history with filters (time range, detection type)
-  - Snapshots stored per-user in /data/snapshots/{userId}/ with input sanitization
-  - **Limitation**: Client-side tracking requires dashboard to be open in browser
 - **New Lights page** (`/lights`) - Grid view of all configured lights with toggle controls and "All off" button
 - **New Covers page** (`/covers`) - Grid view of all blinds/covers with open/stop/close controls and "All open/close" buttons
 - **New Cameras page** (`/cameras`) - Grid of all camera entities with live feeds, click for fullscreen modal
@@ -38,7 +38,6 @@ Preferred communication style: Simple, everyday language.
 - Dashboard displays custom background with dark overlay for readability
 - Calendar page now uses CalendarWeek component with real HA calendar entities
 - More page buttons now configurable via Settings (select HA scripts as buttons)
-- Surveillance page fetches real Frigate events with thumbnails via proxy API
 - Family page PersonCard auto-discovers activity sensors (steps, distance, battery)
 - New API routes: /api/ha/camera/[entityId], /api/ha/frigate/events, /api/ha/frigate/thumbnail/[eventId]
 - Dashboard now displays user-configured entities instead of hardcoded examples
@@ -91,7 +90,7 @@ Preferred communication style: Simple, everyday language.
 ### Database
 - **SQLite**: Local file-based database via Prisma ORM
 - **Prisma Client**: `@prisma/client` for database operations
-- Schema includes: `User`, `Session`, `OAuthToken`, `DashboardConfig`, `SurveillanceEvent` tables
+- Schema includes: `User`, `Session`, `OAuthToken`, `DashboardConfig` tables
 
 ### Home Assistant
 - OAuth 2.0 authentication with the HA instance

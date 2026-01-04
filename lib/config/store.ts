@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { DashboardConfig, dashboardConfig as staticConfig, PersonConfig, PersonDetailConfig, RoomConfig, ApplianceConfig, IntercomConfig, SurveillanceCameraConfig } from '@/config/dashboard'
+import { DashboardConfig, dashboardConfig as staticConfig, PersonConfig, PersonDetailConfig, RoomConfig, ApplianceConfig, IntercomConfig } from '@/config/dashboard'
 
 export interface CustomButtonConfig {
   id: string
@@ -38,7 +38,6 @@ interface UserLayoutConfig {
   appliances?: string[] | ApplianceConfig[]
   customButtons?: CustomButtonConfig[]
   intercoms?: IntercomConfig[]
-  surveillanceCameras?: SurveillanceCameraConfig[]
 }
 
 function entityIdToName(entityId: string): string {
@@ -168,7 +167,6 @@ function mergeWithDefaults(userConfig: UserLayoutConfig): DashboardConfig {
     intercoms: userConfig.intercoms || staticConfig.intercoms,
     lights: userConfig.lights || staticConfig.lights,
     covers: userConfig.covers || staticConfig.covers,
-    surveillanceCameras: userConfig.surveillanceCameras || staticConfig.surveillanceCameras,
   }
 }
 
@@ -227,7 +225,6 @@ export const useConfigStore = create<ConfigStore>((set, get) => ({
       appliances: updates.appliances ?? config.appliances,
       customButtons: updates.customButtons ?? config.customButtons,
       intercoms: updates.intercoms ?? config.intercoms,
-      surveillanceCameras: updates.surveillanceCameras ?? config.surveillanceCameras,
       personDetails: updates.personDetails ?? config.personDetails,
     }
     

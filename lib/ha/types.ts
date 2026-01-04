@@ -71,13 +71,3 @@ export interface HAServiceCall {
   }
 }
 
-// Surveillance types
-export interface SurveillanceEvent {
-  id: string
-  timestamp: string
-  camera: string
-  type: 'person' | 'vehicle' | 'animal' | 'motion'
-  label: string
-  confidence: number
-  thumbnailUrl?: string
-}

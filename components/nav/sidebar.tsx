@@ -8,7 +8,6 @@ import {
   Home, 
   Zap, 
   Video, 
-  Shield, 
   Users, 
   Settings,
   ChevronLeft,
@@ -27,7 +26,6 @@ const navItems = [
   { href: '/covers', icon: Blinds, label: 'Covers' },
   { href: '/cameras', icon: Video, label: 'Cameras' },
   { href: '/energy', icon: Zap, label: 'Energy' },
-  { href: '/surveillance', icon: Shield, label: 'Surveillance' },
   { href: '/family', icon: Users, label: 'Family' },
   { href: '/more', icon: Menu, label: 'More' },
 ]

@@ -2,9 +2,9 @@
 // Last updated: 2026-01-03 - Refactored to use dynamic per-user config
 
 import { create } from 'zustand'
-import { HAState, SurveillanceEvent } from './types'
+import { HAState } from './types'
 import { HAWebSocketClient, HAArea, HADevice, HAEntityRegistryEntry } from './websocket-client'
-import { mockStates, generatePowerTrendData, mockSurveillanceEvents, mockSurveillanceStats } from './mock-data'
+import { mockStates, generatePowerTrendData } from './mock-data'
 import { useConfigStore } from '@/lib/config/store'
 import { useNotificationsStore } from '@/lib/ui/notifications-store'
 
@@ -42,13 +42,6 @@ interface HAStore {
 
   // Derived data
   powerTrend: PowerTrendPoint[]
-  surveillanceEvents: SurveillanceEvent[]
-  surveillanceStats: {
-    events: number
-    people: number
-    vehicles: number
-    ai: number
-  }
 
   // Actions
   connect: () => Promise<void>
@@ -72,8 +65,6 @@ export const useHAStore = create<HAStore>((set, get) => ({
   devices: [],
   entityRegistry: [],
   powerTrend: [],
-  surveillanceEvents: [],
-  surveillanceStats: { events: 0, people: 0, vehicles: 0, ai: 0 },
 
   connect: async () => {
     const { useMock, connecting, connected } = get()
@@ -89,8 +80,6 @@ export const useHAStore = create<HAStore>((set, get) => ({
         connecting: false,
         states: mockStates,
         powerTrend: generatePowerTrendData(),
-        surveillanceEvents: mockSurveillanceEvents,
-        surveillanceStats: mockSurveillanceStats,
       })
       return
     }
@@ -161,8 +150,6 @@ export const useHAStore = create<HAStore>((set, get) => ({
         devices,
         entityRegistry,
         powerTrend: generatePowerTrendData(),
-        surveillanceEvents: mockSurveillanceEvents,
-        surveillanceStats: mockSurveillanceStats,
       })
     } catch (err) {
       console.error('[HA Store] Connection error:', err)
@@ -345,5 +332,3 @@ export const useEnergy = () => {
 }
 
 export const usePowerTrend = () => useHAStore((s) => s.powerTrend)
-export const useSurveillanceEvents = () => useHAStore((s) => s.surveillanceEvents)
-export const useSurveillanceStats = () => useHAStore((s) => s.surveillanceStats)

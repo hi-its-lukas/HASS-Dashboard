@@ -1,6 +1,6 @@
 // Mock Data Provider for development without HA connection
 
-import { HAState, SurveillanceEvent } from './types'
+import { HAState } from './types'
 
 export const mockStates: Record<string, HAState> = {
   // Weather
@@ -437,58 +437,3 @@ export function generatePowerTrendData() {
   return data
 }
 
-// Mock surveillance events
-export const mockSurveillanceEvents: SurveillanceEvent[] = [
-  {
-    id: '1',
-    timestamp: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
-    camera: 'Garage',
-    type: 'vehicle',
-    label: 'CAR',
-    confidence: 85,
-    thumbnailUrl: '/thumbnails/garage.jpg',
-  },
-  {
-    id: '2',
-    timestamp: new Date(Date.now() - 19 * 60 * 1000).toISOString(),
-    camera: 'Backyard',
-    type: 'animal',
-    label: 'DOG',
-    confidence: 83,
-    thumbnailUrl: '/thumbnails/backyard.jpg',
-  },
-  {
-    id: '3',
-    timestamp: new Date(Date.now() - 22 * 60 * 1000).toISOString(),
-    camera: 'Indoor',
-    type: 'person',
-    label: 'PERSON',
-    confidence: 84,
-    thumbnailUrl: '/thumbnails/indoor.jpg',
-  },
-  {
-    id: '4',
-    timestamp: new Date(Date.now() - 22 * 60 * 1000).toISOString(),
-    camera: 'Indoor',
-    type: 'person',
-    label: 'PERSON',
-    confidence: 85,
-    thumbnailUrl: '/thumbnails/indoor2.jpg',
-  },
-  {
-    id: '5',
-    timestamp: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
-    camera: 'Front Door',
-    type: 'person',
-    label: 'PERSON',
-    confidence: 93,
-    thumbnailUrl: '/thumbnails/front.jpg',
-  },
-]
-
-export const mockSurveillanceStats = {
-  events: 50,
-  people: 32,
-  vehicles: 5,
-  ai: 48,
-}

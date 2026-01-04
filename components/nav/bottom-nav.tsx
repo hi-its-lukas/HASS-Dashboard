@@ -2,15 +2,14 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Video, Calendar, Shield, Menu } from 'lucide-react'
+import { Home, Video, Calendar, Menu } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
 const navItems = [
   { href: '/', icon: Home, label: 'HOME' },
-  { href: '/surveillance', icon: Video, label: 'CAMS' },
+  { href: '/cameras', icon: Video, label: 'CAMS' },
   { href: '/calendar', icon: Calendar, label: 'CALENDAR' },
-  { href: '/secure', icon: Shield, label: 'SECURE' },
   { href: '/more', icon: Menu, label: 'MORE' },
 ]
 
