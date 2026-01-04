@@ -214,22 +214,45 @@ async function fetchHAUserInfo(haUrl: string, accessToken: string): Promise<HAUs
       }
     })
     
-    if (!response.ok) {
-      const text = await response.text()
-      console.error('[OAuth] Current user fetch failed:', response.status, text)
-      throw new Error(`Failed to get current user: ${response.status}`)
+    if (response.ok) {
+      const userInfo = await response.json()
+      console.log('[OAuth] Current user response:', userInfo)
+      return { 
+        id: userInfo.id, 
+        name: userInfo.name || 'User' 
+      }
     }
     
-    const userInfo = await response.json()
-    console.log('[OAuth] Current user response:', userInfo)
-    
-    return { 
-      id: userInfo.id, 
-      name: userInfo.name || 'User' 
-    }
+    console.log('[OAuth] /api/auth/current_user not available, using fallback')
   } catch (error) {
-    console.error('[OAuth] User info fetch error:', error)
-    throw new Error(`Failed to fetch user info from Home Assistant: ${error instanceof Error ? error.message : 'Network error'}`)
+    console.log('[OAuth] current_user endpoint failed, trying fallback:', error)
+  }
+  
+  try {
+    const configResponse = await fetch(new URL('/api/config', haUrl).toString(), {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      }
+    })
+    
+    if (configResponse.ok) {
+      const config = await configResponse.json()
+      console.log('[OAuth] Config response:', config)
+      
+      const userId = accessToken.substring(0, 32)
+      return { 
+        id: userId, 
+        name: config.location_name || 'User' 
+      }
+    }
+  } catch (configError) {
+    console.error('[OAuth] Config fetch failed:', configError)
+  }
+  
+  const userId = accessToken.substring(0, 32)
+  return { 
+    id: userId, 
+    name: 'User' 
   }
 }
 
