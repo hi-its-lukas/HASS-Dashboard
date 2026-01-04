@@ -65,7 +65,7 @@ export default function HomePage() {
           <div className="lg:col-span-2">
             <CalendarWeek
               calendarEntityIds={calendarEntityIds}
-              weatherEntityId={config.weatherEntityId}
+              weatherEntityId={configStore.config.weatherEntityId || config.weatherEntityId}
             />
           </div>
           

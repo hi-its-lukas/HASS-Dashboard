@@ -97,26 +97,34 @@ export function CalendarWeek({ calendarEntityIds = [], weatherEntityId }: Calend
   }, [calendarEntityIds])
   
   useEffect(() => {
-    if (weatherEntityId && states[weatherEntityId]) {
-      const weather = states[weatherEntityId]
-      const forecast = weather.attributes?.forecast as Array<{
-        datetime: string
-        temperature: number
-        templow?: number
-        condition: string
-      }> | undefined
+    async function loadForecast() {
+      if (!weatherEntityId) return
       
-      if (forecast) {
-        const dailyForecasts: DayForecast[] = forecast.slice(0, 7).map((f) => ({
-          date: new Date(f.datetime),
-          tempHigh: f.temperature,
-          tempLow: f.templow ?? f.temperature - 5,
-          condition: f.condition,
-        }))
-        setForecasts(dailyForecasts)
+      try {
+        const res = await fetch(`/api/ha/weather?entity_id=${encodeURIComponent(weatherEntityId)}`)
+        if (res.ok) {
+          const data = await res.json()
+          if (data.forecast && Array.isArray(data.forecast)) {
+            const dailyForecasts: DayForecast[] = data.forecast.slice(0, 7).map((f: {
+              datetime: string
+              temperature: number
+              templow?: number
+              condition: string
+            }) => ({
+              date: new Date(f.datetime),
+              tempHigh: f.temperature,
+              tempLow: f.templow ?? f.temperature - 5,
+              condition: f.condition,
+            }))
+            setForecasts(dailyForecasts)
+          }
+        }
+      } catch (e) {
+        console.error('Failed to load weather forecast:', e)
       }
     }
-  }, [weatherEntityId, states])
+    loadForecast()
+  }, [weatherEntityId])
   
   useEffect(() => {
     async function loadEvents() {
