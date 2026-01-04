@@ -32,7 +32,9 @@ import {
   Sun,
   Battery,
   Home,
-  PlugZap
+  PlugZap,
+  Pencil,
+  Check
 } from 'lucide-react'
 
 interface ConnectionStatus {
@@ -152,6 +154,7 @@ export default function SettingsPage() {
   const [editingPerson, setEditingPerson] = useState<string | null>(null)
   const [newSensor, setNewSensor] = useState({ label: '', entityId: '', unit: '' })
   const [newIntercom, setNewIntercom] = useState({ name: '', cameraEntityId: '', speakUrl: '', lockEntityId: '' })
+  const [editingIntercomIndex, setEditingIntercomIndex] = useState<number | null>(null)
   const [uploadingBackground, setUploadingBackground] = useState(false)
   const [backgroundUrl, setBackgroundUrl] = useState<string | null>(null)
   
@@ -941,22 +944,127 @@ export default function SettingsPage() {
           {expandedSections.intercoms && (
             <div className="space-y-4">
               {config.intercoms?.map((intercom, index) => (
-                <div key={intercom.id} className="p-3 bg-white/5 rounded-xl flex items-center justify-between">
-                  <div>
-                    <p className="text-white font-medium">{intercom.name}</p>
-                    <p className="text-xs text-gray-500">{intercom.cameraEntityId}</p>
-                  </div>
-                  <button
-                    onClick={() => {
-                      setConfig(prev => ({
-                        ...prev,
-                        intercoms: prev.intercoms?.filter((_, i) => i !== index) || []
-                      }))
-                    }}
-                    className="p-2 hover:bg-red-500/20 rounded-lg transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4 text-red-400" />
-                  </button>
+                <div key={intercom.id} className="p-4 bg-white/5 rounded-xl">
+                  {editingIntercomIndex === index ? (
+                    <div className="space-y-3">
+                      <input
+                        type="text"
+                        placeholder="Name"
+                        value={intercom.name}
+                        onChange={(e) => {
+                          setConfig(prev => ({
+                            ...prev,
+                            intercoms: prev.intercoms?.map((ic, i) => 
+                              i === index ? { ...ic, name: e.target.value } : ic
+                            ) || []
+                          }))
+                        }}
+                        className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                      />
+                      <select
+                        value={intercom.cameraEntityId}
+                        onChange={(e) => {
+                          setConfig(prev => ({
+                            ...prev,
+                            intercoms: prev.intercoms?.map((ic, i) => 
+                              i === index ? { ...ic, cameraEntityId: e.target.value } : ic
+                            ) || []
+                          }))
+                        }}
+                        className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                      >
+                        <option value="" className="bg-gray-800">Kamera auswählen...</option>
+                        {discovered?.cameras?.map(cam => (
+                          <option key={cam.entity_id} value={cam.entity_id} className="bg-gray-800">
+                            {getFriendlyName(cam)} ({cam.entity_id})
+                          </option>
+                        ))}
+                      </select>
+                      <input
+                        type="text"
+                        placeholder="Sprechen URL (optional)"
+                        value={intercom.speakUrl || ''}
+                        onChange={(e) => {
+                          setConfig(prev => ({
+                            ...prev,
+                            intercoms: prev.intercoms?.map((ic, i) => 
+                              i === index ? { ...ic, speakUrl: e.target.value } : ic
+                            ) || []
+                          }))
+                        }}
+                        className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                      />
+                      <select
+                        value={intercom.lockEntityId || ''}
+                        onChange={(e) => {
+                          setConfig(prev => ({
+                            ...prev,
+                            intercoms: prev.intercoms?.map((ic, i) => 
+                              i === index ? { ...ic, lockEntityId: e.target.value } : ic
+                            ) || []
+                          }))
+                        }}
+                        className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                      >
+                        <option value="" className="bg-gray-800">Lock auswählen (optional)...</option>
+                        {discovered?.locks?.map(lock => (
+                          <option key={lock.entity_id} value={lock.entity_id} className="bg-gray-800">
+                            {getFriendlyName(lock)} ({lock.entity_id})
+                          </option>
+                        ))}
+                      </select>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setEditingIntercomIndex(null)}
+                          className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400 rounded-lg transition-colors"
+                        >
+                          <Check className="w-4 h-4" />
+                          Fertig
+                        </button>
+                        <button
+                          onClick={() => {
+                            setConfig(prev => ({
+                              ...prev,
+                              intercoms: prev.intercoms?.filter((_, i) => i !== index) || []
+                            }))
+                            setEditingIntercomIndex(null)
+                          }}
+                          className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-white font-medium">{intercom.name}</p>
+                        <p className="text-xs text-gray-500">{intercom.cameraEntityId}</p>
+                        {intercom.lockEntityId && (
+                          <p className="text-xs text-gray-500">Lock: {intercom.lockEntityId}</p>
+                        )}
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setEditingIntercomIndex(index)}
+                          className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                        >
+                          <Pencil className="w-4 h-4 text-gray-400" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setConfig(prev => ({
+                              ...prev,
+                              intercoms: prev.intercoms?.filter((_, i) => i !== index) || []
+                            }))
+                          }}
+                          className="p-2 hover:bg-red-500/20 rounded-lg transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4 text-red-400" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
               
