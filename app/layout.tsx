@@ -2,8 +2,6 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { HAProvider } from '@/components/providers/ha-provider'
 import { ConfigProvider } from '@/components/providers/config-provider'
-import { BottomNav } from '@/components/nav/bottom-nav'
-import { Sidebar } from '@/components/nav/sidebar'
 
 export const metadata: Metadata = {
   title: 'HA Dashboard',
