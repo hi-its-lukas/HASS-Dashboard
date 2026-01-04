@@ -1,8 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Bell, BellOff, Send, Loader2, AlertCircle, CheckCircle, User } from 'lucide-react'
+import { Bell, BellOff, Send, Loader2, AlertCircle, CheckCircle, User, Pencil } from 'lucide-react'
 import { Card } from '@/components/ui/card'
+
+const PUSH_USER_KEY = 'ha-dashboard-push-user'
 
 function urlBase64ToUint8Array(base64String: string): ArrayBuffer {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
@@ -21,6 +23,8 @@ function urlBase64ToUint8Array(base64String: string): ArrayBuffer {
 
 export function PushSettings() {
   const [currentUser, setCurrentUser] = useState<string | null>(null)
+  const [customName, setCustomName] = useState<string>('')
+  const [isEditing, setIsEditing] = useState(false)
   const [isLoadingUser, setIsLoadingUser] = useState(true)
   const [isSubscribed, setIsSubscribed] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -28,7 +32,14 @@ export function PushSettings() {
   const [vapidKey, setVapidKey] = useState<string | null>(null)
   const [permissionState, setPermissionState] = useState<NotificationPermission | 'unsupported'>('default')
   
+  const effectiveUser = customName || currentUser
+  
   useEffect(() => {
+    const savedName = localStorage.getItem(PUSH_USER_KEY)
+    if (savedName) {
+      setCustomName(savedName)
+    }
+    
     fetch('/api/auth/me')
       .then(res => res.json())
       .then(data => {
@@ -68,8 +79,19 @@ export function PushSettings() {
     }
   }
   
+  const handleSaveName = () => {
+    if (customName.trim()) {
+      localStorage.setItem(PUSH_USER_KEY, customName.trim().toLowerCase())
+      setCustomName(customName.trim().toLowerCase())
+    } else {
+      localStorage.removeItem(PUSH_USER_KEY)
+      setCustomName('')
+    }
+    setIsEditing(false)
+  }
+  
   const handleSubscribe = async () => {
-    if (!currentUser) {
+    if (!effectiveUser) {
       setStatus({ type: 'error', message: 'Benutzer konnte nicht ermittelt werden.' })
       return
     }
@@ -107,7 +129,7 @@ export function PushSettings() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId: currentUser,
+          userId: effectiveUser,
           subscription: subscription.toJSON(),
         }),
       })
@@ -140,7 +162,7 @@ export function PushSettings() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            userId: currentUser,
+            userId: effectiveUser,
             endpoint: subscription.endpoint,
           }),
         })
@@ -159,7 +181,7 @@ export function PushSettings() {
   }
   
   const handleTestPush = async () => {
-    if (!currentUser) {
+    if (!effectiveUser) {
       setStatus({ type: 'error', message: 'Benutzer konnte nicht ermittelt werden.' })
       return
     }
@@ -171,7 +193,7 @@ export function PushSettings() {
       const response = await fetch('/api/push/test', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: currentUser }),
+        body: JSON.stringify({ userId: effectiveUser }),
       })
       
       if (response.ok) {
@@ -217,14 +239,44 @@ export function PushSettings() {
       </div>
       
       <div className="space-y-4">
-        <div className="flex items-center gap-2 p-3 rounded-lg bg-white/5 border border-white/10">
-          <User className="w-4 h-4 text-accent-cyan" />
-          <span className="text-sm text-text-secondary">Eingeloggt als:</span>
-          {isLoadingUser ? (
-            <Loader2 className="w-4 h-4 animate-spin text-white" />
-          ) : (
-            <span className="text-white font-medium capitalize">{currentUser || 'Unbekannt'}</span>
-          )}
+        <div className="p-3 rounded-lg bg-white/5 border border-white/10">
+          <div className="flex items-center gap-2">
+            <User className="w-4 h-4 text-accent-cyan" />
+            <span className="text-sm text-text-secondary">Push-Name:</span>
+            {isLoadingUser ? (
+              <Loader2 className="w-4 h-4 animate-spin text-white" />
+            ) : isEditing ? (
+              <div className="flex items-center gap-2 flex-1">
+                <input
+                  type="text"
+                  value={customName}
+                  onChange={(e) => setCustomName(e.target.value)}
+                  placeholder={currentUser || 'Name eingeben'}
+                  className="flex-1 px-2 py-1 bg-white/10 border border-white/20 rounded text-white text-sm"
+                  autoFocus
+                />
+                <button
+                  onClick={handleSaveName}
+                  className="px-2 py-1 bg-accent-cyan/20 text-accent-cyan rounded text-sm"
+                >
+                  OK
+                </button>
+              </div>
+            ) : (
+              <>
+                <span className="text-white font-medium capitalize">{effectiveUser || 'Unbekannt'}</span>
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="p-1 hover:bg-white/10 rounded transition-colors"
+                >
+                  <Pencil className="w-3 h-3 text-text-secondary" />
+                </button>
+              </>
+            )}
+          </div>
+          <p className="text-xs text-text-muted mt-2">
+            Dieser Name wird für Push-Benachrichtigungen verwendet. Muss mit dem Namen in Home Assistant übereinstimmen.
+          </p>
         </div>
         
         <div className="flex flex-wrap gap-2">
@@ -244,7 +296,7 @@ export function PushSettings() {
           ) : (
             <button
               onClick={handleSubscribe}
-              disabled={isLoading || !currentUser}
+              disabled={isLoading || !effectiveUser}
               className="flex items-center gap-2 px-4 py-2 bg-accent-green/20 hover:bg-accent-green/30 text-accent-green rounded-xl transition-colors disabled:opacity-50"
             >
               {isLoading ? (
