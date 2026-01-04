@@ -6,6 +6,18 @@ import { HAState, SurveillanceEvent } from './types'
 import { HAWebSocketClient, HAArea, HADevice, HAEntityRegistryEntry } from './websocket-client'
 import { mockStates, generatePowerTrendData, mockSurveillanceEvents, mockSurveillanceStats } from './mock-data'
 import { useConfigStore } from '@/lib/config/store'
+import { useNotificationsStore } from '@/lib/ui/notifications-store'
+
+interface DashboardPopupEventData {
+  title?: string
+  message?: string
+  severity?: string
+  timeout?: number
+  tag?: string
+  camera_entity?: string
+  ai_description?: string
+  intercom_slug?: string
+}
 
 interface PowerTrendPoint {
   time: string
@@ -124,6 +136,21 @@ export const useHAStore = create<HAStore>((set, get) => ({
         set((state) => ({
           states: { ...state.states, [entityId]: newState },
         }))
+      })
+
+      // Subscribe to dashboard popup events
+      await wsClient.subscribeToEvents('dashboard_popup')
+      wsClient.onEvent<DashboardPopupEventData>('dashboard_popup', (data) => {
+        useNotificationsStore.getState().show({
+          title: data.title,
+          message: data.message,
+          severity: data.severity as 'info' | 'warning' | 'critical',
+          timeout: data.timeout,
+          tag: data.tag,
+          cameraEntity: data.camera_entity,
+          aiDescription: data.ai_description,
+          intercomSlug: data.intercom_slug,
+        })
       })
 
       set({

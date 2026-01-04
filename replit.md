@@ -8,6 +8,16 @@ HA Dashboard is a modern, mobile-first Progressive Web App (PWA) for Home Assist
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes (2026-01-04)
+- **Dashboard Popup Notifications** - Real-time popups triggered by Home Assistant events
+  - WebSocket client extended with generic event subscriptions (`subscribeToEvents`, `onEvent`)
+  - Notifications store with queue management, tag-based deduplication, severity levels
+  - Popup modal with camera snapshots, AI descriptions, and intercom links
+  - Auto-close with progress bar, manual dismiss
+  - Documentation at `docs/DASHBOARD_POPUP.md`
+- **Weather forecast in calendar** - Fetches forecasts via new `/api/ha/weather` route
+  - Weather entity selector added to Settings under Calendar section
+
 ## Recent Changes (2026-01-03)
 - **AI Surveillance with UniFi Protect** - Configure cameras with detection types (Person, Vehicle, Animal, Motion)
   - Sensor auto-discovery based on camera name patterns

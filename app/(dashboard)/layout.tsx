@@ -1,5 +1,6 @@
 import { Sidebar } from '@/components/nav/sidebar'
 import { BottomNav } from '@/components/nav/bottom-nav'
+import { NotificationModal } from '@/components/ui/notification-modal'
 
 export default function DashboardLayout({
   children,
@@ -17,6 +18,7 @@ export default function DashboardLayout({
       <div className="lg:hidden">
         <BottomNav />
       </div>
+      <NotificationModal />
     </>
   )
 }

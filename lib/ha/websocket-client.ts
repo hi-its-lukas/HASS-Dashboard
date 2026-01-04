@@ -109,6 +109,14 @@ export class HAWebSocketClient {
         case 'auth_ok':
           console.log('[HA WS] Authenticated')
           this.isAuthenticated = true
+          // Re-subscribe to previously subscribed event types after reconnect
+          const previouslySubscribed = Array.from(this.subscribedEventTypes)
+          this.subscribedEventTypes.clear()
+          for (const eventType of previouslySubscribed) {
+            this.subscribeToEvents(eventType).catch(err => {
+              console.error(`[HA WS] Failed to re-subscribe to ${eventType}:`, err)
+            })
+          }
           connectResolve?.()
           break
 
