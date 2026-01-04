@@ -208,24 +208,25 @@ async function fetchHAUserInfo(haUrl: string, accessToken: string): Promise<HAUs
   console.log('[OAuth] Fetching current user from HA')
   
   try {
-    const response = await fetch(new URL('/api/auth/current_user', haUrl).toString(), {
+    const response = await fetch(new URL('/api/', haUrl).toString(), {
       headers: {
         'Authorization': `Bearer ${accessToken}`
       }
     })
     
     if (response.ok) {
-      const userInfo = await response.json()
-      console.log('[OAuth] Current user response:', userInfo)
-      return { 
-        id: userInfo.id, 
-        name: userInfo.name || 'User' 
+      const apiInfo = await response.json()
+      console.log('[OAuth] API response:', apiInfo)
+      
+      if (apiInfo.user_id && apiInfo.user_name) {
+        return { 
+          id: apiInfo.user_id, 
+          name: apiInfo.user_name 
+        }
       }
     }
-    
-    console.log('[OAuth] /api/auth/current_user not available, using fallback')
   } catch (error) {
-    console.log('[OAuth] current_user endpoint failed, trying fallback:', error)
+    console.log('[OAuth] API info fetch failed:', error)
   }
   
   try {
