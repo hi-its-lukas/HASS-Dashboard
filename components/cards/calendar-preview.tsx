@@ -30,26 +30,26 @@ export function CalendarPreview() {
         endOfTomorrow.setDate(endOfTomorrow.getDate() + 2)
         endOfTomorrow.setHours(0, 0, 0, 0)
 
-        const allEvents: CalendarEvent[] = []
-
-        for (const calendarId of calendars) {
-          const res = await fetch(
-            `/api/ha/calendar/${encodeURIComponent(calendarId)}?` +
-            `start=${now.toISOString()}&end=${endOfTomorrow.toISOString()}`
-          )
-          if (res.ok) {
-            const data = await res.json()
-            if (data.events) {
-              allEvents.push(...data.events)
-            }
-          }
-        }
-
-        allEvents.sort((a, b) => 
-          new Date(a.start).getTime() - new Date(b.start).getTime()
+        const res = await fetch(
+          `/api/ha/calendar?` +
+          `start=${now.toISOString()}&end=${endOfTomorrow.toISOString()}&entities=${calendars.join(',')}`
         )
+        
+        if (res.ok) {
+          const data = await res.json()
+          const allEvents: CalendarEvent[] = []
+          
+          for (const calendarId of calendars) {
+            const calEvents = data.events?.[calendarId] || []
+            allEvents.push(...calEvents)
+          }
 
-        setEvents(allEvents.slice(0, 5))
+          allEvents.sort((a, b) => 
+            new Date(a.start).getTime() - new Date(b.start).getTime()
+          )
+
+          setEvents(allEvents.slice(0, 5))
+        }
       } catch (error) {
         console.error('Error fetching calendar events:', error)
       } finally {

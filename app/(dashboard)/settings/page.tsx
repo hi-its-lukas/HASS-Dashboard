@@ -818,6 +818,29 @@ export default function SettingsPage() {
                         </select>
                         <p className="text-xs text-gray-500 mt-1">Zum Vergleich: Zeigt Innentemperatur neben Außentemperatur</p>
                       </div>
+                      
+                      <div>
+                        <label className="flex items-center gap-2 text-sm text-gray-300 mb-2">
+                          <Trash2 className="w-4 h-4 text-green-400" />
+                          Müllabfuhr-Kalender
+                        </label>
+                        <select
+                          value={(config as { trashCalendarId?: string }).trashCalendarId || ''}
+                          onChange={(e) => setConfig(prev => ({
+                            ...prev,
+                            trashCalendarId: e.target.value || undefined
+                          } as typeof prev))}
+                          className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                        >
+                          <option value="" className="bg-gray-800">Kein Müllkalender</option>
+                          {discovered?.calendars?.map(entity => (
+                            <option key={entity.entity_id} value={entity.entity_id} className="bg-gray-800">
+                              {getFriendlyName(entity)} ({entity.entity_id})
+                            </option>
+                          ))}
+                        </select>
+                        <p className="text-xs text-gray-500 mt-1">Zeigt nächste Müllabholtermine auf der Startseite</p>
+                      </div>
                     </div>
                   </div>
                 )}

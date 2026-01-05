@@ -3,13 +3,16 @@
 import { motion } from 'framer-motion'
 import { CalendarWeek } from '@/components/cards/calendar-week'
 import { useHAStore } from '@/lib/ha'
-import { useConfig } from '@/lib/config/store'
+import { useConfig, useConfigStore } from '@/lib/config/store'
+import Link from 'next/link'
 
 export default function CalendarPage() {
   const config = useConfig()
+  const { calendars } = useConfigStore()
   const states = useHAStore((s) => s.states)
   
-  const calendarEntityIds = Object.keys(states).filter((id) => id.startsWith('calendar.'))
+  const allCalendarIds = Object.keys(states).filter((id) => id.startsWith('calendar.'))
+  const calendarEntityIds = calendars && calendars.length > 0 ? calendars : allCalendarIds
 
   return (
     <div className="px-4 py-6 safe-top max-w-7xl mx-auto">
@@ -21,9 +24,14 @@ export default function CalendarPage() {
         <h1 className="text-2xl font-bold text-white">Kalender</h1>
         <p className="text-sm text-text-secondary">
           {calendarEntityIds.length > 0 
-            ? `${calendarEntityIds.length} Kalender verbunden`
-            : 'Keine Kalender gefunden'}
+            ? `${calendarEntityIds.length} Kalender angezeigt`
+            : 'Keine Kalender konfiguriert'}
         </p>
+        {calendars.length === 0 && allCalendarIds.length > 0 && (
+          <Link href="/settings" className="text-accent-cyan text-xs hover:underline">
+            Kalender in Einstellungen auswählen
+          </Link>
+        )}
       </motion.header>
 
       <motion.div

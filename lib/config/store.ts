@@ -15,6 +15,7 @@ interface UserLayoutConfig {
   dashboardTitle?: string
   weatherEntityId?: string
   temperatureSensorId?: string
+  trashCalendarId?: string
   lightsGroupEntityId?: string
   powerEntityId?: string
   alarmEntityId?: string
@@ -151,6 +152,7 @@ function mergeWithDefaults(userConfig: UserLayoutConfig): DashboardConfig {
   return {
     weatherEntityId: userConfig.weatherEntityId || staticConfig.weatherEntityId,
     temperatureSensorId: userConfig.temperatureSensorId,
+    trashCalendarId: userConfig.trashCalendarId,
     lightsGroupEntityId: userConfig.lightsGroupEntityId || staticConfig.lightsGroupEntityId,
     powerEntityId: userConfig.powerEntityId || staticConfig.powerEntityId,
     backgroundUrl: userConfig.backgroundUrl,
