@@ -37,41 +37,38 @@ export function PersonMiniCard({ entityId, name }: PersonMiniCardProps) {
   
   return (
     <div className="glass-tile w-full min-w-0 overflow-hidden rounded-2xl p-3">
-      <div className="flex items-center gap-2 mb-2">
+      <div className="flex items-center gap-3">
         <div className="relative flex-shrink-0">
           {entityPicture ? (
             <img 
               src={entityPicture} 
               alt={displayName}
-              className="w-9 h-9 rounded-full object-cover border-2 border-white/20"
+              className="w-10 h-10 rounded-full object-cover border-2 border-white/20"
             />
           ) : (
-            <Avatar name={displayName} size="sm" />
-          )}
-          <div 
-            className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-card-bg"
-            style={{ backgroundColor: statusStyle.color }}
-          />
-        </div>
-        <p className="font-semibold text-white text-sm truncate min-w-0 flex-1">{displayName}</p>
-      </div>
-      
-      <div className="flex items-center gap-2">
-        <div 
-          className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
-          style={{ backgroundColor: statusStyle.bg }}
-        >
-          {isHome ? (
-            <Home className="w-3.5 h-3.5" style={{ color: statusStyle.color }} />
-          ) : (
-            <MapPin className="w-3.5 h-3.5" style={{ color: statusStyle.color }} />
+            <Avatar name={displayName} size="md" />
           )}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-white text-xs font-medium truncate">{getLocationText()}</p>
-          {gpsAccuracy && (
-            <p className="text-text-secondary text-[9px] truncate">±{Math.round(gpsAccuracy)}m</p>
-          )}
+          <p className="font-semibold text-white text-sm truncate">{displayName}</p>
+          <div className="flex items-center gap-1.5 mt-1">
+            <div 
+              className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
+              style={{ backgroundColor: statusStyle.bg }}
+            >
+              {isHome ? (
+                <Home className="w-3 h-3" style={{ color: statusStyle.color }} />
+              ) : (
+                <MapPin className="w-3 h-3" style={{ color: statusStyle.color }} />
+              )}
+            </div>
+            <span className="text-xs truncate" style={{ color: statusStyle.color }}>
+              {getLocationText()}
+            </span>
+            {gpsAccuracy && (
+              <span className="text-text-secondary text-[10px]">±{Math.round(gpsAccuracy)}m</span>
+            )}
+          </div>
         </div>
       </div>
     </div>
