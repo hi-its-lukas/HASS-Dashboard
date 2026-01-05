@@ -12,12 +12,12 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
-  Menu,
   Lightbulb,
   Blinds,
   Phone,
   Thermometer,
-  Calendar
+  Calendar,
+  Play
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useConfigStore } from '@/lib/config/store'
@@ -51,7 +51,7 @@ const navItems = [
   { href: '/cameras', icon: Video, label: 'Kameras' },
   { href: '/energy', icon: Zap, label: 'Energie' },
   { href: '/family', icon: Users, label: 'Familie' },
-  { href: '/more', icon: Menu, label: 'Mehr' },
+  { href: '/more', icon: Play, label: 'Aktionen' },
 ]
 
 export function Sidebar() {

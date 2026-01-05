@@ -16,8 +16,8 @@ import {
   Blinds,
   Phone,
   Thermometer,
-  MoreHorizontal,
-  Calendar
+  Calendar,
+  Play
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useConfigStore } from '@/lib/config/store'
@@ -33,7 +33,7 @@ const navItems = [
   { href: '/cameras', icon: Video, label: 'Kameras' },
   { href: '/energy', icon: Zap, label: 'Energie' },
   { href: '/family', icon: Users, label: 'Familie' },
-  { href: '/more', icon: MoreHorizontal, label: 'Mehr' },
+  { href: '/more', icon: Play, label: 'Aktionen' },
 ]
 
 export function MobileNav() {

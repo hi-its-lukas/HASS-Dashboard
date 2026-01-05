@@ -3,23 +3,11 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import {
-  Users,
-  Home,
-  ArrowDown,
-  MapPin,
-  Moon,
-  LogOut,
-  Zap,
   Settings,
-  Bell,
   Loader2,
   Play,
-  Lightbulb,
-  Blinds,
-  Video,
-  DoorOpen,
+  Zap,
 } from 'lucide-react'
-import { Card } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import { useHAStore } from '@/lib/ha'
 import { useConfig } from '@/lib/config/store'
@@ -84,12 +72,12 @@ export default function MorePage() {
         animate={{ opacity: 1, y: 0 }}
         className="flex items-center gap-3 mb-6"
       >
-        <div className="w-10 h-10 rounded-full bg-accent-cyan/20 flex items-center justify-center">
-          <Bell className="w-5 h-5 text-accent-cyan" />
+        <div className="w-10 h-10 rounded-full bg-accent-orange/20 flex items-center justify-center">
+          <Zap className="w-5 h-5 text-accent-orange" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-white">Alexa</h1>
-          <p className="text-xs text-text-secondary">Home Announcements</p>
+          <h1 className="text-2xl font-bold text-white">Aktionen</h1>
+          <p className="text-xs text-text-secondary">Home Assistant Skripte</p>
         </div>
       </motion.header>
 
@@ -99,10 +87,10 @@ export default function MorePage() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center py-12"
         >
-          <Bell className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-          <p className="text-text-secondary mb-2">Keine Buttons konfiguriert</p>
+          <Zap className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+          <p className="text-text-secondary mb-2">Keine Aktionen konfiguriert</p>
           <p className="text-sm text-text-muted mb-4">
-            Wähle in den Einstellungen Skripte aus, die hier als Buttons angezeigt werden sollen.
+            Wähle in den Einstellungen Skripte aus, die hier als Aktionen angezeigt werden sollen.
           </p>
           <a 
             href="/settings" 
@@ -117,11 +105,7 @@ export default function MorePage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="mb-6"
         >
-          <h2 className="text-sm font-medium text-text-muted uppercase tracking-wider mb-3">
-            Skripte ({customButtons.length})
-          </h2>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {customButtons.map((btn) => {
               const isAvailable = btn.entityId ? scripts.includes(btn.entityId) : true
@@ -130,7 +114,7 @@ export default function MorePage() {
                   key={btn.id}
                   icon={<Play className="w-6 h-6" />}
                   label={btn.label}
-                  color={isAvailable ? 'text-accent-cyan' : 'text-gray-500'}
+                  color={isAvailable ? 'text-accent-orange' : 'text-gray-500'}
                   loading={loadingScript === btn.id}
                   disabled={!isAvailable}
                   onClick={isAvailable && btn.entityId ? () => handleRunScript(btn.entityId!, btn.id) : undefined}
@@ -140,91 +124,6 @@ export default function MorePage() {
           </div>
         </motion.section>
       )}
-
-      {config.intercoms && config.intercoms.length > 0 && (
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="mb-6"
-        >
-          <h2 className="text-sm font-medium text-text-muted uppercase tracking-wider mb-3">
-            Intercoms
-          </h2>
-          <div className="grid grid-cols-2 gap-3">
-            {config.intercoms.map((intercom) => (
-              <a key={intercom.id} href={`/intercom/${intercom.slug}`}>
-                <Card hoverable className="p-4">
-                  <div className="flex items-center gap-3">
-                    <DoorOpen className="w-5 h-5 text-accent-cyan" />
-                    <span className="font-medium text-white">{intercom.name}</span>
-                  </div>
-                </Card>
-              </a>
-            ))}
-          </div>
-        </motion.section>
-      )}
-
-      <motion.section
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-      >
-        <h2 className="text-sm font-medium text-text-muted uppercase tracking-wider mb-3">
-          Quick Access
-        </h2>
-        <div className="grid grid-cols-2 gap-2">
-          <a href="/lights">
-            <Card hoverable className="p-4">
-              <div className="flex items-center gap-3">
-                <Lightbulb className="w-5 h-5 text-accent-yellow" />
-                <span className="font-medium text-white">Lichter</span>
-              </div>
-            </Card>
-          </a>
-          <a href="/covers">
-            <Card hoverable className="p-4">
-              <div className="flex items-center gap-3">
-                <Blinds className="w-5 h-5 text-accent-purple" />
-                <span className="font-medium text-white">Rollos</span>
-              </div>
-            </Card>
-          </a>
-          <a href="/cameras">
-            <Card hoverable className="p-4">
-              <div className="flex items-center gap-3">
-                <Video className="w-5 h-5 text-accent-cyan" />
-                <span className="font-medium text-white">Kameras</span>
-              </div>
-            </Card>
-          </a>
-          <a href="/energy">
-            <Card hoverable className="p-4">
-              <div className="flex items-center gap-3">
-                <Zap className="w-5 h-5 text-accent-orange" />
-                <span className="font-medium text-white">Energie</span>
-              </div>
-            </Card>
-          </a>
-          <a href="/family">
-            <Card hoverable className="p-4">
-              <div className="flex items-center gap-3">
-                <Users className="w-5 h-5 text-accent-green" />
-                <span className="font-medium text-white">Familie</span>
-              </div>
-            </Card>
-          </a>
-          <a href="/settings">
-            <Card hoverable className="p-4">
-              <div className="flex items-center gap-3">
-                <Settings className="w-5 h-5 text-text-muted" />
-                <span className="font-medium text-white">Einstellungen</span>
-              </div>
-            </Card>
-          </a>
-        </div>
-      </motion.section>
     </div>
   )
 }
