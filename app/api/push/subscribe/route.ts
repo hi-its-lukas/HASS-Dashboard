@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { addSubscription } from '@/lib/push/subscriptions'
 
-const VALID_USERS = ['lukas', 'simon']
-
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const { userId, subscription } = body
     
-    if (!userId || !VALID_USERS.includes(userId.toLowerCase())) {
+    console.log('[Push] Subscribe request:', { userId, hasSubscription: !!subscription })
+    
+    if (!userId || userId.trim().length === 0) {
       return NextResponse.json(
-        { error: 'Invalid userId. Must be one of: ' + VALID_USERS.join(', ') },
+        { error: 'userId is required' },
         { status: 400 }
       )
     }

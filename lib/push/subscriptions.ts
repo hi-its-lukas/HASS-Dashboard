@@ -99,3 +99,7 @@ export function getSubscriptionsForUsers(userIds: string[]): { userId: string; s
   
   return result
 }
+
+export function getAllSubscriptions(): SubscriptionsData {
+  return loadSubscriptions()
+}
