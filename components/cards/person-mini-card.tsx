@@ -35,6 +35,15 @@ export function PersonMiniCard({ entityId, name }: PersonMiniCardProps) {
   const lng = state?.attributes?.longitude as number | undefined
   const hasLocation = lat !== undefined && lng !== undefined
   
+  // Benutzerfreundliche Statusanzeige
+  const getStatusText = () => {
+    if (!state?.state) return 'Unbekannt'
+    if (state.state === 'home') return 'Zuhause'
+    if (state.state === 'not_home') return 'Unterwegs'
+    // Zonennamen direkt anzeigen (z.B. "Arbeit", "Schule")
+    return state.state.charAt(0).toUpperCase() + state.state.slice(1).replace(/_/g, ' ')
+  }
+  
   useEffect(() => {
     import('leaflet').then((L) => {
       delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: unknown })._getIconUrl
@@ -86,8 +95,8 @@ export function PersonMiniCard({ entityId, name }: PersonMiniCardProps) {
         </div>
         <div className="flex-1 min-w-0">
           <p className="font-medium text-white text-xs truncate">{displayName}</p>
-          <p className="text-[10px] text-text-secondary truncate">
-            {isHome ? 'Zuhause' : state?.state || 'Unbekannt'}
+          <p className={`text-[10px] truncate ${isHome ? 'text-accent-green' : 'text-text-secondary'}`}>
+            {getStatusText()}
           </p>
         </div>
       </div>

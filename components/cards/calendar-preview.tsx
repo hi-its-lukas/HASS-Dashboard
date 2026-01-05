@@ -65,26 +65,33 @@ export function CalendarPreview() {
     fetchEvents()
   }, [calendars])
 
-  const formatEventTime = (dateStr: string) => {
+  const getDayLabel = (dateStr: string) => {
     const date = new Date(dateStr)
     const now = new Date()
     const tomorrow = new Date(now)
     tomorrow.setDate(tomorrow.getDate() + 1)
     
-    const isToday = date.toDateString() === now.toDateString()
-    const isTomorrow = date.toDateString() === tomorrow.toDateString()
-    
-    const timeStr = date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
-    
-    if (isToday) {
-      return `Heute, ${timeStr}`
-    } else if (isTomorrow) {
-      return `Morgen, ${timeStr}`
+    if (date.toDateString() === now.toDateString()) {
+      return 'Heute'
+    } else if (date.toDateString() === tomorrow.toDateString()) {
+      return 'Morgen'
     }
-    return date.toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short' }) + `, ${timeStr}`
+    return date.toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short' })
   }
 
-  const isAllDay = (start: string, end: string) => {
+  const formatEventTime = (dateStr: string, allDay: boolean) => {
+    const dayLabel = getDayLabel(dateStr)
+    
+    if (allDay) {
+      return `${dayLabel}, Ganztägig`
+    }
+    
+    const date = new Date(dateStr)
+    const timeStr = date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
+    return `${dayLabel}, ${timeStr}`
+  }
+
+  const isAllDay = (start: string) => {
     return start.length === 10 || !start.includes('T')
   }
 
@@ -145,10 +152,7 @@ export function CalendarPreview() {
             <div className="flex-1 min-w-0">
               <p className="text-white text-sm font-medium truncate">{event.summary}</p>
               <p className="text-text-secondary text-xs" suppressHydrationWarning>
-                {mounted 
-                  ? (isAllDay(event.start, event.end) ? 'Ganztägig' : formatEventTime(event.start))
-                  : ''
-                }
+                {mounted ? formatEventTime(event.start, isAllDay(event.start)) : ''}
               </p>
             </div>
           </div>
