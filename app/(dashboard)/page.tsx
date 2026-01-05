@@ -150,7 +150,7 @@ export default function HomePage() {
               </Link>
             </div>
           ) : (
-            <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
               {config.persons.map((person) => (
                 <PersonMiniCard 
                   key={person.id} 
