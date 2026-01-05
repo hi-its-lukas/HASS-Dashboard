@@ -57,8 +57,8 @@ export function PersonMiniCard({ entityId, name }: PersonMiniCardProps) {
   }, [])
   
   return (
-    <div className="glass-tile flex-shrink-0 p-0 overflow-hidden min-w-[140px] max-w-[160px]">
-      <div className="h-[100px] relative bg-gray-800/50">
+    <div className="glass-tile flex-shrink-0 p-0 overflow-hidden min-w-[200px] max-w-[240px]">
+      <div className="h-[140px] relative bg-gray-800/50">
         {hasLocation && mounted ? (
           <MapContainer
             center={[lat, lng]}

@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Calendar, Clock } from 'lucide-react'
+import { Calendar, Clock, ChevronRight } from 'lucide-react'
 import { useConfigStore } from '@/lib/config/store'
+import Link from 'next/link'
 
 interface CalendarEvent {
   summary: string
@@ -136,10 +137,13 @@ export function CalendarPreview() {
 
   return (
     <div className="glass-tile p-4">
-      <div className="flex items-center gap-2 mb-3">
-        <Calendar className="w-4 h-4 text-accent-cyan" />
-        <span className="text-white font-medium">Termine</span>
-      </div>
+      <Link href="/calendar" className="flex items-center justify-between mb-3 group">
+        <div className="flex items-center gap-2">
+          <Calendar className="w-4 h-4 text-accent-cyan" />
+          <span className="text-white font-medium">Termine</span>
+        </div>
+        <ChevronRight className="w-4 h-4 text-text-secondary group-hover:text-white transition-colors" />
+      </Link>
       <div className="space-y-2">
         {events.map((event, i) => (
           <div 

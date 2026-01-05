@@ -10,7 +10,7 @@ import {
   useConnectionStatus,
 } from '@/lib/ha'
 import { useConfig, useConfigStore } from '@/lib/config/store'
-import { Lightbulb, Blinds, Thermometer, ChevronRight, MapPin, Calendar } from 'lucide-react'
+import { Lightbulb, Blinds, Thermometer, ChevronRight, MapPin } from 'lucide-react'
 import Link from 'next/link'
 
 export default function HomePage() {
@@ -78,7 +78,7 @@ export default function HomePage() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="grid grid-cols-4 gap-2 mb-4"
+          className="grid grid-cols-3 gap-2 mb-4"
         >
           <Link href="/lights" className="glass-tile p-3">
             <div className="flex flex-col items-center text-center gap-2">
@@ -112,18 +112,6 @@ export default function HomePage() {
               <div>
                 <p className="text-white font-medium">Klima</p>
                 <p className="text-text-secondary text-xs">Steuerung</p>
-              </div>
-            </div>
-          </Link>
-          
-          <Link href="/calendar" className="glass-tile p-3">
-            <div className="flex flex-col items-center text-center gap-2">
-              <div className="w-12 h-12 rounded-full bg-accent-cyan/20 flex items-center justify-center">
-                <Calendar className="w-6 h-6 text-accent-cyan" />
-              </div>
-              <div>
-                <p className="text-white font-medium">Kalender</p>
-                <p className="text-text-secondary text-xs">Alle Termine</p>
               </div>
             </div>
           </Link>
