@@ -51,24 +51,24 @@ export function PersonMiniCard({ entityId, name }: PersonMiniCardProps) {
         </div>
         <div className="min-w-0 flex-1">
           <p className="font-semibold text-white text-sm truncate">{displayName}</p>
-          <div className="flex items-center gap-1.5 mt-1">
+          <div className="flex items-center gap-1.5 mt-0.5">
             <div 
-              className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
+              className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0"
               style={{ backgroundColor: statusStyle.bg }}
             >
               {isHome ? (
-                <Home className="w-3 h-3" style={{ color: statusStyle.color }} />
+                <Home className="w-2.5 h-2.5" style={{ color: statusStyle.color }} />
               ) : (
-                <MapPin className="w-3 h-3" style={{ color: statusStyle.color }} />
+                <MapPin className="w-2.5 h-2.5" style={{ color: statusStyle.color }} />
               )}
             </div>
-            <span className="text-xs flex-shrink-0" style={{ color: statusStyle.color }}>
+            <span className="text-[11px]" style={{ color: statusStyle.color }}>
               {getLocationText()}
             </span>
-            {gpsAccuracy && (
-              <span className="text-text-secondary text-[10px] flex-shrink-0">±{Math.round(gpsAccuracy)}m</span>
-            )}
           </div>
+          {gpsAccuracy && (
+            <p className="text-text-secondary text-[10px] mt-0.5">±{Math.round(gpsAccuracy)}m Genauigkeit</p>
+          )}
         </div>
       </div>
     </div>
