@@ -119,12 +119,12 @@ export function TrashCalendar({ entityId }: TrashCalendarProps) {
 
   if (loading) {
     return (
-      <div className="glass-tile p-4">
-        <div className="flex items-center gap-2 mb-3">
+      <div>
+        <div className="flex items-center gap-2 mb-2">
           <Trash2 className="w-4 h-4 text-accent-green" />
           <span className="text-white font-medium">Müllabfuhr</span>
         </div>
-        <div className="animate-pulse space-y-2">
+        <div className="glass-tile p-3 animate-pulse space-y-2">
           <div className="h-8 bg-white/10 rounded-lg" />
           <div className="h-8 bg-white/10 rounded-lg" />
         </div>
@@ -134,23 +134,25 @@ export function TrashCalendar({ entityId }: TrashCalendarProps) {
 
   if (events.length === 0) {
     return (
-      <div className="glass-tile p-4">
-        <div className="flex items-center gap-2 mb-3">
+      <div>
+        <div className="flex items-center gap-2 mb-2">
           <Trash2 className="w-4 h-4 text-accent-green" />
           <span className="text-white font-medium">Müllabfuhr</span>
         </div>
-        <p className="text-text-secondary text-sm">Keine Termine in den nächsten 2 Wochen</p>
+        <div className="glass-tile p-3">
+          <p className="text-text-secondary text-sm">Keine Termine in den nächsten 2 Wochen</p>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="glass-tile p-4">
-      <div className="flex items-center gap-2 mb-3">
+    <div>
+      <div className="flex items-center gap-2 mb-2">
         <Trash2 className="w-4 h-4 text-accent-green" />
         <span className="text-white font-medium">Müllabfuhr</span>
       </div>
-      <div className="space-y-2">
+      <div className="glass-tile p-3 space-y-2">
         {events.map((event, i) => {
           const daysUntil = mounted ? getDaysUntil(event.start) : 99
           const isUrgent = daysUntil <= 1

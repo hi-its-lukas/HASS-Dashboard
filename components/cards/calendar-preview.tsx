@@ -89,12 +89,12 @@ export function CalendarPreview() {
 
   if (loading) {
     return (
-      <div className="glass-tile p-4">
-        <div className="flex items-center gap-2 mb-3">
+      <div>
+        <div className="flex items-center gap-2 mb-2">
           <Calendar className="w-4 h-4 text-accent-cyan" />
           <span className="text-white font-medium">Termine</span>
         </div>
-        <div className="animate-pulse space-y-2">
+        <div className="glass-tile p-3 animate-pulse space-y-2">
           <div className="h-10 bg-white/10 rounded-lg" />
           <div className="h-10 bg-white/10 rounded-lg" />
         </div>
@@ -104,38 +104,42 @@ export function CalendarPreview() {
 
   if (!calendars || calendars.length === 0) {
     return (
-      <div className="glass-tile p-4">
-        <div className="flex items-center gap-2 mb-3">
+      <div>
+        <div className="flex items-center gap-2 mb-2">
           <Calendar className="w-4 h-4 text-accent-cyan" />
           <span className="text-white font-medium">Termine</span>
         </div>
-        <p className="text-text-secondary text-sm">Keine Kalender konfiguriert</p>
+        <div className="glass-tile p-3">
+          <p className="text-text-secondary text-sm">Keine Kalender konfiguriert</p>
+        </div>
       </div>
     )
   }
 
   if (events.length === 0) {
     return (
-      <div className="glass-tile p-4">
-        <div className="flex items-center gap-2 mb-3">
+      <div>
+        <div className="flex items-center gap-2 mb-2">
           <Calendar className="w-4 h-4 text-accent-cyan" />
           <span className="text-white font-medium">Termine</span>
         </div>
-        <p className="text-text-secondary text-sm">Keine Termine in den nächsten 7 Tagen</p>
+        <div className="glass-tile p-3">
+          <p className="text-text-secondary text-sm">Keine Termine in den nächsten 7 Tagen</p>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="glass-tile p-4">
-      <Link href="/calendar" className="flex items-center justify-between mb-3 group">
+    <div>
+      <Link href="/calendar" className="flex items-center justify-between mb-2 group">
         <div className="flex items-center gap-2">
           <Calendar className="w-4 h-4 text-accent-cyan" />
           <span className="text-white font-medium">Termine</span>
         </div>
         <ChevronRight className="w-4 h-4 text-text-secondary group-hover:text-white transition-colors" />
       </Link>
-      <div className="space-y-2">
+      <div className="glass-tile p-3 space-y-2">
         {events.map((event, i) => (
           <div 
             key={i} 
