@@ -1043,7 +1043,7 @@ export default function SettingsPage() {
                 >
                   <div className="flex items-center gap-3">
                     <Play className="w-5 h-5 text-cyan-400" />
-                    <span className="text-white font-medium">Alexa Buttons ({config.customButtons?.length || 0})</span>
+                    <span className="text-white font-medium">Aktionen ({config.customButtons?.length || 0})</span>
                   </div>
                   {expandedSections.buttons ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
                 </button>
