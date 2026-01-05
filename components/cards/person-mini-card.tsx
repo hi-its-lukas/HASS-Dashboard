@@ -62,11 +62,11 @@ export function PersonMiniCard({ entityId, name }: PersonMiniCardProps) {
                 <MapPin className="w-3 h-3" style={{ color: statusStyle.color }} />
               )}
             </div>
-            <span className="text-xs truncate" style={{ color: statusStyle.color }}>
+            <span className="text-xs flex-shrink-0" style={{ color: statusStyle.color }}>
               {getLocationText()}
             </span>
             {gpsAccuracy && (
-              <span className="text-text-secondary text-[10px]">±{Math.round(gpsAccuracy)}m</span>
+              <span className="text-text-secondary text-[10px] flex-shrink-0">±{Math.round(gpsAccuracy)}m</span>
             )}
           </div>
         </div>
