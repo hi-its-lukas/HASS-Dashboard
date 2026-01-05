@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Calendar, Clock, ChevronRight } from 'lucide-react'
+import { Calendar, ChevronRight } from 'lucide-react'
 import { useConfigStore } from '@/lib/config/store'
 import Link from 'next/link'
 
@@ -32,13 +32,12 @@ export function CalendarPreview() {
 
       try {
         const now = new Date()
-        const endOfTomorrow = new Date(now)
-        endOfTomorrow.setDate(endOfTomorrow.getDate() + 2)
-        endOfTomorrow.setHours(0, 0, 0, 0)
+        const endDate = new Date(now)
+        endDate.setDate(endDate.getDate() + 7)
 
         const res = await fetch(
           `/api/ha/calendar?` +
-          `start=${now.toISOString()}&end=${endOfTomorrow.toISOString()}&entities=${calendars.join(',')}`
+          `start=${now.toISOString()}&end=${endDate.toISOString()}&entities=${calendars.join(',')}`
         )
         
         if (res.ok) {
@@ -66,34 +65,26 @@ export function CalendarPreview() {
     fetchEvents()
   }, [calendars])
 
-  const getDayLabel = (dateStr: string) => {
+  const formatDate = (dateStr: string): string => {
     const date = new Date(dateStr)
     const now = new Date()
     const tomorrow = new Date(now)
     tomorrow.setDate(tomorrow.getDate() + 1)
     
-    if (date.toDateString() === now.toDateString()) {
-      return 'Heute'
-    } else if (date.toDateString() === tomorrow.toDateString()) {
-      return 'Morgen'
-    }
+    if (date.toDateString() === now.toDateString()) return 'Heute'
+    if (date.toDateString() === tomorrow.toDateString()) return 'Morgen'
+    
     return date.toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short' })
-  }
-
-  const formatEventTime = (dateStr: string, allDay: boolean) => {
-    const dayLabel = getDayLabel(dateStr)
-    
-    if (allDay) {
-      return `${dayLabel}, Ganztägig`
-    }
-    
-    const date = new Date(dateStr)
-    const timeStr = date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
-    return `${dayLabel}, ${timeStr}`
   }
 
   const isAllDay = (start: string) => {
     return start.length === 10 || !start.includes('T')
+  }
+
+  const formatTime = (dateStr: string) => {
+    if (isAllDay(dateStr)) return 'Ganztägig'
+    const date = new Date(dateStr)
+    return date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
   }
 
   if (loading) {
@@ -130,7 +121,7 @@ export function CalendarPreview() {
           <Calendar className="w-4 h-4 text-accent-cyan" />
           <span className="text-white font-medium">Termine</span>
         </div>
-        <p className="text-text-secondary text-sm">Keine Termine heute/morgen</p>
+        <p className="text-text-secondary text-sm">Keine Termine in den nächsten 7 Tagen</p>
       </div>
     )
   }
@@ -148,15 +139,18 @@ export function CalendarPreview() {
         {events.map((event, i) => (
           <div 
             key={i} 
-            className="flex items-start gap-3 p-2 rounded-lg bg-white/5"
+            className="flex items-center gap-3 p-2 rounded-lg bg-white/5"
           >
-            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-accent-cyan/20 flex items-center justify-center mt-0.5">
-              <Clock className="w-4 h-4 text-accent-cyan" />
-            </div>
+            <div className="flex-shrink-0 w-3 h-3 rounded-full bg-accent-cyan" />
             <div className="flex-1 min-w-0">
               <p className="text-white text-sm font-medium truncate">{event.summary}</p>
+            </div>
+            <div className="text-right flex-shrink-0">
               <p className="text-text-secondary text-xs" suppressHydrationWarning>
-                {mounted ? formatEventTime(event.start, isAllDay(event.start)) : ''}
+                {mounted ? formatDate(event.start) : ''}
+              </p>
+              <p className="text-text-secondary text-[10px]" suppressHydrationWarning>
+                {mounted ? formatTime(event.start) : ''}
               </p>
             </div>
           </div>

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { Avatar } from '@/components/ui/avatar'
 import { useHAStore } from '@/lib/ha'
-import { Home, MapPin } from 'lucide-react'
+import { Home, MapPin, Navigation } from 'lucide-react'
 
 const MapContainer = dynamic(
   () => import('react-leaflet').then((mod) => mod.MapContainer),
@@ -35,12 +35,10 @@ export function PersonMiniCard({ entityId, name }: PersonMiniCardProps) {
   const lng = state?.attributes?.longitude as number | undefined
   const hasLocation = lat !== undefined && lng !== undefined
   
-  // Benutzerfreundliche Statusanzeige
   const getStatusText = () => {
     if (!state?.state) return 'Unbekannt'
     if (state.state === 'home') return 'Zuhause'
     if (state.state === 'not_home') return 'Unterwegs'
-    // Zonennamen direkt anzeigen (z.B. "Arbeit", "Schule")
     return state.state.charAt(0).toUpperCase() + state.state.slice(1).replace(/_/g, ' ')
   }
   
@@ -57,12 +55,12 @@ export function PersonMiniCard({ entityId, name }: PersonMiniCardProps) {
   }, [])
   
   return (
-    <div className="glass-tile flex-shrink-0 p-0 overflow-hidden min-w-[200px] max-w-[240px]">
-      <div className="h-[140px] relative bg-gray-800/50">
+    <div className="glass-tile flex-shrink-0 overflow-hidden w-[220px]">
+      <div className="h-[160px] relative">
         {hasLocation && mounted ? (
           <MapContainer
             center={[lat, lng]}
-            zoom={14}
+            zoom={15}
             scrollWheelZoom={false}
             zoomControl={false}
             attributionControl={false}
@@ -75,29 +73,53 @@ export function PersonMiniCard({ entityId, name }: PersonMiniCardProps) {
             <Marker position={[lat, lng]} />
           </MapContainer>
         ) : (
-          <div className="h-full w-full flex items-center justify-center">
+          <div className="h-full w-full bg-gradient-to-br from-gray-800/80 to-gray-900/80 flex items-center justify-center">
             {isHome ? (
-              <Home className="w-8 h-8 text-accent-green/50" />
+              <div className="text-center">
+                <Home className="w-10 h-10 text-accent-green mx-auto mb-2" />
+                <p className="text-accent-green text-xs font-medium">Zuhause</p>
+              </div>
             ) : (
-              <MapPin className="w-8 h-8 text-gray-500" />
+              <div className="text-center">
+                <Navigation className="w-10 h-10 text-accent-orange mx-auto mb-2" />
+                <p className="text-accent-orange text-xs font-medium">Unterwegs</p>
+              </div>
             )}
           </div>
         )}
+        
+        <div className="absolute top-2 right-2">
+          <div 
+            className={`px-2 py-0.5 rounded-full text-[10px] font-medium backdrop-blur-sm ${
+              isHome 
+                ? 'bg-accent-green/20 text-accent-green border border-accent-green/30' 
+                : 'bg-accent-orange/20 text-accent-orange border border-accent-orange/30'
+            }`}
+          >
+            {getStatusText()}
+          </div>
+        </div>
       </div>
       
-      <div className="p-3 flex items-center gap-2">
+      <div className="p-3 flex items-center gap-3 bg-black/20">
         <div className="relative">
-          <Avatar name={displayName} size="sm" />
+          <Avatar name={displayName} size="md" />
           <div 
-            className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 ${isHome ? 'bg-accent-green' : 'bg-gray-500'}`}
-            style={{ borderColor: 'rgba(28, 28, 30, 0.8)' }}
+            className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-card-bg ${
+              isHome ? 'bg-accent-green' : 'bg-accent-orange'
+            }`}
           />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-medium text-white text-xs truncate">{displayName}</p>
-          <p className={`text-[10px] truncate ${isHome ? 'text-accent-green' : 'text-text-secondary'}`}>
-            {getStatusText()}
-          </p>
+          <p className="font-medium text-white text-sm truncate">{displayName}</p>
+          {hasLocation && (
+            <div className="flex items-center gap-1 text-text-secondary">
+              <MapPin className="w-3 h-3" />
+              <p className="text-[10px] truncate">
+                {lat?.toFixed(4)}, {lng?.toFixed(4)}
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>
