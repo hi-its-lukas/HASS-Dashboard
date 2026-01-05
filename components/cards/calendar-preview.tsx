@@ -15,7 +15,12 @@ interface CalendarEvent {
 export function CalendarPreview() {
   const [events, setEvents] = useState<CalendarEvent[]>([])
   const [loading, setLoading] = useState(true)
+  const [mounted, setMounted] = useState(false)
   const { calendars } = useConfigStore()
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -139,10 +144,10 @@ export function CalendarPreview() {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-white text-sm font-medium truncate">{event.summary}</p>
-              <p className="text-text-secondary text-xs">
-                {isAllDay(event.start, event.end) 
-                  ? 'Ganztägig' 
-                  : formatEventTime(event.start)
+              <p className="text-text-secondary text-xs" suppressHydrationWarning>
+                {mounted 
+                  ? (isAllDay(event.start, event.end) ? 'Ganztägig' : formatEventTime(event.start))
+                  : ''
                 }
               </p>
             </div>

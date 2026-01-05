@@ -70,6 +70,11 @@ function getDaysUntil(dateStr: string): number {
 export function TrashCalendar({ entityId }: TrashCalendarProps) {
   const [events, setEvents] = useState<TrashEvent[]>([])
   const [loading, setLoading] = useState(true)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -147,7 +152,7 @@ export function TrashCalendar({ entityId }: TrashCalendarProps) {
       </div>
       <div className="space-y-2">
         {events.map((event, i) => {
-          const daysUntil = getDaysUntil(event.start)
+          const daysUntil = mounted ? getDaysUntil(event.start) : 99
           const isUrgent = daysUntil <= 1
           
           return (
@@ -159,8 +164,8 @@ export function TrashCalendar({ entityId }: TrashCalendarProps) {
               <div className="flex-1 min-w-0">
                 <p className="text-white text-sm font-medium truncate">{event.summary}</p>
               </div>
-              <p className={`text-xs ${isUrgent ? 'text-accent-orange font-medium' : 'text-text-secondary'}`}>
-                {formatDate(event.start)}
+              <p className={`text-xs ${isUrgent ? 'text-accent-orange font-medium' : 'text-text-secondary'}`} suppressHydrationWarning>
+                {mounted ? formatDate(event.start) : ''}
               </p>
             </div>
           )
