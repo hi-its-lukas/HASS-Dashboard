@@ -3,12 +3,13 @@
 import { motion } from 'framer-motion'
 import { PersonMiniCard } from '@/components/cards/person-mini-card'
 import { WeatherWidget } from '@/components/cards/weather-widget'
+import { CalendarPreview } from '@/components/cards/calendar-preview'
 import {
   useHAStore,
   useConnectionStatus,
 } from '@/lib/ha'
 import { useConfig, useConfigStore } from '@/lib/config/store'
-import { Lightbulb, Blinds, Thermometer, Calendar, ChevronRight, MapPin } from 'lucide-react'
+import { Lightbulb, Blinds, Thermometer, ChevronRight, MapPin } from 'lucide-react'
 import Link from 'next/link'
 
 export default function HomePage() {
@@ -75,55 +76,52 @@ export default function HomePage() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="grid grid-cols-2 gap-3 mb-4"
+          className="grid grid-cols-3 gap-3 mb-4"
         >
-          <Link href="/lights" className="glass-tile p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-accent-yellow/20 flex items-center justify-center">
-                <Lightbulb className="w-5 h-5 text-accent-yellow" />
+          <Link href="/lights" className="glass-tile p-3">
+            <div className="flex flex-col items-center text-center gap-2">
+              <div className="w-12 h-12 rounded-full bg-accent-yellow/20 flex items-center justify-center">
+                <Lightbulb className="w-6 h-6 text-accent-yellow" />
               </div>
               <div>
-                <p className="text-white font-medium text-lg">{lightsOnCount}</p>
-                <p className="text-text-secondary text-xs">Lichter an</p>
+                <p className="text-white font-medium">{lightsOnCount}</p>
+                <p className="text-text-secondary text-xs">Lichter</p>
               </div>
             </div>
           </Link>
           
-          <Link href="/covers" className="glass-tile p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-accent-blue/20 flex items-center justify-center">
-                <Blinds className="w-5 h-5 text-accent-blue" />
+          <Link href="/covers" className="glass-tile p-3">
+            <div className="flex flex-col items-center text-center gap-2">
+              <div className="w-12 h-12 rounded-full bg-accent-blue/20 flex items-center justify-center">
+                <Blinds className="w-6 h-6 text-accent-blue" />
               </div>
               <div>
-                <p className="text-white font-medium text-lg">{openCovers}</p>
-                <p className="text-text-secondary text-xs">Rollos offen</p>
+                <p className="text-white font-medium">{openCovers}</p>
+                <p className="text-text-secondary text-xs">Rollos</p>
               </div>
             </div>
           </Link>
           
-          <Link href="/climate" className="glass-tile p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-accent-orange/20 flex items-center justify-center">
-                <Thermometer className="w-5 h-5 text-accent-orange" />
+          <Link href="/climate" className="glass-tile p-3">
+            <div className="flex flex-col items-center text-center gap-2">
+              <div className="w-12 h-12 rounded-full bg-accent-orange/20 flex items-center justify-center">
+                <Thermometer className="w-6 h-6 text-accent-orange" />
               </div>
               <div>
-                <p className="text-white font-medium text-lg">Klima</p>
+                <p className="text-white font-medium">Klima</p>
                 <p className="text-text-secondary text-xs">Steuerung</p>
               </div>
             </div>
           </Link>
-          
-          <Link href="/calendar" className="glass-tile p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-accent-cyan/20 flex items-center justify-center">
-                <Calendar className="w-5 h-5 text-accent-cyan" />
-              </div>
-              <div>
-                <p className="text-white font-medium text-lg">Kalender</p>
-                <p className="text-text-secondary text-xs">Termine</p>
-              </div>
-            </div>
-          </Link>
+        </motion.div>
+        
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.12 }}
+          className="mb-4"
+        >
+          <CalendarPreview />
         </motion.div>
         
         <motion.div
