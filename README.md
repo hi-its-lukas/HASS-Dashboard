@@ -1,262 +1,257 @@
-# HASS Dashboard
+# HA Dashboard
 
-Ein modernes, mobiles Dashboard für Home Assistant mit OAuth-Authentifizierung.
+Ein modernes, mobiles Home Assistant Dashboard mit Apple Home-inspiriertem Design.
+
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Next.js](https://img.shields.io/badge/Next.js-14-black)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)
+![Docker](https://img.shields.io/badge/Docker-ready-2496ED)
 
 ## Features
 
-- **Login mit Home Assistant** - OAuth 2.0 mit PKCE
-- **Multi-User Support** - Jeder Benutzer hat eigene Einstellungen
-- **Verschlüsselte Token-Speicherung** - AES-256-GCM
-- **Echtzeit-Updates** - WebSocket-Verbindung zu Home Assistant
-- **PWA** - Als App auf iOS/Android installierbar
+- **Apple Home Design** - Glassmorphism UI mit transluzenten Karten und Blur-Effekten
+- **Progressive Web App** - Installierbar auf iPhone/Android mit Offline-Support
+- **Multi-User** - Jeder Benutzer hat eigene Konfiguration und Hintergrundbild
+- **OAuth 2.0** - Sichere Authentifizierung mit Home Assistant (PKCE)
+- **Echtzeit-Updates** - WebSocket-Verbindung für Live-Statusänderungen
+- **Responsive** - Mobile-first mit Desktop-Sidebar
 
-### Dashboard-Seiten
+### Seiten
 
 | Seite | Beschreibung |
 |-------|-------------|
-| Home | Uhrzeit, Wetter, Lichter, Stromverbrauch, Alarm, Anwesenheit |
-| Energie | Solar, Batterie, Netz, Hausverbrauch mit Diagrammen |
-| Sicherheit | Alarmsteuerung (Stay/Away/Night/Disarm) |
-| Familie | Anwesenheitserkennung mit Aktivitätsdaten |
-| Überwachung | Kamera-Events mit Personen-/Fahrzeugerkennung |
+| **Home** | Dashboard mit Wetter, Kalendervorschau, Müllabfuhr, Familien-Status |
+| **Lichtquellen** | Alle Lichter ein-/ausschalten, nach Räumen gruppiert |
+| **Rollos** | Jalousien/Rollläden steuern (öffnen/stoppen/schließen) |
+| **Klima** | Heizung, Klimaanlage, Ventilatoren steuern |
+| **Kalender** | Wochenansicht mit allen Home Assistant Kalendern |
+| **Kameras** | Live-Kamera-Feeds mit Vollbild-Modus |
+| **Energie** | Solar, Batterie, Netzverbrauch visualisiert |
+| **Familie** | Personen-Standorte mit Karte und Aktivitätssensoren |
+| **Aktionen** | Konfigurierbare Home Assistant Skripte ausführen |
+| **Intercoms** | Türklingeln mit Live-Video, Sprechen und Türöffner |
+
+## Voraussetzungen
+
+- **Home Assistant** mit aktiviertem OAuth (siehe Konfiguration unten)
+- **Docker** und **Docker Compose**
+- **Cloudflare Tunnel** oder anderer Reverse Proxy für HTTPS
 
 ## Installation
-
-### Voraussetzungen
-
-- Docker & Docker Compose
-- Cloudflare Account (für HTTPS via Tunnel)
-- Home Assistant Installation
 
 ### 1. Repository klonen
 
 ```bash
-git clone https://github.com/yourusername/hass-dashboard.git
-cd hass-dashboard
+git clone https://github.com/DEIN-USERNAME/ha-dashboard.git
+cd ha-dashboard
 ```
 
-### 2. Dashboard starten
+### 2. Docker Container starten
 
 ```bash
-docker compose up -d --build
+docker-compose up -d
 ```
 
-Das Dashboard läuft auf `http://localhost:80`.
+Das Dashboard ist dann unter `http://DEINE-IP:80` erreichbar.
 
-### Update
+### 3. Home Assistant konfigurieren
 
-```bash
-cd hass-dashboard
-git pull
-docker compose down
-docker compose up -d --build
-docker logs hass-dashboard -f
-```
-
-### 3. Cloudflare Tunnel einrichten
-
-HTTPS wird über Cloudflare Tunnel bereitgestellt - kein lokales SSL-Zertifikat nötig.
-
-```bash
-# cloudflared installieren (Raspberry Pi / ARM64)
-curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-arm64.deb -o cloudflared.deb
-sudo dpkg -i cloudflared.deb
-
-# Login
-cloudflared tunnel login
-
-# Tunnel erstellen
-cloudflared tunnel create hass-dashboard
-
-# DNS-Eintrag hinzufügen
-cloudflared tunnel route dns hass-dashboard dashboard.deinedomain.de
-```
-
-Tunnel-Konfiguration (`~/.cloudflared/config.yml`):
+Füge folgendes zu deiner `configuration.yaml` hinzu:
 
 ```yaml
-tunnel: hass-dashboard
-credentials-file: /home/pi/.cloudflared/<tunnel-id>.json
+# Home Assistant OAuth Konfiguration
+homeassistant:
+  auth_providers:
+    - type: homeassistant
 
-ingress:
-  - hostname: dashboard.deinedomain.de
-    service: http://localhost:80
-  - service: http_status:404
+# Erlaube das Dashboard als OAuth Client
+http:
+  cors_allowed_origins:
+    - https://deine-dashboard-domain.de
 ```
 
-Als Service starten:
+Dann unter **Einstellungen > Geräte & Dienste > Integrationen > Anwendungsanmeldedaten**:
+
+1. Klicke auf "Anwendung hinzufügen"
+2. Name: `HA Dashboard`
+3. Redirect URI: `https://deine-dashboard-domain.de/api/auth/callback`
+4. Notiere Client ID (wird automatisch generiert)
+
+### 4. Erste Anmeldung
+
+1. Öffne das Dashboard im Browser
+2. Gib deine Home Assistant URL ein (z.B. `https://homeassistant.local:8123`)
+3. Klicke auf "Mit Home Assistant anmelden"
+4. Autorisiere die App in Home Assistant
+5. Konfiguriere deine Entitäten in den Einstellungen
+
+## Docker Compose
+
+```yaml
+services:
+  app:
+    image: ghcr.io/DEIN-USERNAME/ha-dashboard:latest
+    container_name: hass-dashboard
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - ./data:/data
+```
+
+### Volumes
+
+| Pfad | Beschreibung |
+|------|-------------|
+| `/data` | SQLite Datenbank, Hintergrundbilder, Encryption Key |
+
+### Umgebungsvariablen (optional)
+
+| Variable | Standard | Beschreibung |
+|----------|----------|--------------|
+| `ENCRYPTION_KEY` | Auto-generiert | AES-256 Key für OAuth Token Verschlüsselung |
+| `DATABASE_URL` | `file:/data/hass-dashboard.db` | SQLite Datenbankpfad |
+| `NODE_ENV` | `production` | Node.js Umgebung |
+
+## Update
 
 ```bash
-sudo cloudflared service install
-sudo systemctl enable cloudflared
-sudo systemctl start cloudflared
+# Neues Image pullen
+docker-compose pull
+
+# Container neu starten
+docker-compose down
+docker-compose up -d
 ```
 
-### 4. Cloudflare Dashboard konfigurieren
+## Architektur
 
-Im Cloudflare Zero Trust Dashboard:
-
-1. **Networks** → **Tunnels** → Tunnel auswählen
-2. **Configure** → **Public Hostname** Tab
-3. Route bearbeiten → **Additional application settings** aufklappen
-4. **HTTP Host Header**: `dashboard.deinedomain.de` eintragen
-5. Speichern
-
-Dies stellt sicher, dass die App die richtige Domain für OAuth erkennt.
-
-### 5. Split-DNS einrichten (optional)
-
-Für lokalen Zugriff ohne Cloudflare:
-
-| DNS | Ziel |
-|-----|------|
-| Extern (Cloudflare) | Cloudflare Tunnel (HTTPS) |
-| Intern (Router/Pi-hole) | Lokale IP des Pi (HTTP) |
-
-**Hinweis:** Intern ist nur HTTP verfügbar. Für lokales HTTPS siehe "Erweitert" unten.
-
-## Konfiguration
-
-### Automatisch konfiguriert
-
-| Was | Wo |
-|-----|-----|
-| Encryption Key | `./data/.encryption_key` |
-| Datenbank | `./data/hass-dashboard.db` |
-| OAuth URLs | Aus Request-Headers |
-
-### Optional (.env)
-
-```env
-ENCRYPTION_KEY=dein-64-zeichen-hex-key
+```
++-------------------------------------------------------------+
+|                         Browser                              |
+|  +-------------+  +-------------+  +---------------------+  |
+|  |   Next.js   |  |   Zustand   |  |  WebSocket Client   |  |
+|  |   Frontend  |  |    Store    |  |  (Echtzeit-Updates) |  |
+|  +------+------+  +------+------+  +----------+----------+  |
++---------+----------------+--------------------+--------------+
+          |                |                    |
+          v                v                    v
++-------------------------------------------------------------+
+|                    Next.js API Routes                        |
+|  +-------------+  +-------------+  +---------------------+  |
+|  |  /api/auth  |  |  /api/ha/*  |  |  /api/config        |  |
+|  |   (OAuth)   |  |  (HA Proxy) |  |  (User Settings)    |  |
+|  +------+------+  +------+------+  +----------+----------+  |
++---------+----------------+--------------------+--------------+
+          |                |                    |
+          v                v                    v
++-----------------+  +-------------+  +---------------------+
+|  SQLite + Prisma |  |    Home     |  |    Cloudflare       |
+|  (User Data)     |  |  Assistant  |  |     Tunnel          |
++-----------------+  +-------------+  +---------------------+
 ```
 
-### Benutzer-Einstellungen
+### Technologie-Stack
 
-Nach dem Login unter **Einstellungen**:
+- **Frontend**: Next.js 14, TypeScript, Tailwind CSS, Framer Motion
+- **State**: Zustand
+- **Datenbank**: SQLite via Prisma ORM
+- **Auth**: OAuth 2.0 mit PKCE
+- **PWA**: next-pwa mit Service Worker
+- **Icons**: Lucide React
+- **Charts**: Recharts
+- **Maps**: Leaflet / React-Leaflet
 
-- Home Assistant URL eingeben
-- Entities zu Dashboard-Widgets zuordnen
-- Räume und Personen konfigurieren
+### Sicherheit
 
-## Technologie
+- OAuth Tokens werden mit AES-256-GCM verschlüsselt gespeichert
+- Tokens nie im Browser sichtbar (Server-side Proxy)
+- HTTP-only Session Cookies
+- Benutzer können nur eigene Hintergrundbilder sehen
 
-| Komponente | Technologie |
-|------------|-------------|
-| Framework | Next.js 14 (App Router) |
-| Sprache | TypeScript |
-| Styling | Tailwind CSS |
-| State | Zustand |
-| Datenbank | SQLite (Prisma) |
-| Animationen | Framer Motion |
-| Charts | Recharts |
-| Icons | Lucide React |
-| Container | Debian Bookworm Slim |
+## Einstellungen
 
-### Warum Debian statt Alpine?
+Nach der Anmeldung kannst du in den **Einstellungen** konfigurieren:
 
-Das Docker-Image verwendet `node:20-bookworm-slim` statt Alpine weil:
+### Dashboard
+- Wetter-Entität
+- Innentemperatur-Sensor
+- Hintergrundbild hochladen
 
-- **Prisma + ARM64**: Alpine (musl libc) hat Kompatibilitätsprobleme mit Prisma auf ARM64
-- **OpenSSL 3**: Debian Bookworm enthält OpenSSL 3.x, das Prisma benötigt
-- **Raspberry Pi**: Funktioniert zuverlässig auf ARM64 ohne manuelle Fixes
+### Kalender
+- Kalender für Vorschau auswählen
+- Müllabfuhr-Kalender auswählen
+- Wetter-Entität für Vorhersage
 
-## Sicherheit
+### Räume & Geräte
+- Lichter
+- Rollläden/Jalousien
+- Klimageräte
 
-- **Server-Side Token Storage** - Tokens nie im Browser
-- **AES-256-GCM Verschlüsselung** - Tokens at-rest verschlüsselt
-- **httpOnly Cookies** - Session nicht per JavaScript lesbar
-- **OAuth PKCE** - Schutz vor Interception-Angriffen
-- **365-Tage Sessions** - Lange Login-Dauer
+### Personen
+- Person-Entitäten für Familien-Seite
 
-## Datenpersistenz
+### Aktionen
+- Home Assistant Skripte als Buttons
 
-Das `/data` Verzeichnis im Container speichert:
+### Intercoms
+- Türklingeln mit Kamera, Sprechen-URL und Türschloss
 
-| Datei | Beschreibung |
-|-------|-------------|
-| `.encryption_key` | Auto-generierter AES-256 Schlüssel |
-| `hass-dashboard.db` | SQLite Datenbank (Benutzer, Tokens, Einstellungen) |
+## Entwicklung
 
-Der Container:
-- Erstellt `/data` automatisch falls nicht vorhanden
-- Generiert den Encryption Key beim ersten Start
-- Behebt Berechtigungsprobleme automatisch
-
-**Keine manuelle Konfiguration erforderlich.**
-
-## Troubleshooting
-
-### OAuth funktioniert nicht
-
-1. HTTP Host Header im Cloudflare Dashboard gesetzt?
-2. Split-DNS korrekt eingerichtet?
-3. Home Assistant erreichbar vom Dashboard-Server?
-
-### Berechtigungsprobleme mit /data
-
-Falls der Container mit "Permission denied" crasht:
+### Lokal starten
 
 ```bash
-# Option 1: Verzeichnis löschen und neu starten
-docker compose down
-rm -rf data/
-docker compose up -d --build
+# Dependencies installieren
+npm install
 
-# Option 2: Berechtigungen manuell fixen
-sudo chown -R 1001:1001 ./data
-docker compose restart
+# Prisma Client generieren
+npx prisma generate
+
+# Entwicklungsserver starten
+npm run dev
 ```
 
-### Datenbank zurücksetzen
+Das Dashboard läuft dann unter `http://localhost:5000`.
+
+### Mock-Modus
+
+Für Entwicklung ohne Home Assistant:
 
 ```bash
-docker compose down
-rm -rf data/
-docker compose up -d --build
+NEXT_PUBLIC_USE_MOCK=true npm run dev
 ```
 
-### Logs anzeigen
+### Docker Image bauen
 
 ```bash
-docker logs hass-dashboard -f
+docker build -t ha-dashboard .
 ```
 
-## Erweitert: Lokales HTTPS
+## Fehlerbehebung
 
-Für lokales HTTPS (ohne Cloudflare) kann Caddy als Reverse Proxy verwendet werden.
+### "Token expired" nach Login
+- Home Assistant OAuth Token ist abgelaufen
+- Lösung: Erneut anmelden
 
-Erstelle `Caddyfile`:
+### Karten werden nicht angezeigt
+- Leaflet CSS muss geladen sein
+- Prüfe Browser-Konsole auf Fehler
 
-```
-{
-    auto_https disable_redirects
-}
+### WebSocket verbindet nicht
+- Prüfe ob Home Assistant WebSocket API erreichbar ist
+- Cloudflare Tunnel muss WebSocket unterstützen
 
-dashboard.deinedomain.de {
-    tls internal
-    reverse_proxy localhost:3000
-}
-```
-
-Und passe `docker-compose.yml` an um Caddy hinzuzufügen. Das selbstsignierte Zertifikat erfordert einmalige Browser-Akzeptanz.
-
-## Projektstruktur
-
-```
-hass-dashboard/
-├── app/                    # Next.js App Router
-│   ├── (dashboard)/        # Geschützte Dashboard-Seiten
-│   ├── api/                # API Routes
-│   └── login/              # Login-Seite
-├── components/             # React Komponenten
-├── lib/                    # Utilities, Stores, Auth
-├── prisma/                 # Datenbank-Schema
-├── data/                   # Persistente Daten (Volume)
-├── docker-compose.yml
-└── Dockerfile
-```
+### Keine Entitäten in Einstellungen
+- OAuth Token hat nicht genug Berechtigungen
+- Lösung: Neu anmelden und alle Berechtigungen erlauben
 
 ## Lizenz
 
-MIT
+MIT License - siehe [LICENSE](LICENSE)
+
+## Beitragen
+
+Pull Requests sind willkommen! Bitte erstelle zuerst ein Issue, um größere Änderungen zu diskutieren.
