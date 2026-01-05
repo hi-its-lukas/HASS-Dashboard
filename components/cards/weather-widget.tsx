@@ -67,7 +67,7 @@ export function WeatherWidget({ weatherEntityId, temperatureSensorId }: WeatherW
     const fetchForecast = async () => {
       setLoading(true)
       try {
-        const res = await fetch(`/api/ha/weather?entityId=${weatherEntityId}`)
+        const res = await fetch(`/api/ha/weather?entity_id=${weatherEntityId}`)
         if (res.ok) {
           const data = await res.json()
           setForecast(data.forecast?.slice(0, 5) || [])
