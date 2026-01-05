@@ -6,17 +6,12 @@ import { Avatar } from '@/components/ui/avatar'
 import { useHAStore } from '@/lib/ha'
 import { Home, Car } from 'lucide-react'
 
-const MapContainer = dynamic(
-  () => import('react-leaflet').then((mod) => mod.MapContainer),
-  { ssr: false, loading: () => <div className="h-full w-full bg-gray-800 animate-pulse" /> }
-)
-const TileLayer = dynamic(
-  () => import('react-leaflet').then((mod) => mod.TileLayer),
-  { ssr: false }
-)
-const CircleMarker = dynamic(
-  () => import('react-leaflet').then((mod) => mod.CircleMarker),
-  { ssr: false }
+const PersonMap = dynamic(
+  () => import('./person-map').then((mod) => mod.PersonMap),
+  { 
+    ssr: false,
+    loading: () => <div className="h-full w-full bg-gray-800 animate-pulse" />
+  }
 )
 
 interface PersonMiniCardProps {
@@ -51,36 +46,19 @@ export function PersonMiniCard({ entityId, name }: PersonMiniCardProps) {
     setMounted(true)
   }, [])
   
-  const statusColor = isHome ? 'accent-green' : state?.state === 'unknown' ? 'gray-400' : 'accent-orange'
+  const getStatusStyle = () => {
+    if (isHome) return { bg: 'rgba(52, 211, 153, 0.3)', color: '#34d399' }
+    if (state?.state === 'unknown') return { bg: 'rgba(156, 163, 175, 0.3)', color: '#9ca3af' }
+    return { bg: 'rgba(251, 146, 60, 0.3)', color: '#fb923c' }
+  }
+  
+  const statusStyle = getStatusStyle()
   
   return (
     <div className="glass-tile flex-shrink-0 overflow-hidden w-[200px] rounded-2xl">
       <div className="h-[140px] relative">
         {hasLocation && mounted ? (
-          <MapContainer
-            center={[lat, lng]}
-            zoom={15}
-            scrollWheelZoom={false}
-            zoomControl={false}
-            attributionControl={false}
-            dragging={false}
-            doubleClickZoom={false}
-            className="h-full w-full"
-          >
-            <TileLayer
-              url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-            />
-            <CircleMarker 
-              center={[lat, lng]} 
-              radius={10}
-              pathOptions={{
-                fillColor: isHome ? '#34d399' : '#fb923c',
-                fillOpacity: 1,
-                color: 'white',
-                weight: 3
-              }}
-            />
-          </MapContainer>
+          <PersonMap lat={lat} lng={lng} isHome={isHome} />
         ) : (
           <div className={`h-full w-full flex items-center justify-center ${
             isHome 
@@ -95,13 +73,10 @@ export function PersonMiniCard({ entityId, name }: PersonMiniCardProps) {
           </div>
         )}
         
-        <div className="absolute top-2 left-2 right-2 flex justify-between items-start pointer-events-none">
+        <div className="absolute top-2 left-2 right-2 flex justify-between items-start pointer-events-none z-[1000]">
           <div 
-            className={`px-2 py-0.5 rounded-full text-[10px] font-medium backdrop-blur-md bg-${statusColor}/30 text-${statusColor}`}
-            style={{
-              backgroundColor: isHome ? 'rgba(52, 211, 153, 0.3)' : state?.state === 'unknown' ? 'rgba(156, 163, 175, 0.3)' : 'rgba(251, 146, 60, 0.3)',
-              color: isHome ? '#34d399' : state?.state === 'unknown' ? '#9ca3af' : '#fb923c'
-            }}
+            className="px-2 py-0.5 rounded-full text-[10px] font-medium backdrop-blur-md"
+            style={{ backgroundColor: statusStyle.bg, color: statusStyle.color }}
           >
             {getLocationText()}
           </div>
@@ -127,9 +102,7 @@ export function PersonMiniCard({ entityId, name }: PersonMiniCardProps) {
             )}
             <div 
               className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-card-bg"
-              style={{
-                backgroundColor: isHome ? '#34d399' : state?.state === 'unknown' ? '#9ca3af' : '#fb923c'
-              }}
+              style={{ backgroundColor: statusStyle.color }}
             />
           </div>
           <div className="flex-1 min-w-0">
