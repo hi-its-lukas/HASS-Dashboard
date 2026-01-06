@@ -140,7 +140,6 @@ export function TrashCalendar({ entityId, enableReminders = true }: TrashCalenda
             title: 'Müllabfuhr morgen',
             message: `${event.summary} - Bitte Tonne rausstellen!`,
             severity: 'warning',
-            timeout: 30000,
             tag: `trash-${event.summary}`,
           })
         }
@@ -152,7 +151,6 @@ export function TrashCalendar({ entityId, enableReminders = true }: TrashCalenda
             title: 'Müllabfuhr heute',
             message: `${event.summary} wird heute abgeholt!`,
             severity: 'critical',
-            timeout: 60000,
             tag: `trash-today-${event.summary}`,
           })
         }

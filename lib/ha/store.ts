@@ -134,7 +134,6 @@ export const useHAStore = create<HAStore>((set, get) => ({
           title: data.title,
           message: data.message,
           severity: data.severity as 'info' | 'warning' | 'critical',
-          timeout: data.timeout,
           tag: data.tag,
           cameraEntity: data.camera_entity,
           aiDescription: data.ai_description,

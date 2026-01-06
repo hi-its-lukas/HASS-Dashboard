@@ -3,6 +3,8 @@
 import { Sidebar } from '@/components/nav/sidebar'
 import { MobileNav } from '@/components/nav/mobile-nav'
 import { NotificationModal } from '@/components/ui/notification-modal'
+import { NotificationCenter } from '@/components/ui/notification-center'
+import { NotificationBell } from '@/components/ui/notification-bell'
 import { useConfigStore } from '@/lib/config/store'
 import { useEffect, useState } from 'react'
 
@@ -47,6 +49,10 @@ export default function DashboardLayout({
       </div>
       <MobileNav />
       <NotificationModal />
+      <NotificationCenter />
+      <div className="fixed top-4 right-4 z-30 lg:hidden">
+        <NotificationBell />
+      </div>
     </>
   )
 }

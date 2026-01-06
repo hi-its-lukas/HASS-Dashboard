@@ -22,6 +22,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useConfigStore } from '@/lib/config/store'
+import { NotificationBell } from '@/components/ui/notification-bell'
 
 const DASHBOARD_TITLE_KEY = 'ha-dashboard-title'
 
@@ -114,9 +115,11 @@ export function Sidebar() {
         
         {collapsed && (
           <div className="w-full flex justify-center">
-            <span className="text-white font-bold text-lg">H</span>
+            <NotificationBell />
           </div>
         )}
+        
+        {!collapsed && <NotificationBell />}
       </div>
       
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">

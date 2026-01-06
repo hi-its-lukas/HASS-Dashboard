@@ -3,14 +3,13 @@
 import { useEffect, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Bell, AlertTriangle, AlertCircle, Bot, Video } from 'lucide-react'
-import { useNotificationsStore, DashboardNotification } from '@/lib/ui/notifications-store'
+import { useNotificationsStore, useLatestUnread, DashboardNotification } from '@/lib/ui/notifications-store'
 import Link from 'next/link'
 
 function NotificationItem({ notification, onDismiss }: { 
   notification: DashboardNotification
   onDismiss: () => void 
 }) {
-  const [progress, setProgress] = useState(100)
   const [imageUrl, setImageUrl] = useState<string | null>(null)
   const [imageError, setImageError] = useState(false)
 
@@ -30,45 +29,21 @@ function NotificationItem({ notification, onDismiss }: {
     }
   }, [notification.id, notification.cameraEntity])
 
-  useEffect(() => {
-    if (notification.timeout <= 0) return
-
-    const startTime = Date.now()
-    const endTime = startTime + notification.timeout
-
-    const interval = setInterval(() => {
-      const now = Date.now()
-      const remaining = Math.max(0, endTime - now)
-      const percent = (remaining / notification.timeout) * 100
-      setProgress(percent)
-
-      if (remaining <= 0) {
-        clearInterval(interval)
-        onDismiss()
-      }
-    }, 100)
-
-    return () => clearInterval(interval)
-  }, [notification.timeout, onDismiss])
-
   const severityStyles = {
     info: {
       border: 'border-cyan-500/50',
       bg: 'bg-cyan-500/10',
       icon: <Bell className="w-5 h-5 text-cyan-400" />,
-      progress: 'bg-cyan-500',
     },
     warning: {
       border: 'border-amber-500/50',
       bg: 'bg-amber-500/10',
       icon: <AlertTriangle className="w-5 h-5 text-amber-400" />,
-      progress: 'bg-amber-500',
     },
     critical: {
       border: 'border-red-500/50',
       bg: 'bg-red-500/10',
       icon: <AlertCircle className="w-5 h-5 text-red-400 animate-pulse" />,
-      progress: 'bg-red-500',
     },
   }
 
@@ -130,40 +105,39 @@ function NotificationItem({ notification, onDismiss }: {
           </Link>
         )}
       </div>
-
-      {notification.timeout > 0 && (
-        <div className="h-1 bg-gray-800">
-          <div
-            className={`h-full ${style.progress} transition-all duration-100 ease-linear`}
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-      )}
     </motion.div>
   )
 }
 
 export function NotificationModal() {
-  const { queue, dismiss } = useNotificationsStore()
-  const currentNotification = queue[queue.length - 1]
+  const { notifications, markRead, setOpen } = useNotificationsStore()
+  const latestUnread = useLatestUnread()
+  const unreadCount = notifications.filter((n) => !n.readAt).length
 
   const handleDismiss = useCallback(() => {
-    if (currentNotification) {
-      dismiss(currentNotification.id)
+    if (latestUnread) {
+      markRead(latestUnread.id)
     }
-  }, [currentNotification, dismiss])
+  }, [latestUnread, markRead])
+
+  const handleOpenAll = useCallback(() => {
+    if (latestUnread) {
+      markRead(latestUnread.id)
+    }
+    setOpen(true)
+  }, [latestUnread, markRead, setOpen])
 
   useEffect(() => {
-    if (currentNotification) {
+    if (latestUnread) {
       try {
         window.focus()
       } catch {}
     }
-  }, [currentNotification])
+  }, [latestUnread])
 
   return (
     <AnimatePresence>
-      {currentNotification && (
+      {latestUnread && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -174,13 +148,16 @@ export function NotificationModal() {
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
           <div className="relative" onClick={(e) => e.stopPropagation()}>
             <NotificationItem
-              notification={currentNotification}
+              notification={latestUnread}
               onDismiss={handleDismiss}
             />
-            {queue.length > 1 && (
-              <div className="mt-2 text-center text-sm text-gray-400">
-                +{queue.length - 1} weitere Benachrichtigungen
-              </div>
+            {unreadCount > 1 && (
+              <button
+                onClick={handleOpenAll}
+                className="mt-2 w-full text-center text-sm text-cyan-400 hover:text-cyan-300 py-2 bg-gray-900/80 rounded-xl border border-white/10 transition-colors"
+              >
+                +{unreadCount - 1} weitere Benachrichtigungen anzeigen
+              </button>
             )}
           </div>
         </motion.div>
