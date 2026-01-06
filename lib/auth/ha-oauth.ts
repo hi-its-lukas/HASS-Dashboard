@@ -132,32 +132,30 @@ export async function handleOAuthCallback(code: string, state: string): Promise<
     const accessTokenEncrypted = encrypt(tokenResponse.access_token)
     const refreshTokenEncrypted = tokenResponse.refresh_token ? encrypt(tokenResponse.refresh_token) : null
     
-    await prisma.oAuthToken.upsert({
-      where: {
-        userId_provider: {
-          userId: user.id,
-          provider: 'home_assistant'
-        }
-      },
-      create: {
-        userId: user.id,
-        provider: 'home_assistant',
-        accessTokenEnc: accessTokenEncrypted.ciphertext,
-        accessTokenNonce: accessTokenEncrypted.nonce,
-        refreshTokenEnc: refreshTokenEncrypted?.ciphertext ?? null,
-        refreshTokenNonce: refreshTokenEncrypted?.nonce ?? null,
-        clientId: baseUrl,
-        expiresAt: new Date(Date.now() + tokenResponse.expires_in * 1000)
-      },
-      update: {
-        accessTokenEnc: accessTokenEncrypted.ciphertext,
-        accessTokenNonce: accessTokenEncrypted.nonce,
-        refreshTokenEnc: refreshTokenEncrypted?.ciphertext ?? null,
-        refreshTokenNonce: refreshTokenEncrypted?.nonce ?? null,
-        clientId: baseUrl,
-        expiresAt: new Date(Date.now() + tokenResponse.expires_in * 1000)
-      }
-    })
+    await prisma.$executeRaw`
+      INSERT INTO oauth_tokens (id, user_id, provider, access_token_enc, access_token_nonce, refresh_token_enc, refresh_token_nonce, client_id, expires_at, created_at, updated_at)
+      VALUES (
+        ${crypto.randomUUID()},
+        ${user.id},
+        'home_assistant',
+        ${accessTokenEncrypted.ciphertext},
+        ${accessTokenEncrypted.nonce},
+        ${refreshTokenEncrypted?.ciphertext ?? null},
+        ${refreshTokenEncrypted?.nonce ?? null},
+        ${baseUrl},
+        ${new Date(Date.now() + tokenResponse.expires_in * 1000)},
+        ${new Date()},
+        ${new Date()}
+      )
+      ON CONFLICT (user_id, provider) DO UPDATE SET
+        access_token_enc = ${accessTokenEncrypted.ciphertext},
+        access_token_nonce = ${accessTokenEncrypted.nonce},
+        refresh_token_enc = ${refreshTokenEncrypted?.ciphertext ?? null},
+        refresh_token_nonce = ${refreshTokenEncrypted?.nonce ?? null},
+        client_id = ${baseUrl},
+        expires_at = ${new Date(Date.now() + tokenResponse.expires_in * 1000)},
+        updated_at = ${new Date()}
+    `
     
     const sessionToken = await createSession(user.id)
     await setSessionCookie(sessionToken)
@@ -231,7 +229,7 @@ export async function getStoredToken(userId: string): Promise<string | null> {
       try {
         const user = await prisma.user.findUnique({ where: { id: userId } })
         if (user?.haInstanceUrl) {
-          await refreshAccessToken(userId, tokenRecord, user.haInstanceUrl)
+          await refreshAccessToken(userId, tokenRecord as unknown as TokenRecordForRefresh, user.haInstanceUrl)
           const refreshedToken = await prisma.oAuthToken.findUnique({
             where: { userId_provider: { userId, provider: 'home_assistant' } }
           })

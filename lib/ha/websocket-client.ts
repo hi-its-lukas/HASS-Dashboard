@@ -1,54 +1,45 @@
 // Home Assistant WebSocket Client
 
-import { HAState, HAMessage, HAServiceCall, HAIncomingMessage } from './types'
+import { 
+  HAState, 
+  HAMessage, 
+  HAServiceCall, 
+  HAIncomingMessage,
+  HAArea,
+  HADevice,
+  HAEntityRegistryEntry,
+  HAStateChangedEventData,
+  HAEvent,
+  HAResultMessage,
+  HAEventMessage
+} from './types'
 
 type StateChangeCallback = (entityId: string, newState: HAState, oldState: HAState | null) => void
-type EventCallback<T = unknown> = (data: T, rawEvent: unknown) => void
+type EventCallback<T = Record<string, unknown>> = (data: T, rawEvent: HAEvent<T>) => void
 
-export interface HAArea {
-  area_id: string
-  name: string
-  picture?: string | null
-  aliases?: string[]
-}
-
-export interface HADevice {
-  id: string
-  name: string
-  area_id?: string | null
-  manufacturer?: string
-  model?: string
-}
-
-export interface HAEntityRegistryEntry {
-  entity_id: string
-  name?: string | null
-  area_id?: string | null
-  device_id?: string | null
-  platform?: string
-  disabled_by?: string | null
-}
-
-// Connection resolve/reject - für Promise<void>
 type ConnectResolve = () => void
 type ConnectReject = (reason: Error) => void
 
-// Generic request resolve/reject - für Promise<T> mit beliebigem Rückgabewert
-type RequestResolve = (value: unknown) => void
-type RequestReject = (reason: Error) => void
+interface PendingRequest {
+  resolve: (value: unknown) => void
+  reject: (reason: Error) => void
+  timeoutId: NodeJS.Timeout
+}
 
 export class HAWebSocketClient {
   private ws: WebSocket | null = null
   private messageId = 1
-  private pendingRequests = new Map<number, { resolve: RequestResolve; reject: RequestReject }>()
+  private pendingRequests = new Map<number, PendingRequest>()
   private stateChangeCallbacks: StateChangeCallback[] = []
-  private eventCallbacks = new Map<string, Set<EventCallback>>()
+  private eventCallbacks = new Map<string, Set<EventCallback<Record<string, unknown>>>>()
   private subscribedEventTypes = new Set<string>()
   private reconnectAttempts = 0
   private maxReconnectAttempts = 10
   private reconnectDelay = 1000
+  private reconnectTimeout: NodeJS.Timeout | null = null
   private heartbeatInterval: NodeJS.Timeout | null = null
   private isAuthenticated = false
+  private isDisconnecting = false
   private url: string
   private getToken: () => Promise<string>
 
@@ -58,6 +49,8 @@ export class HAWebSocketClient {
   }
 
   async connect(): Promise<void> {
+    this.isDisconnecting = false
+    
     return new Promise<void>((resolve, reject) => {
       try {
         this.ws = new WebSocket(this.url)
@@ -79,14 +72,17 @@ export class HAWebSocketClient {
 
         this.ws.onerror = (error) => {
           console.error('[HA WS] Error:', error)
-          reject(new Error('WebSocket error'))
+          reject(new Error('WebSocket connection error'))
         }
 
-        this.ws.onclose = () => {
-          console.log('[HA WS] Disconnected')
+        this.ws.onclose = (event) => {
+          console.log('[HA WS] Disconnected:', event.code, event.reason)
           this.isAuthenticated = false
           this.stopHeartbeat()
-          this.handleReconnect()
+          
+          if (!this.isDisconnecting) {
+            this.handleReconnect()
+          }
         }
       } catch (err) {
         reject(err instanceof Error ? err : new Error('Connection failed'))
@@ -98,100 +94,128 @@ export class HAWebSocketClient {
     message: HAIncomingMessage,
     connectResolve?: ConnectResolve,
     connectReject?: ConnectReject
-  ) {
-    if ('type' in message) {
-      switch (message.type) {
-        case 'auth_required':
+  ): Promise<void> {
+    switch (message.type) {
+      case 'auth_required': {
+        try {
           const token = await this.getToken()
           this.send({ type: 'auth', access_token: token })
-          break
+        } catch (err) {
+          console.error('[HA WS] Failed to get token:', err)
+          connectReject?.(err instanceof Error ? err : new Error('Token retrieval failed'))
+        }
+        break
+      }
 
-        case 'auth_ok':
-          console.log('[HA WS] Authenticated')
-          this.isAuthenticated = true
-          // Re-subscribe to previously subscribed event types after reconnect
-          const previouslySubscribed = Array.from(this.subscribedEventTypes)
-          this.subscribedEventTypes.clear()
-          for (const eventType of previouslySubscribed) {
-            this.subscribeToEvents(eventType).catch(err => {
-              console.error(`[HA WS] Failed to re-subscribe to ${eventType}:`, err)
+      case 'auth_ok': {
+        console.log('[HA WS] Authenticated')
+        this.isAuthenticated = true
+        
+        const previouslySubscribed = Array.from(this.subscribedEventTypes)
+        this.subscribedEventTypes.clear()
+        
+        for (const eventType of previouslySubscribed) {
+          this.subscribeToEvents(eventType).catch(err => {
+            console.error(`[HA WS] Failed to re-subscribe to ${eventType}:`, err)
+          })
+        }
+        connectResolve?.()
+        break
+      }
+
+      case 'auth_invalid': {
+        const authInvalidMsg = message as { type: 'auth_invalid'; message?: string }
+        const errorMsg = authInvalidMsg.message || 'Authentication failed'
+        console.error('[HA WS] Authentication failed:', errorMsg)
+        this.isAuthenticated = false
+        connectReject?.(new Error(`Authentication failed: ${errorMsg}`))
+        break
+      }
+
+      case 'result': {
+        const resultMsg = message as HAResultMessage
+        const pending = this.pendingRequests.get(resultMsg.id)
+        if (pending) {
+          clearTimeout(pending.timeoutId)
+          if (resultMsg.success) {
+            pending.resolve(resultMsg.result)
+          } else {
+            const errorMessage = resultMsg.error?.message || 'Unknown error'
+            const errorCode = resultMsg.error?.code || 'UNKNOWN'
+            pending.reject(new Error(`[${errorCode}] ${errorMessage}`))
+          }
+          this.pendingRequests.delete(resultMsg.id)
+        }
+        break
+      }
+
+      case 'event': {
+        const eventMsg = message as HAEventMessage
+        const event = eventMsg.event
+        const eventType = event.event_type
+        
+        if (eventType === 'state_changed') {
+          const data = event.data as unknown as HAStateChangedEventData
+          if (data.entity_id && data.new_state) {
+            this.stateChangeCallbacks.forEach((cb) => {
+              try {
+                cb(data.entity_id, data.new_state!, data.old_state)
+              } catch (err) {
+                console.error('[HA WS] State change callback error:', err)
+              }
             })
           }
-          connectResolve?.()
-          break
-
-        case 'auth_invalid':
-          console.error('[HA WS] Authentication failed')
-          this.isAuthenticated = false
-          connectReject?.(new Error('Authentication failed'))
-          break
-
-        case 'result':
-          const resultMsg = message as { id: number; success: boolean; result?: unknown; error?: { message?: string } }
-          const pending = this.pendingRequests.get(resultMsg.id)
-          if (pending) {
-            if (resultMsg.success) {
-              pending.resolve(resultMsg.result)
-            } else {
-              pending.reject(new Error(resultMsg.error?.message || 'Unknown error'))
-            }
-            this.pendingRequests.delete(resultMsg.id)
+        } else if (eventType) {
+          const callbacks = this.eventCallbacks.get(eventType)
+          if (callbacks) {
+            callbacks.forEach((cb) => {
+              try {
+                cb(event.data as Record<string, unknown>, event as HAEvent<Record<string, unknown>>)
+              } catch (err) {
+                console.error(`[HA WS] Event callback error for ${eventType}:`, err)
+              }
+            })
           }
-          break
-
-        case 'event':
-          const eventMsg = message as { 
-            event: { 
-              event_type?: string
-              data: { entity_id?: string; new_state?: HAState; old_state?: HAState; [key: string]: unknown } 
-            } 
-          }
-          const eventType = eventMsg.event.event_type
-          
-          if (eventType === 'state_changed') {
-            const { entity_id, new_state, old_state } = eventMsg.event.data
-            if (entity_id && new_state) {
-              this.stateChangeCallbacks.forEach((cb) => cb(entity_id, new_state, old_state || null))
-            }
-          } else if (eventType) {
-            const callbacks = this.eventCallbacks.get(eventType)
-            if (callbacks) {
-              callbacks.forEach((cb) => cb(eventMsg.event.data, eventMsg.event))
-            }
-          }
-          break
-
-        case 'pong':
-          // Heartbeat response received
-          break
+        }
+        break
       }
+
+      case 'pong':
+        break
     }
   }
 
-  private send(message: HAMessage) {
+  private send(message: HAMessage): void {
     if (this.ws?.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify(message))
+    } else {
+      console.warn('[HA WS] Cannot send message - WebSocket not open')
     }
   }
 
-  private sendCommand<T>(command: HAMessage): Promise<T> {
+  private sendCommand<T>(command: HAMessage, timeoutMs = 30000): Promise<T> {
     return new Promise<T>((resolve, reject) => {
-      const id = this.messageId++
-      // Cast is necessary because Map stores handlers for different return types
-      // The runtime behavior is correct as resolve() accepts the actual result value
-      this.pendingRequests.set(id, {
-        resolve: (value: unknown) => resolve(value as T),
-        reject
-      })
-      this.send({ ...command, id })
+      if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+        reject(new Error('WebSocket not connected'))
+        return
+      }
 
-      // Timeout after 30 seconds
-      setTimeout(() => {
+      const id = this.messageId++
+      
+      const timeoutId = setTimeout(() => {
         if (this.pendingRequests.has(id)) {
           this.pendingRequests.delete(id)
-          reject(new Error('Request timeout'))
+          reject(new Error(`Request timeout after ${timeoutMs}ms`))
         }
-      }, 30000)
+      }, timeoutMs)
+
+      this.pendingRequests.set(id, {
+        resolve: (value: unknown) => resolve(value as T),
+        reject,
+        timeoutId
+      })
+      
+      this.send({ ...command, id })
     })
   }
 
@@ -228,7 +252,7 @@ export class HAWebSocketClient {
     return this.sendCommand<HAEntityRegistryEntry[]>({ type: 'config/entity_registry/list' })
   }
 
-  onStateChange(callback: StateChangeCallback) {
+  onStateChange(callback: StateChangeCallback): () => void {
     this.stateChangeCallbacks.push(callback)
     return () => {
       this.stateChangeCallbacks = this.stateChangeCallbacks.filter((cb) => cb !== callback)
@@ -246,22 +270,25 @@ export class HAWebSocketClient {
     this.subscribedEventTypes.add(eventType)
   }
 
-  onEvent<T = unknown>(eventType: string, callback: EventCallback<T>): () => void {
+  onEvent<T extends Record<string, unknown> = Record<string, unknown>>(
+    eventType: string, 
+    callback: EventCallback<T>
+  ): () => void {
     if (!this.eventCallbacks.has(eventType)) {
       this.eventCallbacks.set(eventType, new Set())
     }
     const callbacks = this.eventCallbacks.get(eventType)!
-    callbacks.add(callback as EventCallback)
+    callbacks.add(callback as EventCallback<Record<string, unknown>>)
     
     return () => {
-      callbacks.delete(callback as EventCallback)
+      callbacks.delete(callback as EventCallback<Record<string, unknown>>)
       if (callbacks.size === 0) {
         this.eventCallbacks.delete(eventType)
       }
     }
   }
 
-  private startHeartbeat() {
+  private startHeartbeat(): void {
     this.stopHeartbeat()
     this.heartbeatInterval = setInterval(() => {
       if (this.ws?.readyState === WebSocket.OPEN) {
@@ -270,33 +297,78 @@ export class HAWebSocketClient {
     }, 30000)
   }
 
-  private stopHeartbeat() {
+  private stopHeartbeat(): void {
     if (this.heartbeatInterval) {
       clearInterval(this.heartbeatInterval)
       this.heartbeatInterval = null
     }
   }
 
-  private handleReconnect() {
+  private clearReconnectTimeout(): void {
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout)
+      this.reconnectTimeout = null
+    }
+  }
+
+  private handleReconnect(): void {
+    if (this.isDisconnecting) {
+      return
+    }
+    
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++
       const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1)
       console.log(`[HA WS] Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts})`)
-      setTimeout(() => this.connect(), delay)
+      
+      this.clearReconnectTimeout()
+      this.reconnectTimeout = setTimeout(() => {
+        if (!this.isDisconnecting) {
+          this.connect().catch(err => {
+            console.error('[HA WS] Reconnection failed:', err)
+          })
+        }
+      }, delay)
     } else {
       console.error('[HA WS] Max reconnection attempts reached')
     }
   }
 
-  disconnect() {
+  disconnect(): void {
+    this.isDisconnecting = true
+    
     this.stopHeartbeat()
+    this.clearReconnectTimeout()
+    
+    for (const [id, pending] of this.pendingRequests) {
+      clearTimeout(pending.timeoutId)
+      pending.reject(new Error('Connection closed'))
+    }
+    this.pendingRequests.clear()
+    
+    this.stateChangeCallbacks = []
+    this.eventCallbacks.clear()
+    this.subscribedEventTypes.clear()
+    
     if (this.ws) {
-      this.ws.close()
+      this.ws.onopen = null
+      this.ws.onmessage = null
+      this.ws.onerror = null
+      this.ws.onclose = null
+      
+      if (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING) {
+        this.ws.close(1000, 'Client disconnect')
+      }
       this.ws = null
     }
+    
+    this.isAuthenticated = false
+    this.reconnectAttempts = 0
   }
 
   get connected(): boolean {
     return this.ws?.readyState === WebSocket.OPEN && this.isAuthenticated
   }
 }
+
+export type { HAArea, HADevice, HAEntityRegistryEntry }
