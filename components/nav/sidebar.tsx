@@ -119,7 +119,7 @@ export function Sidebar() {
               exit={{ opacity: 0 }}
               className="flex items-center justify-center"
             >
-              <span className="text-white font-bold text-lg">H</span>
+              <Home className="w-6 h-6 text-white" />
             </motion.div>
           )}
         </AnimatePresence>
