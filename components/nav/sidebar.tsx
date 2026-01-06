@@ -91,15 +91,17 @@ export function Sidebar() {
       initial={false}
       animate={{ width: collapsed ? 80 : 256 }}
       transition={{ duration: 0.2, ease: 'easeInOut' }}
-      className="hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0 overflow-x-hidden"
+      className="hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0"
       style={{
         background: 'rgba(28, 28, 30, 0.8)',
         backdropFilter: 'blur(20px)',
         WebkitBackdropFilter: 'blur(20px)',
         borderRight: '1px solid rgba(255, 255, 255, 0.1)',
+        overflowX: 'hidden',
+        overflowY: 'hidden',
       }}
     >
-      <div className="flex items-center justify-between px-4 py-5" style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
+      <div className="flex items-center justify-between px-4 py-5 flex-shrink-0" style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
         <AnimatePresence mode="wait">
           {!collapsed ? (
             <motion.div
@@ -117,14 +119,12 @@ export function Sidebar() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="flex items-center justify-center"
+              className="flex items-center justify-center w-full"
             >
               <Home className="w-6 h-6 text-white" />
             </motion.div>
           )}
         </AnimatePresence>
-        
-        <NotificationBell />
       </div>
       
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
