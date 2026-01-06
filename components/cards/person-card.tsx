@@ -49,24 +49,24 @@ export function PersonCard({ person }: PersonCardProps) {
   })
 
   return (
-    <Card className="p-4">
-      <div className="flex items-center gap-3 mb-3">
-        <Avatar name={displayName} src={person.avatarUrl} size="lg" />
+    <Card className="p-5 lg:p-6">
+      <div className="flex items-center gap-4 mb-4">
+        <Avatar name={displayName} src={person.avatarUrl} size="xl" />
         <div className="flex-1">
           <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-white">{displayName}</h3>
+            <h3 className="font-semibold text-white text-lg lg:text-xl">{displayName}</h3>
           </div>
-          <p className="text-sm text-text-secondary">{isHome ? 'Home' : 'Away'}</p>
+          <p className="text-sm lg:text-base text-text-secondary">{isHome ? 'Zuhause' : 'Unterwegs'}</p>
         </div>
         {battery !== null && !isNaN(battery) && (
           <div className="text-right">
-            <span className="text-lg font-bold text-white">{battery}%</span>
+            <span className="text-xl lg:text-2xl font-bold text-white">{battery}%</span>
           </div>
         )}
       </div>
 
       {battery !== null && !isNaN(battery) && (
-        <div className="mb-4">
+        <div className="mb-5">
           <ProgressBar
             value={battery}
             color={battery > 50 ? 'green' : battery > 20 ? 'yellow' : 'orange'}
@@ -75,18 +75,18 @@ export function PersonCard({ person }: PersonCardProps) {
       )}
 
       {sensorValues.length > 0 ? (
-        <div className="space-y-2">
+        <div className="space-y-3">
           {sensorValues.map(sensor => (
             <div key={sensor.id} className="flex justify-between items-start gap-2">
-              <span className="text-[10px] text-text-muted uppercase flex-shrink-0">{sensor.label}</span>
-              <span className="text-sm font-medium text-accent-cyan text-right break-words">
+              <span className="text-xs lg:text-sm text-text-muted uppercase flex-shrink-0">{sensor.label}</span>
+              <span className="text-sm lg:text-base font-medium text-accent-cyan text-right break-words">
                 {sensor.value}{sensor.unit && sensor.value !== '-' ? sensor.unit : ''}
               </span>
             </div>
           ))}
         </div>
       ) : (
-        <p className="text-xs text-text-muted text-center py-2">
+        <p className="text-sm text-text-muted text-center py-3">
           Keine Sensoren konfiguriert
         </p>
       )}
