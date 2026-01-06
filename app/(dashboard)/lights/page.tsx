@@ -307,11 +307,22 @@ export default function LightsPage() {
                                     <Palette className="w-4 h-4 text-text-secondary hover:text-white" />
                                   </button>
                                 )}
-                                <div className={cn(
-                                  'w-3 h-3 rounded-full',
-                                  isOn ? 'bg-accent-yellow' : 'bg-gray-600',
-                                  toggling === entityId && 'animate-pulse'
-                                )} />
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleToggle(entityId)
+                                  }}
+                                  disabled={toggling === entityId}
+                                  className={cn(
+                                    'p-2 rounded-lg transition-all',
+                                    isOn 
+                                      ? 'bg-accent-yellow/20 text-accent-yellow hover:bg-accent-yellow/30' 
+                                      : 'bg-gray-600/30 text-gray-400 hover:bg-gray-600/50',
+                                    toggling === entityId && 'animate-pulse'
+                                  )}
+                                >
+                                  <Power className="w-4 h-4" />
+                                </button>
                               </div>
                             </div>
                             <p className="text-sm font-medium text-white truncate capitalize">
