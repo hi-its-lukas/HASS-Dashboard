@@ -1383,7 +1383,7 @@ export default function SettingsPage() {
                     value={config.vacuum?.entityId || ''}
                     onChange={(e) => setConfig(prev => ({
                       ...prev,
-                      vacuum: { ...prev.vacuum, entityId: e.target.value } as VacuumConfig
+                      vacuum: { ...(prev.vacuum ?? {}), entityId: e.target.value } as VacuumConfig
                     }))}
                     className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                   >
@@ -1400,7 +1400,7 @@ export default function SettingsPage() {
                     value={config.vacuum?.batteryEntityId || ''}
                     onChange={(e) => setConfig(prev => ({
                       ...prev,
-                      vacuum: { ...prev.vacuum, entityId: prev.vacuum?.entityId || '', batteryEntityId: e.target.value || undefined } as VacuumConfig
+                      vacuum: { ...(prev.vacuum ?? {}), entityId: prev.vacuum?.entityId || '', batteryEntityId: e.target.value || undefined } as VacuumConfig
                     }))}
                     className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                   >
@@ -1417,7 +1417,7 @@ export default function SettingsPage() {
                     value={config.vacuum?.statusEntityId || ''}
                     onChange={(e) => setConfig(prev => ({
                       ...prev,
-                      vacuum: { ...prev.vacuum, entityId: prev.vacuum?.entityId || '', statusEntityId: e.target.value || undefined } as VacuumConfig
+                      vacuum: { ...(prev.vacuum ?? {}), entityId: prev.vacuum?.entityId || '', statusEntityId: e.target.value || undefined } as VacuumConfig
                     }))}
                     className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                   >
@@ -1434,7 +1434,7 @@ export default function SettingsPage() {
                     value={config.vacuum?.currentRoomEntityId || ''}
                     onChange={(e) => setConfig(prev => ({
                       ...prev,
-                      vacuum: { ...prev.vacuum, entityId: prev.vacuum?.entityId || '', currentRoomEntityId: e.target.value || undefined } as VacuumConfig
+                      vacuum: { ...(prev.vacuum ?? {}), entityId: prev.vacuum?.entityId || '', currentRoomEntityId: e.target.value || undefined } as VacuumConfig
                     }))}
                     className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                   >
@@ -1451,7 +1451,7 @@ export default function SettingsPage() {
                     value={config.vacuum?.chargingEntityId || ''}
                     onChange={(e) => setConfig(prev => ({
                       ...prev,
-                      vacuum: { ...prev.vacuum, entityId: prev.vacuum?.entityId || '', chargingEntityId: e.target.value || undefined } as VacuumConfig
+                      vacuum: { ...(prev.vacuum ?? {}), entityId: prev.vacuum?.entityId || '', chargingEntityId: e.target.value || undefined } as VacuumConfig
                     }))}
                     className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                   >
@@ -1468,7 +1468,7 @@ export default function SettingsPage() {
                     value={config.vacuum?.cleaningEntityId || ''}
                     onChange={(e) => setConfig(prev => ({
                       ...prev,
-                      vacuum: { ...prev.vacuum, entityId: prev.vacuum?.entityId || '', cleaningEntityId: e.target.value || undefined } as VacuumConfig
+                      vacuum: { ...(prev.vacuum ?? {}), entityId: prev.vacuum?.entityId || '', cleaningEntityId: e.target.value || undefined } as VacuumConfig
                     }))}
                     className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                   >
@@ -1485,7 +1485,7 @@ export default function SettingsPage() {
                     value={config.vacuum?.mopAttachedEntityId || ''}
                     onChange={(e) => setConfig(prev => ({
                       ...prev,
-                      vacuum: { ...prev.vacuum, entityId: prev.vacuum?.entityId || '', mopAttachedEntityId: e.target.value || undefined } as VacuumConfig
+                      vacuum: { ...(prev.vacuum ?? {}), entityId: prev.vacuum?.entityId || '', mopAttachedEntityId: e.target.value || undefined } as VacuumConfig
                     }))}
                     className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                   >
@@ -1502,7 +1502,7 @@ export default function SettingsPage() {
                     value={config.vacuum?.errorEntityId || ''}
                     onChange={(e) => setConfig(prev => ({
                       ...prev,
-                      vacuum: { ...prev.vacuum, entityId: prev.vacuum?.entityId || '', errorEntityId: e.target.value || undefined } as VacuumConfig
+                      vacuum: { ...(prev.vacuum ?? {}), entityId: prev.vacuum?.entityId || '', errorEntityId: e.target.value || undefined } as VacuumConfig
                     }))}
                     className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                   >
@@ -1519,7 +1519,7 @@ export default function SettingsPage() {
                     value={config.vacuum?.cleaningProgressEntityId || ''}
                     onChange={(e) => setConfig(prev => ({
                       ...prev,
-                      vacuum: { ...prev.vacuum, entityId: prev.vacuum?.entityId || '', cleaningProgressEntityId: e.target.value || undefined } as VacuumConfig
+                      vacuum: { ...(prev.vacuum ?? {}), entityId: prev.vacuum?.entityId || '', cleaningProgressEntityId: e.target.value || undefined } as VacuumConfig
                     }))}
                     className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                   >
@@ -1536,7 +1536,7 @@ export default function SettingsPage() {
                     value={config.vacuum?.cleaningAreaEntityId || ''}
                     onChange={(e) => setConfig(prev => ({
                       ...prev,
-                      vacuum: { ...prev.vacuum, entityId: prev.vacuum?.entityId || '', cleaningAreaEntityId: e.target.value || undefined } as VacuumConfig
+                      vacuum: { ...(prev.vacuum ?? {}), entityId: prev.vacuum?.entityId || '', cleaningAreaEntityId: e.target.value || undefined } as VacuumConfig
                     }))}
                     className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                   >
@@ -1553,7 +1553,7 @@ export default function SettingsPage() {
                     value={config.vacuum?.cleaningTimeEntityId || ''}
                     onChange={(e) => setConfig(prev => ({
                       ...prev,
-                      vacuum: { ...prev.vacuum, entityId: prev.vacuum?.entityId || '', cleaningTimeEntityId: e.target.value || undefined } as VacuumConfig
+                      vacuum: { ...(prev.vacuum ?? {}), entityId: prev.vacuum?.entityId || '', cleaningTimeEntityId: e.target.value || undefined } as VacuumConfig
                     }))}
                     className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                   >
@@ -1570,7 +1570,7 @@ export default function SettingsPage() {
                     value={config.vacuum?.mopModeEntityId || ''}
                     onChange={(e) => setConfig(prev => ({
                       ...prev,
-                      vacuum: { ...prev.vacuum, entityId: prev.vacuum?.entityId || '', mopModeEntityId: e.target.value || undefined } as VacuumConfig
+                      vacuum: { ...(prev.vacuum ?? {}), entityId: prev.vacuum?.entityId || '', mopModeEntityId: e.target.value || undefined } as VacuumConfig
                     }))}
                     className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                   >
@@ -1587,7 +1587,7 @@ export default function SettingsPage() {
                     value={config.vacuum?.waterIntensityEntityId || ''}
                     onChange={(e) => setConfig(prev => ({
                       ...prev,
-                      vacuum: { ...prev.vacuum, entityId: prev.vacuum?.entityId || '', waterIntensityEntityId: e.target.value || undefined } as VacuumConfig
+                      vacuum: { ...(prev.vacuum ?? {}), entityId: prev.vacuum?.entityId || '', waterIntensityEntityId: e.target.value || undefined } as VacuumConfig
                     }))}
                     className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                   >
@@ -1604,7 +1604,7 @@ export default function SettingsPage() {
                     value={config.vacuum?.fullCleanButtonEntityId || ''}
                     onChange={(e) => setConfig(prev => ({
                       ...prev,
-                      vacuum: { ...prev.vacuum, entityId: prev.vacuum?.entityId || '', fullCleanButtonEntityId: e.target.value || undefined } as VacuumConfig
+                      vacuum: { ...(prev.vacuum ?? {}), entityId: prev.vacuum?.entityId || '', fullCleanButtonEntityId: e.target.value || undefined } as VacuumConfig
                     }))}
                     className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                   >
@@ -1625,7 +1625,7 @@ export default function SettingsPage() {
                       value={config.vacuum?.filterRemainingEntityId || ''}
                       onChange={(e) => setConfig(prev => ({
                         ...prev,
-                        vacuum: { ...prev.vacuum, entityId: prev.vacuum?.entityId || '', filterRemainingEntityId: e.target.value || undefined } as VacuumConfig
+                        vacuum: { ...(prev.vacuum ?? {}), entityId: prev.vacuum?.entityId || '', filterRemainingEntityId: e.target.value || undefined } as VacuumConfig
                       }))}
                       className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                     >
@@ -1642,7 +1642,7 @@ export default function SettingsPage() {
                       value={config.vacuum?.mainBrushRemainingEntityId || ''}
                       onChange={(e) => setConfig(prev => ({
                         ...prev,
-                        vacuum: { ...prev.vacuum, entityId: prev.vacuum?.entityId || '', mainBrushRemainingEntityId: e.target.value || undefined } as VacuumConfig
+                        vacuum: { ...(prev.vacuum ?? {}), entityId: prev.vacuum?.entityId || '', mainBrushRemainingEntityId: e.target.value || undefined } as VacuumConfig
                       }))}
                       className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                     >
@@ -1659,7 +1659,7 @@ export default function SettingsPage() {
                       value={config.vacuum?.sideBrushRemainingEntityId || ''}
                       onChange={(e) => setConfig(prev => ({
                         ...prev,
-                        vacuum: { ...prev.vacuum, entityId: prev.vacuum?.entityId || '', sideBrushRemainingEntityId: e.target.value || undefined } as VacuumConfig
+                        vacuum: { ...(prev.vacuum ?? {}), entityId: prev.vacuum?.entityId || '', sideBrushRemainingEntityId: e.target.value || undefined } as VacuumConfig
                       }))}
                       className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                     >
@@ -1676,7 +1676,7 @@ export default function SettingsPage() {
                       value={config.vacuum?.sensorRemainingEntityId || ''}
                       onChange={(e) => setConfig(prev => ({
                         ...prev,
-                        vacuum: { ...prev.vacuum, entityId: prev.vacuum?.entityId || '', sensorRemainingEntityId: e.target.value || undefined } as VacuumConfig
+                        vacuum: { ...(prev.vacuum ?? {}), entityId: prev.vacuum?.entityId || '', sensorRemainingEntityId: e.target.value || undefined } as VacuumConfig
                       }))}
                       className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                     >
@@ -1698,7 +1698,7 @@ export default function SettingsPage() {
                       value={config.vacuum?.totalCleaningsEntityId || ''}
                       onChange={(e) => setConfig(prev => ({
                         ...prev,
-                        vacuum: { ...prev.vacuum, entityId: prev.vacuum?.entityId || '', totalCleaningsEntityId: e.target.value || undefined } as VacuumConfig
+                        vacuum: { ...(prev.vacuum ?? {}), entityId: prev.vacuum?.entityId || '', totalCleaningsEntityId: e.target.value || undefined } as VacuumConfig
                       }))}
                       className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                     >
@@ -1715,7 +1715,7 @@ export default function SettingsPage() {
                       value={config.vacuum?.totalAreaEntityId || ''}
                       onChange={(e) => setConfig(prev => ({
                         ...prev,
-                        vacuum: { ...prev.vacuum, entityId: prev.vacuum?.entityId || '', totalAreaEntityId: e.target.value || undefined } as VacuumConfig
+                        vacuum: { ...(prev.vacuum ?? {}), entityId: prev.vacuum?.entityId || '', totalAreaEntityId: e.target.value || undefined } as VacuumConfig
                       }))}
                       className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                     >
@@ -1732,7 +1732,7 @@ export default function SettingsPage() {
                       value={config.vacuum?.totalTimeEntityId || ''}
                       onChange={(e) => setConfig(prev => ({
                         ...prev,
-                        vacuum: { ...prev.vacuum, entityId: prev.vacuum?.entityId || '', totalTimeEntityId: e.target.value || undefined } as VacuumConfig
+                        vacuum: { ...(prev.vacuum ?? {}), entityId: prev.vacuum?.entityId || '', totalTimeEntityId: e.target.value || undefined } as VacuumConfig
                       }))}
                       className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                     >

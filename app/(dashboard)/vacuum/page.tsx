@@ -17,8 +17,10 @@ import {
   Sparkles,
   AlertCircle,
   CheckCircle,
-  Loader2
+  Loader2,
+  Settings
 } from 'lucide-react'
+import Link from 'next/link'
 
 export default function VacuumPage() {
   const states = useHAStore((s) => s.states)
@@ -26,36 +28,105 @@ export default function VacuumPage() {
   const config = useConfig()
   const [loading, setLoading] = useState<string | null>(null)
 
-  const vacuumEntityId = config.vacuumEntityId || 'vacuum.niels'
+  const vacuumConfig = config.vacuum
+  const vacuumEntityId = vacuumConfig?.entityId || config.vacuumEntityId
+
+  if (!vacuumEntityId) {
+    return (
+      <div className="px-4 py-6 safe-top max-w-4xl mx-auto">
+        <motion.header
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6"
+        >
+          <h1 className="text-2xl font-bold text-white">Saugroboter</h1>
+        </motion.header>
+        
+        <Card className="p-8 text-center">
+          <Sparkles className="w-12 h-12 text-gray-500 mx-auto mb-4" />
+          <h2 className="text-lg font-medium text-white mb-2">Kein Saugroboter konfiguriert</h2>
+          <p className="text-text-secondary mb-4">
+            Bitte konfiguriere deinen Saugroboter in den Einstellungen.
+          </p>
+          <Link 
+            href="/settings"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400 rounded-lg transition-colors"
+          >
+            <Settings className="w-4 h-4" />
+            Einstellungen öffnen
+          </Link>
+        </Card>
+      </div>
+    )
+  }
+
   const vacuumState = states[vacuumEntityId]
   
-  const battery = states['sensor.niels_batterie']?.state
-  const status = states['sensor.niels_status']?.state
-  const currentRoom = states['sensor.niels_aktueller_raum']?.state
-  const cleaningProgress = states['sensor.niels_reinigungsfortschritt']?.state
-  const cleaningArea = states['sensor.niels_reinigungsbereich']?.state
-  const cleaningTime = states['sensor.niels_reinigungszeit']?.state
-  const isCharging = states['binary_sensor.niels_ladestatus']?.state === 'on'
-  const isCleaning = states['binary_sensor.niels_reinigen']?.state === 'on'
-  const hasMop = states['binary_sensor.niels_mopp_angebracht']?.state === 'on'
-  const error = states['sensor.niels_staubsauger_fehler']?.state
-  const mopMode = states['select.niels_mopp_modus']?.state
-  const waterIntensity = states['select.niels_wisch_intensitat']?.state
+  const battery = vacuumConfig?.batteryEntityId 
+    ? states[vacuumConfig.batteryEntityId]?.state 
+    : undefined
+  const status = vacuumConfig?.statusEntityId 
+    ? states[vacuumConfig.statusEntityId]?.state 
+    : vacuumState?.state
+  const currentRoom = vacuumConfig?.currentRoomEntityId 
+    ? states[vacuumConfig.currentRoomEntityId]?.state 
+    : undefined
+  const cleaningProgress = vacuumConfig?.cleaningProgressEntityId 
+    ? states[vacuumConfig.cleaningProgressEntityId]?.state 
+    : undefined
+  const cleaningArea = vacuumConfig?.cleaningAreaEntityId 
+    ? states[vacuumConfig.cleaningAreaEntityId]?.state 
+    : undefined
+  const cleaningTime = vacuumConfig?.cleaningTimeEntityId 
+    ? states[vacuumConfig.cleaningTimeEntityId]?.state 
+    : undefined
+  const isCharging = vacuumConfig?.chargingEntityId 
+    ? states[vacuumConfig.chargingEntityId]?.state === 'on' 
+    : false
+  const isCleaning = vacuumConfig?.cleaningEntityId 
+    ? states[vacuumConfig.cleaningEntityId]?.state === 'on' 
+    : vacuumState?.state === 'cleaning'
+  const hasMop = vacuumConfig?.mopAttachedEntityId 
+    ? states[vacuumConfig.mopAttachedEntityId]?.state === 'on' 
+    : false
+  const error = vacuumConfig?.errorEntityId 
+    ? states[vacuumConfig.errorEntityId]?.state 
+    : undefined
+  const mopMode = vacuumConfig?.mopModeEntityId 
+    ? states[vacuumConfig.mopModeEntityId]?.state 
+    : undefined
+  const waterIntensity = vacuumConfig?.waterIntensityEntityId 
+    ? states[vacuumConfig.waterIntensityEntityId]?.state 
+    : undefined
 
-  const filterRemaining = states['sensor.niels_verbleibende_filterzeit']?.state
-  const mainBrushRemaining = states['sensor.niels_verbleibende_zeit_der_hauptburste']?.state
-  const sideBrushRemaining = states['sensor.niels_verbleibende_zeit_der_seitenburste']?.state
-  const sensorRemaining = states['sensor.niels_verbleibende_sensorzeit']?.state
+  const filterRemaining = vacuumConfig?.filterRemainingEntityId 
+    ? states[vacuumConfig.filterRemainingEntityId]?.state 
+    : undefined
+  const mainBrushRemaining = vacuumConfig?.mainBrushRemainingEntityId 
+    ? states[vacuumConfig.mainBrushRemainingEntityId]?.state 
+    : undefined
+  const sideBrushRemaining = vacuumConfig?.sideBrushRemainingEntityId 
+    ? states[vacuumConfig.sideBrushRemainingEntityId]?.state 
+    : undefined
+  const sensorRemaining = vacuumConfig?.sensorRemainingEntityId 
+    ? states[vacuumConfig.sensorRemainingEntityId]?.state 
+    : undefined
 
-  const totalCleanings = states['sensor.niels_gesamtzahl_reinigungen']?.state
-  const totalArea = states['sensor.niels_gesamter_reinigungsbereich']?.state
-  const totalTime = states['sensor.niels_gesamtreinigungszeit']?.state
+  const totalCleanings = vacuumConfig?.totalCleaningsEntityId 
+    ? states[vacuumConfig.totalCleaningsEntityId]?.state 
+    : undefined
+  const totalArea = vacuumConfig?.totalAreaEntityId 
+    ? states[vacuumConfig.totalAreaEntityId]?.state 
+    : undefined
+  const totalTime = vacuumConfig?.totalTimeEntityId 
+    ? states[vacuumConfig.totalTimeEntityId]?.state 
+    : undefined
 
   const handleAction = async (action: string) => {
     setLoading(action)
     try {
-      if (action === 'full_clean') {
-        await callService('button', 'press', 'button.niels_vollreinigung')
+      if (action === 'full_clean' && vacuumConfig?.fullCleanButtonEntityId) {
+        await callService('button', 'press', vacuumConfig.fullCleanButtonEntityId)
       } else {
         await callService('vacuum', action, vacuumEntityId)
       }
@@ -79,6 +150,8 @@ export default function VacuumPage() {
   }
 
   const batteryNum = battery ? parseInt(battery) : 0
+  const hasMaintenanceData = filterRemaining || mainBrushRemaining || sideBrushRemaining || sensorRemaining
+  const hasStatisticsData = totalCleanings || totalArea || totalTime
 
   return (
     <div className="px-4 py-6 safe-top max-w-4xl mx-auto">
@@ -89,7 +162,7 @@ export default function VacuumPage() {
       >
         <h1 className="text-2xl font-bold text-white">Saugroboter</h1>
         <p className="text-sm text-text-secondary">
-          {vacuumState?.attributes?.friendly_name || 'Niels'}
+          {vacuumState?.attributes?.friendly_name || vacuumEntityId.split('.')[1]}
         </p>
       </motion.header>
 
@@ -110,10 +183,12 @@ export default function VacuumPage() {
               </div>
               <div>
                 <h2 className="text-xl font-bold text-white">{status || 'Unbekannt'}</h2>
-                <div className="flex items-center gap-2 text-text-secondary">
-                  <MapPin className="w-4 h-4" />
-                  <span>{currentRoom || 'Unbekannt'}</span>
-                </div>
+                {currentRoom && (
+                  <div className="flex items-center gap-2 text-text-secondary">
+                    <MapPin className="w-4 h-4" />
+                    <span>{currentRoom}</span>
+                  </div>
+                )}
                 {hasMop && (
                   <div className="flex items-center gap-1 text-cyan-400 text-sm mt-1">
                     <Droplets className="w-3 h-3" />
@@ -122,15 +197,17 @@ export default function VacuumPage() {
                 )}
               </div>
             </div>
-            <div className="text-right">
-              <div className={`flex items-center gap-1 ${getBatteryColor(batteryNum)}`}>
-                <Battery className="w-5 h-5" />
-                <span className="text-2xl font-bold">{battery || '?'}%</span>
+            {battery && (
+              <div className="text-right">
+                <div className={`flex items-center gap-1 ${getBatteryColor(batteryNum)}`}>
+                  <Battery className="w-5 h-5" />
+                  <span className="text-2xl font-bold">{battery}%</span>
+                </div>
+                {isCharging && (
+                  <span className="text-xs text-cyan-400">Lädt...</span>
+                )}
               </div>
-              {isCharging && (
-                <span className="text-xs text-cyan-400">Lädt...</span>
-              )}
-            </div>
+            )}
           </div>
 
           {isCleaning && cleaningProgress && (
@@ -196,23 +273,25 @@ export default function VacuumPage() {
               )}
               <span className="text-xs text-white">Basis</span>
             </button>
-            <button
-              onClick={() => handleAction('full_clean')}
-              disabled={loading !== null}
-              className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-purple-500/20 hover:bg-purple-500/30 transition-colors disabled:opacity-50"
-            >
-              {loading === 'full_clean' ? (
-                <Loader2 className="w-6 h-6 text-purple-400 animate-spin" />
-              ) : (
-                <Sparkles className="w-6 h-6 text-purple-400" />
-              )}
-              <span className="text-xs text-white">Voll</span>
-            </button>
+            {vacuumConfig?.fullCleanButtonEntityId && (
+              <button
+                onClick={() => handleAction('full_clean')}
+                disabled={loading !== null}
+                className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-purple-500/20 hover:bg-purple-500/30 transition-colors disabled:opacity-50"
+              >
+                {loading === 'full_clean' ? (
+                  <Loader2 className="w-6 h-6 text-purple-400 animate-spin" />
+                ) : (
+                  <Sparkles className="w-6 h-6 text-purple-400" />
+                )}
+                <span className="text-xs text-white">Voll</span>
+              </button>
+            )}
           </div>
         </Card>
       </motion.div>
 
-      {hasMop && (
+      {hasMop && (mopMode || waterIntensity) && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -224,64 +303,78 @@ export default function VacuumPage() {
           </h2>
           <Card className="p-4">
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <span className="text-xs text-text-muted">Mopp-Modus</span>
-                <p className="text-white font-medium">{mopMode || '-'}</p>
-              </div>
-              <div>
-                <span className="text-xs text-text-muted">Wisch-Intensität</span>
-                <p className="text-white font-medium">{waterIntensity || '-'}</p>
-              </div>
+              {mopMode && (
+                <div>
+                  <span className="text-xs text-text-muted">Mopp-Modus</span>
+                  <p className="text-white font-medium">{mopMode}</p>
+                </div>
+              )}
+              {waterIntensity && (
+                <div>
+                  <span className="text-xs text-text-muted">Wisch-Intensität</span>
+                  <p className="text-white font-medium">{waterIntensity}</p>
+                </div>
+              )}
             </div>
           </Card>
         </motion.div>
       )}
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-        className="mb-6"
-      >
-        <h2 className="text-sm font-medium text-text-muted uppercase tracking-wider mb-3">
-          Wartung
-        </h2>
-        <Card className="p-4">
-          <div className="grid grid-cols-2 gap-4">
-            <MaintenanceItem label="Filter" hours={filterRemaining} />
-            <MaintenanceItem label="Hauptbürste" hours={mainBrushRemaining} />
-            <MaintenanceItem label="Seitenbürste" hours={sideBrushRemaining} />
-            <MaintenanceItem label="Sensoren" hours={sensorRemaining} />
-          </div>
-        </Card>
-      </motion.div>
+      {hasMaintenanceData && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="mb-6"
+        >
+          <h2 className="text-sm font-medium text-text-muted uppercase tracking-wider mb-3">
+            Wartung
+          </h2>
+          <Card className="p-4">
+            <div className="grid grid-cols-2 gap-4">
+              {filterRemaining && <MaintenanceItem label="Filter" hours={filterRemaining} />}
+              {mainBrushRemaining && <MaintenanceItem label="Hauptbürste" hours={mainBrushRemaining} />}
+              {sideBrushRemaining && <MaintenanceItem label="Seitenbürste" hours={sideBrushRemaining} />}
+              {sensorRemaining && <MaintenanceItem label="Sensoren" hours={sensorRemaining} />}
+            </div>
+          </Card>
+        </motion.div>
+      )}
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
-      >
-        <h2 className="text-sm font-medium text-text-muted uppercase tracking-wider mb-3">
-          Statistik
-        </h2>
-        <div className="grid grid-cols-3 gap-3">
-          <Card className="p-4 text-center">
-            <Gauge className="w-6 h-6 text-accent-cyan mx-auto mb-2" />
-            <p className="text-2xl font-bold text-white">{totalCleanings || '0'}</p>
-            <p className="text-xs text-text-muted">Reinigungen</p>
-          </Card>
-          <Card className="p-4 text-center">
-            <MapPin className="w-6 h-6 text-accent-green mx-auto mb-2" />
-            <p className="text-2xl font-bold text-white">{totalArea || '0'}</p>
-            <p className="text-xs text-text-muted">m² gesamt</p>
-          </Card>
-          <Card className="p-4 text-center">
-            <Clock className="w-6 h-6 text-accent-orange mx-auto mb-2" />
-            <p className="text-2xl font-bold text-white">{totalTime || '0'}</p>
-            <p className="text-xs text-text-muted">Stunden</p>
-          </Card>
-        </div>
-      </motion.div>
+      {hasStatisticsData && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <h2 className="text-sm font-medium text-text-muted uppercase tracking-wider mb-3">
+            Statistik
+          </h2>
+          <div className="grid grid-cols-3 gap-3">
+            {totalCleanings && (
+              <Card className="p-4 text-center">
+                <Gauge className="w-6 h-6 text-accent-cyan mx-auto mb-2" />
+                <p className="text-2xl font-bold text-white">{totalCleanings}</p>
+                <p className="text-xs text-text-muted">Reinigungen</p>
+              </Card>
+            )}
+            {totalArea && (
+              <Card className="p-4 text-center">
+                <MapPin className="w-6 h-6 text-accent-green mx-auto mb-2" />
+                <p className="text-2xl font-bold text-white">{totalArea}</p>
+                <p className="text-xs text-text-muted">m² gesamt</p>
+              </Card>
+            )}
+            {totalTime && (
+              <Card className="p-4 text-center">
+                <Clock className="w-6 h-6 text-accent-orange mx-auto mb-2" />
+                <p className="text-2xl font-bold text-white">{totalTime}</p>
+                <p className="text-xs text-text-muted">Stunden</p>
+              </Card>
+            )}
+          </div>
+        </motion.div>
+      )}
     </div>
   )
 }
