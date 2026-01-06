@@ -106,7 +106,7 @@ export default function IntercomPage() {
         
         <button
           onClick={refreshStream}
-          className="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
+          className="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors mr-12"
         >
           <RefreshCw className="w-5 h-5 text-white" />
         </button>
