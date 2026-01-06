@@ -231,13 +231,15 @@ export class HAWebSocketClient {
   }
 
   async callService(call: HAServiceCall): Promise<void> {
-    await this.sendCommand({
+    const command: HAMessage = {
       type: 'call_service',
       domain: call.domain,
       service: call.service,
-      service_data: call.serviceData,
-      target: call.target,
-    })
+      ...(call.serviceData && { service_data: call.serviceData }),
+      ...(call.target && { target: call.target }),
+    }
+    
+    await this.sendCommand(command)
   }
 
   async getAreaRegistry(): Promise<HAArea[]> {

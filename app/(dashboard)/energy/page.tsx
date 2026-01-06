@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { EnergyCard } from '@/components/cards/energy-card'
+import { EnergyFlow } from '@/components/cards/energy-flow'
 import { PowerTrendChart } from '@/components/cards/power-trend-chart'
 import { ApplianceCard } from '@/components/cards/appliance-card'
 import { useEnergy } from '@/lib/ha'
@@ -53,6 +54,22 @@ export default function EnergyPage() {
               type="house"
               value={energy.house}
               subLabel="Consumption"
+            />
+          </motion.section>
+
+          {/* Energy Flow Visualization */}
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            className="mb-4"
+          >
+            <EnergyFlow
+              solar={energy.solar}
+              battery={energy.batteryPower}
+              batteryLevel={energy.battery}
+              grid={energy.grid}
+              house={energy.house}
             />
           </motion.section>
 

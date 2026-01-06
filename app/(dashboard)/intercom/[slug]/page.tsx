@@ -3,10 +3,17 @@
 import { useState, useRef } from 'react'
 import { useParams } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Video, Mic, DoorOpen, Loader2, RefreshCw } from 'lucide-react'
+import { Video, Mic, DoorOpen, Loader2, RefreshCw, MessageCircle } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { useHAStore } from '@/lib/ha'
 import { useConfig } from '@/lib/config/store'
+
+const QUICK_REPLIES = [
+  { label: 'Bin gleich da', message: 'Ich bin gleich da, einen Moment bitte.' },
+  { label: 'Paket ablegen', message: 'Bitte legen Sie das Paket vor der Tür ab. Vielen Dank!' },
+  { label: 'Kein Interesse', message: 'Nein danke, ich habe kein Interesse.' },
+  { label: 'Klingel defekt', message: 'Die Klingel ist defekt. Bitte rufen Sie an.' },
+]
 
 export default function IntercomPage() {
   const params = useParams()
@@ -18,6 +25,7 @@ export default function IntercomPage() {
   
   const [unlocking, setUnlocking] = useState(false)
   const [streamKey, setStreamKey] = useState(Date.now())
+  const [sendingReply, setSendingReply] = useState<string | null>(null)
   
   const intercom = config.intercoms?.find((i) => i.slug === slug)
   
@@ -55,6 +63,23 @@ export default function IntercomPage() {
       console.error('Failed to unlock:', error)
     } finally {
       setUnlocking(false)
+    }
+  }
+  
+  const handleQuickReply = async (message: string, label: string) => {
+    if (!intercom.ttsEntityId) return
+    
+    setSendingReply(label)
+    try {
+      await callService('tts', 'speak', undefined, {
+        entity_id: intercom.ttsEntityId,
+        message,
+        cache: false,
+      })
+    } catch (error) {
+      console.error('Failed to send TTS message:', error)
+    } finally {
+      setSendingReply(null)
     }
   }
   
@@ -147,6 +172,39 @@ export default function IntercomPage() {
           </div>
         )}
       </motion.div>
+
+      {intercom.ttsEntityId && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="mt-6 max-w-4xl mx-auto"
+        >
+          <div className="flex items-center gap-2 mb-3">
+            <MessageCircle className="w-4 h-4 text-accent-cyan" />
+            <h2 className="text-sm font-medium text-text-muted uppercase tracking-wider">Schnellantworten</h2>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            {QUICK_REPLIES.map((reply) => (
+              <button
+                key={reply.label}
+                onClick={() => handleQuickReply(reply.message, reply.label)}
+                disabled={sendingReply !== null}
+                className="p-3 bg-white/5 hover:bg-accent-cyan/20 border border-white/10 hover:border-accent-cyan/30 rounded-xl transition-all text-left disabled:opacity-50"
+              >
+                {sendingReply === reply.label ? (
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 text-accent-cyan animate-spin" />
+                    <span className="text-white text-sm">Senden...</span>
+                  </div>
+                ) : (
+                  <span className="text-white text-sm font-medium">{reply.label}</span>
+                )}
+              </button>
+            ))}
+          </div>
+        </motion.div>
+      )}
     </div>
   )
 }

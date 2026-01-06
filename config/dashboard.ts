@@ -64,6 +64,7 @@ export interface IntercomConfig {
   cameraEntityId: string
   speakUrl?: string
   lockEntityId?: string
+  ttsEntityId?: string
 }
 
 export interface LightConfig {

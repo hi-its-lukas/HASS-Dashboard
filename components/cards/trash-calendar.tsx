@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { Trash2 } from 'lucide-react'
+import { useNotificationsStore } from '@/lib/ui/notifications-store'
 
 interface TrashEvent {
   summary: string
@@ -11,6 +12,7 @@ interface TrashEvent {
 
 interface TrashCalendarProps {
   entityId?: string
+  enableReminders?: boolean
 }
 
 const trashColors: Record<string, string> = {
@@ -67,10 +69,12 @@ function getDaysUntil(dateStr: string): number {
   return Math.ceil((date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
 }
 
-export function TrashCalendar({ entityId }: TrashCalendarProps) {
+export function TrashCalendar({ entityId, enableReminders = true }: TrashCalendarProps) {
   const [events, setEvents] = useState<TrashEvent[]>([])
   const [loading, setLoading] = useState(true)
   const [mounted, setMounted] = useState(false)
+  const notifiedEvents = useRef<Set<string>>(new Set())
+  const showNotification = useNotificationsStore((s) => s.show)
 
   useEffect(() => {
     setMounted(true)
@@ -111,7 +115,55 @@ export function TrashCalendar({ entityId }: TrashCalendarProps) {
     }
 
     fetchEvents()
+    
+    const interval = setInterval(fetchEvents, 60 * 60 * 1000)
+    return () => clearInterval(interval)
   }, [entityId])
+
+  useEffect(() => {
+    if (!enableReminders || !mounted || events.length === 0) return
+
+    const checkForReminders = () => {
+      const now = new Date()
+      const currentHour = now.getHours()
+      
+      if (currentHour < 18 || currentHour > 21) return
+      
+      events.forEach((event) => {
+        const daysUntil = getDaysUntil(event.start)
+        const eventKey = `${event.summary}-${event.start}`
+        
+        if (daysUntil === 1 && !notifiedEvents.current.has(eventKey)) {
+          notifiedEvents.current.add(eventKey)
+          
+          showNotification({
+            title: 'Müllabfuhr morgen',
+            message: `${event.summary} - Bitte Tonne rausstellen!`,
+            severity: 'warning',
+            timeout: 30000,
+            tag: `trash-${event.summary}`,
+          })
+        }
+        
+        if (daysUntil === 0 && !notifiedEvents.current.has(eventKey + '-today')) {
+          notifiedEvents.current.add(eventKey + '-today')
+          
+          showNotification({
+            title: 'Müllabfuhr heute',
+            message: `${event.summary} wird heute abgeholt!`,
+            severity: 'critical',
+            timeout: 60000,
+            tag: `trash-today-${event.summary}`,
+          })
+        }
+      })
+    }
+
+    checkForReminders()
+    
+    const interval = setInterval(checkForReminders, 30 * 60 * 1000)
+    return () => clearInterval(interval)
+  }, [events, enableReminders, mounted, showNotification])
 
   if (!entityId) {
     return null
