@@ -1,0 +1,190 @@
+Aktueller Raum
+Arbeitszimmer
+sensor.niels_aktueller_raum
+Roborock
+—
+Ausgewählte Karte
+Arbeitszimmer
+select.niels_ausgewahlte_karte
+Roborock
+—
+Batterie
+Arbeitszimmer
+sensor.niels_batterie
+Roborock
+—
+Bitte nicht stören
+Arbeitszimmer
+switch.niels_bitte_nicht_storen
+Roborock
+—
+Bitte nicht stören Beginn
+Arbeitszimmer
+time.niels_bitte_nicht_storen_beginn
+Roborock
+—
+Bitte nicht stören Ende
+Arbeitszimmer
+time.niels_bitte_nicht_storen_ende
+Roborock
+—
+Gesamter Reinigungsbereich
+Arbeitszimmer
+sensor.niels_gesamter_reinigungsbereich
+Roborock
+—
+Gesamtreinigungszeit
+Arbeitszimmer
+sensor.niels_gesamtreinigungszeit
+Roborock
+—
+Gesamtzahl Reinigungen
+Arbeitszimmer
+sensor.niels_gesamtzahl_reinigungen
+Roborock
+—
+Home
+Arbeitszimmer
+image.niels_home
+Roborock
+—
+Ladestatus
+Arbeitszimmer
+binary_sensor.niels_ladestatus
+Roborock
+—
+Lautstärke
+Arbeitszimmer
+number.niels_lautstarke
+Roborock
+—
+Letzter Reinigungsbeginn
+Arbeitszimmer
+sensor.niels_letzter_reinigungsbeginn
+Roborock
+—
+Letztes Reinigungsende
+Arbeitszimmer
+sensor.niels_letztes_reinigungsende
+Roborock
+—
+Mopp angebracht
+Arbeitszimmer
+binary_sensor.niels_mopp_angebracht
+Roborock
+—
+Mopp-Modus
+Arbeitszimmer
+select.niels_mopp_modus
+Roborock
+—
+Niels
+Arbeitszimmer
+vacuum.niels
+Roborock
+—
+Reinigen
+Arbeitszimmer
+binary_sensor.niels_reinigen
+Roborock
+—
+Reinigungsbereich
+Arbeitszimmer
+sensor.niels_reinigungsbereich
+Roborock
+—
+Reinigungsfortschritt
+Arbeitszimmer
+sensor.niels_reinigungsfortschritt
+Roborock
+—
+Reinigungszeit
+Arbeitszimmer
+sensor.niels_reinigungszeit
+Roborock
+—
+Status
+Arbeitszimmer
+sensor.niels_status
+Roborock
+—
+Staubsauger-Fehler
+Arbeitszimmer
+sensor.niels_staubsauger_fehler
+Roborock
+—
+Verbleibende Filterzeit
+Arbeitszimmer
+sensor.niels_verbleibende_filterzeit
+Roborock
+—
+Verbleibende Sensorzeit
+Arbeitszimmer
+sensor.niels_verbleibende_sensorzeit
+Roborock
+—
+Verbleibende Zeit der Hauptbürste
+Arbeitszimmer
+sensor.niels_verbleibende_zeit_der_hauptburste
+Roborock
+—
+Verbleibende Zeit der Seitenbürste
+Arbeitszimmer
+sensor.niels_verbleibende_zeit_der_seitenburste
+Roborock
+—
+Vollreinigung
+Arbeitszimmer
+button.niels_vollreinigung
+Roborock
+—
+Wasserkasten angebracht
+Arbeitszimmer
+binary_sensor.niels_wasserkasten_angebracht
+Roborock
+—
+Wasserknappheit
+Arbeitszimmer
+binary_sensor.niels_wasserknappheit
+Roborock
+—
+Wisch-Intensität
+Arbeitszimmer
+select.niels_wisch_intensitat
+Roborock
+—
+Niels Dock
+Bürstenwartung verbleibend
+Arbeitszimmer
+sensor.niels_dock_burstenwartung_verbleibend
+Roborock
+—
+Dock-Fehler
+Arbeitszimmer
+sensor.niels_dock_dock_fehler
+Roborock
+—
+Entleerungsmodus
+Arbeitszimmer
+select.niels_dock_entleerungsmodus
+Roborock
+—
+Kindersicherung
+Arbeitszimmer
+switch.niels_dock_kindersicherung
+Roborock
+—
+Mopp-Trocknung
+Arbeitszimmer
+binary_sensor.niels_dock_mopp_trocknung
+Roborock
+—
+Schmutzfänger verbleibend
+Arbeitszimmer
+sensor.niels_dock_schmutzfanger_verbleibend
+Roborock
+—
+Verbleibende Zeit zum Trocknen des Mopps
+Arbeitszimmer
+sensor.niels_dock_verbleibende_zeit_zum_trocknen_des_mopps
+Roborock
