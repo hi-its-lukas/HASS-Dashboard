@@ -6,6 +6,7 @@ import { NotificationModal } from '@/components/ui/notification-modal'
 import { NotificationCenter } from '@/components/ui/notification-center'
 import { NotificationBell } from '@/components/ui/notification-bell'
 import { useConfigStore } from '@/lib/config/store'
+import { usePushListener } from '@/lib/push/use-push-listener'
 import { useEffect, useState } from 'react'
 
 export default function DashboardLayout({
@@ -17,6 +18,8 @@ export default function DashboardLayout({
   const sidebarState = useConfigStore((s) => s.sidebarState)
   const [mounted, setMounted] = useState(false)
   const [isDesktop, setIsDesktop] = useState(false)
+  
+  usePushListener()
   
   useEffect(() => {
     setMounted(true)

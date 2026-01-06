@@ -20,8 +20,30 @@ self.addEventListener('push', function(event) {
       requireInteraction: true
     }
     
+    const notifyClients = clients.matchAll({ type: 'window', includeUncontrolled: true })
+      .then(function(clientList) {
+        const notification = {
+          type: 'PUSH_NOTIFICATION',
+          payload: {
+            title: data.title || 'Benachrichtigung',
+            message: data.body || data.message || '',
+            severity: data.severity || 'info',
+            tag: data.tag,
+            cameraEntity: data.cameraEntity,
+            aiDescription: data.aiDescription,
+            intercomSlug: data.intercomSlug,
+          }
+        }
+        clientList.forEach(function(client) {
+          client.postMessage(notification)
+        })
+      })
+    
     event.waitUntil(
-      self.registration.showNotification(data.title || 'Benachrichtigung', options)
+      Promise.all([
+        self.registration.showNotification(data.title || 'Benachrichtigung', options),
+        notifyClients
+      ])
     )
   } catch (error) {
     console.error('Error handling push:', error)

@@ -67,3 +67,15 @@ model Session {
   @@map("sessions")
 }
 
+model PushSubscription {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  endpoint     String   @unique
+  p256dh       String
+  auth         String
+  userAgent    String?  @map("user_agent")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@map("push_subscriptions")
+}
+

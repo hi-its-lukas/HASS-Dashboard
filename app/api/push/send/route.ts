@@ -1,27 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import webpush from 'web-push'
 import { getSubscriptionsForUsers, removeSubscriptionByEndpoint } from '@/lib/push/subscriptions'
+import { initializeWebPush } from '@/lib/push/vapid'
 
 let vapidConfigured = false
 
 function configureVapid() {
   if (vapidConfigured) return true
   
-  const publicKey = process.env.VAPID_PUBLIC_KEY
-  const privateKey = process.env.VAPID_PRIVATE_KEY
-  const subject = process.env.VAPID_SUBJECT || 'mailto:admin@example.com'
-  
-  if (publicKey && privateKey) {
-    try {
-      webpush.setVapidDetails(subject, publicKey, privateKey)
-      vapidConfigured = true
-      return true
-    } catch (e) {
-      console.error('[Push] VAPID configuration error:', e)
-      return false
-    }
+  try {
+    initializeWebPush()
+    vapidConfigured = true
+    return true
+  } catch (e) {
+    console.error('[Push] VAPID configuration error:', e)
+    return false
   }
-  return false
 }
 
 export async function POST(request: NextRequest) {

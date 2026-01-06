@@ -1,14 +1,15 @@
 import { NextResponse } from 'next/server'
+import { getPublicVapidKey } from '@/lib/push/vapid'
 
 export async function GET() {
-  const publicKey = process.env.VAPID_PUBLIC_KEY
-  
-  if (!publicKey) {
+  try {
+    const publicKey = getPublicVapidKey()
+    return NextResponse.json({ publicKey })
+  } catch (error) {
+    console.error('[API] Failed to get VAPID key:', error)
     return NextResponse.json(
-      { error: 'VAPID public key not configured' },
+      { error: 'Failed to get VAPID key' },
       { status: 500 }
     )
   }
-  
-  return NextResponse.json({ publicKey })
 }
