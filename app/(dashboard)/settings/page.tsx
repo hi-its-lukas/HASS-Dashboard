@@ -433,22 +433,26 @@ export default function SettingsPage() {
             </button>
           </div>
           
-          {discovered && (
-            <div className="space-y-4">
-              <div className="border border-white/5 rounded-xl overflow-hidden">
-                <button
-                  onClick={() => toggleSection('persons')}
-                  className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <Users className="w-5 h-5 text-blue-400" />
-                    <span className="text-white font-medium">Persons ({discovered.persons.length})</span>
-                  </div>
-                  {expandedSections.persons ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
-                </button>
-                {expandedSections.persons && (
-                  <div className="p-4 space-y-2">
-                    {discovered.persons.map(entity => (
+          <div className="space-y-4">
+            <div className="border border-white/5 rounded-xl overflow-hidden">
+              <button
+                onClick={() => toggleSection('persons')}
+                className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <Users className="w-5 h-5 text-blue-400" />
+                  <span className="text-white font-medium">Personen {discovered ? `(${discovered.persons.length})` : ''}</span>
+                </div>
+                {expandedSections.persons ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
+              </button>
+              {expandedSections.persons && (
+                <div className="p-4 space-y-2">
+                  {!discovered ? (
+                    <p className="text-gray-500 text-sm">Klicke auf "Discover" um Entitäten zu laden</p>
+                  ) : discovered.persons.length === 0 ? (
+                    <p className="text-gray-500 text-sm">Keine Personen gefunden</p>
+                  ) : (
+                    discovered.persons.map(entity => (
                       <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
                         <input
                           type="checkbox"
@@ -459,10 +463,11 @@ export default function SettingsPage() {
                         <span className="text-gray-300">{getFriendlyName(entity)}</span>
                         <span className="text-xs text-gray-500">{entity.entity_id}</span>
                       </label>
-                    ))}
-                  </div>
-                )}
-              </div>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
               
               {config.persons.length > 0 && (
                 <div className="border border-white/5 rounded-xl overflow-hidden">
@@ -652,26 +657,32 @@ export default function SettingsPage() {
                 >
                   <div className="flex items-center gap-3">
                     <Lightbulb className="w-5 h-5 text-yellow-400" />
-                    <span className="text-white font-medium">Lights ({discovered.lights.length})</span>
+                    <span className="text-white font-medium">Lichtquellen {discovered ? `(${discovered.lights.length})` : ''}</span>
                   </div>
                   {expandedSections.lights ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
                 </button>
                 {expandedSections.lights && (
                   <div className="p-4 space-y-2 max-h-64 overflow-y-auto">
-                    {discovered.lights.map(entity => (
-                      <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={config.lights.includes(entity.entity_id)}
-                          onChange={() => toggleEntity('lights', entity.entity_id)}
-                          className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500"
-                        />
-                        <span className="text-gray-300">{getFriendlyName(entity)}</span>
-                        <span className={`text-xs px-2 py-0.5 rounded ${entity.state === 'on' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-gray-500/20 text-gray-400'}`}>
-                          {entity.state}
-                        </span>
-                      </label>
-                    ))}
+                    {!discovered ? (
+                      <p className="text-gray-500 text-sm">Klicke auf "Discover" um Entitäten zu laden</p>
+                    ) : discovered.lights.length === 0 ? (
+                      <p className="text-gray-500 text-sm">Keine Lichtquellen gefunden</p>
+                    ) : (
+                      discovered.lights.map(entity => (
+                        <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={config.lights.includes(entity.entity_id)}
+                            onChange={() => toggleEntity('lights', entity.entity_id)}
+                            className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500"
+                          />
+                          <span className="text-gray-300">{getFriendlyName(entity)}</span>
+                          <span className={`text-xs px-2 py-0.5 rounded ${entity.state === 'on' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-gray-500/20 text-gray-400'}`}>
+                            {entity.state}
+                          </span>
+                        </label>
+                      ))
+                    )}
                   </div>
                 )}
               </div>
@@ -683,23 +694,29 @@ export default function SettingsPage() {
                 >
                   <div className="flex items-center gap-3">
                     <LayoutGrid className="w-5 h-5 text-purple-400" />
-                    <span className="text-white font-medium">Covers ({discovered.covers.length})</span>
+                    <span className="text-white font-medium">Rollos {discovered ? `(${discovered.covers.length})` : ''}</span>
                   </div>
                   {expandedSections.covers ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
                 </button>
                 {expandedSections.covers && (
                   <div className="p-4 space-y-2 max-h-64 overflow-y-auto">
-                    {discovered.covers.map(entity => (
-                      <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={config.covers.includes(entity.entity_id)}
-                          onChange={() => toggleEntity('covers', entity.entity_id)}
-                          className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500"
-                        />
-                        <span className="text-gray-300">{getFriendlyName(entity)}</span>
-                      </label>
-                    ))}
+                    {!discovered ? (
+                      <p className="text-gray-500 text-sm">Klicke auf "Discover" um Entitäten zu laden</p>
+                    ) : discovered.covers.length === 0 ? (
+                      <p className="text-gray-500 text-sm">Keine Rollos gefunden</p>
+                    ) : (
+                      discovered.covers.map(entity => (
+                        <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={config.covers.includes(entity.entity_id)}
+                            onChange={() => toggleEntity('covers', entity.entity_id)}
+                            className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500"
+                          />
+                          <span className="text-gray-300">{getFriendlyName(entity)}</span>
+                        </label>
+                      ))
+                    )}
                   </div>
                 )}
               </div>
@@ -711,55 +728,61 @@ export default function SettingsPage() {
                 >
                   <div className="flex items-center gap-3">
                     <Thermometer className="w-5 h-5 text-orange-400" />
-                    <span className="text-white font-medium">Klima / Heizung ({(discovered.climates?.length || 0) + (discovered.fans?.length || 0)})</span>
+                    <span className="text-white font-medium">Klima / Heizung {discovered ? `(${(discovered.climates?.length || 0) + (discovered.fans?.length || 0)})` : ''}</span>
                   </div>
                   {expandedSections.climates ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
                 </button>
                 {expandedSections.climates && (
                   <div className="p-4 space-y-2 max-h-64 overflow-y-auto">
-                    <p className="text-sm text-gray-400 mb-3">
-                      Wähle die Klimageräte und Ventilatoren aus, die auf der Klima-Seite angezeigt werden sollen:
-                    </p>
-                    {discovered.climates?.length > 0 && (
-                      <div className="mb-3">
-                        <p className="text-xs text-gray-500 mb-2 flex items-center gap-2">
-                          <Thermometer className="w-3 h-3" /> Klimageräte / Heizung
+                    {!discovered ? (
+                      <p className="text-gray-500 text-sm">Klicke auf "Discover" um Entitäten zu laden</p>
+                    ) : (
+                      <>
+                        <p className="text-sm text-gray-400 mb-3">
+                          Wähle die Klimageräte und Ventilatoren aus, die auf der Klima-Seite angezeigt werden sollen:
                         </p>
-                        {discovered.climates.map(entity => (
-                          <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={config.climates?.includes(entity.entity_id) || false}
-                              onChange={() => toggleEntity('climates', entity.entity_id)}
-                              className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500"
-                            />
-                            <span className="text-gray-300">{getFriendlyName(entity)}</span>
-                            <span className="text-xs text-gray-500">{entity.entity_id}</span>
-                          </label>
-                        ))}
-                      </div>
-                    )}
-                    {discovered.fans?.length > 0 && (
-                      <div>
-                        <p className="text-xs text-gray-500 mb-2 flex items-center gap-2">
-                          <Fan className="w-3 h-3" /> Ventilatoren
-                        </p>
-                        {discovered.fans.map(entity => (
-                          <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={config.climates?.includes(entity.entity_id) || false}
-                              onChange={() => toggleEntity('climates', entity.entity_id)}
-                              className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500"
-                            />
-                            <span className="text-gray-300">{getFriendlyName(entity)}</span>
-                            <span className="text-xs text-gray-500">{entity.entity_id}</span>
-                          </label>
-                        ))}
-                      </div>
-                    )}
-                    {(!discovered.climates?.length && !discovered.fans?.length) && (
-                      <p className="text-sm text-gray-500">Keine Klimageräte oder Ventilatoren gefunden.</p>
+                        {discovered.climates?.length > 0 && (
+                          <div className="mb-3">
+                            <p className="text-xs text-gray-500 mb-2 flex items-center gap-2">
+                              <Thermometer className="w-3 h-3" /> Klimageräte / Heizung
+                            </p>
+                            {discovered.climates.map(entity => (
+                              <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={config.climates?.includes(entity.entity_id) || false}
+                                  onChange={() => toggleEntity('climates', entity.entity_id)}
+                                  className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500"
+                                />
+                                <span className="text-gray-300">{getFriendlyName(entity)}</span>
+                                <span className="text-xs text-gray-500">{entity.entity_id}</span>
+                              </label>
+                            ))}
+                          </div>
+                        )}
+                        {discovered.fans?.length > 0 && (
+                          <div>
+                            <p className="text-xs text-gray-500 mb-2 flex items-center gap-2">
+                              <Fan className="w-3 h-3" /> Ventilatoren
+                            </p>
+                            {discovered.fans.map(entity => (
+                              <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={config.climates?.includes(entity.entity_id) || false}
+                                  onChange={() => toggleEntity('climates', entity.entity_id)}
+                                  className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500"
+                                />
+                                <span className="text-gray-300">{getFriendlyName(entity)}</span>
+                                <span className="text-xs text-gray-500">{entity.entity_id}</span>
+                              </label>
+                            ))}
+                          </div>
+                        )}
+                        {(!discovered.climates?.length && !discovered.fans?.length) && (
+                          <p className="text-sm text-gray-500">Keine Klimageräte oder Ventilatoren gefunden.</p>
+                        )}
+                      </>
                     )}
                   </div>
                 )}
@@ -1130,13 +1153,6 @@ export default function SettingsPage() {
                 )}
               </div>
             </div>
-          )}
-          
-          {!discovered && (
-            <p className="text-gray-500 text-sm">
-              Click "Discover" to fetch available entities from Home Assistant
-            </p>
-          )}
         </div>
         
         <div className="bg-[#141b2d]/80 backdrop-blur-lg rounded-2xl p-6 border border-white/5 mb-6">
