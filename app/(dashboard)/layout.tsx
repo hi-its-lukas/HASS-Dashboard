@@ -44,8 +44,8 @@ export default function DashboardLayout({
       <div className="flex min-h-screen relative overflow-x-hidden">
         <Sidebar />
         <main 
-          className="flex-1 pb-6 transition-[margin] duration-200 w-full"
-          style={{ marginLeft: mounted && isDesktop ? sidebarWidth : 0 }}
+          className="flex-1 pb-6 transition-[padding] duration-200 w-full box-border"
+          style={{ paddingLeft: mounted && isDesktop ? sidebarWidth : 0 }}
         >
           {children}
         </main>

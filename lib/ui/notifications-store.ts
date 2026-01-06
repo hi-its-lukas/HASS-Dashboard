@@ -14,9 +14,20 @@ export interface DashboardNotification {
   intercomSlug?: string
 }
 
+interface DismissedEntry {
+  hash: string
+  dismissedAt: number
+}
+
+function hashNotification(tag: string, message: string): string {
+  return `${tag}:${message}`.substring(0, 200)
+}
+
 interface NotificationsState {
   notifications: DashboardNotification[]
+  dismissedRecently: DismissedEntry[]
   isOpen: boolean
+  _hasHydrated: boolean
   show: (notification: Partial<DashboardNotification>) => void
   dismiss: (id: string) => void
   markRead: (id: string) => void
@@ -24,19 +35,38 @@ interface NotificationsState {
   clearAll: () => void
   toggleOpen: () => void
   setOpen: (open: boolean) => void
+  setHasHydrated: (state: boolean) => void
 }
 
 function generateId(): string {
   return Math.random().toString(36).substring(2, 15) + Date.now().toString(36)
 }
 
+const DISMISS_COOLDOWN_MS = 30 * 1000
+
+const pendingNotifications: Partial<DashboardNotification>[] = []
+
 export const useNotificationsStore = create<NotificationsState>()(
   persist(
     (set, get) => ({
       notifications: [],
+      dismissedRecently: [],
       isOpen: false,
+      _hasHydrated: false,
+      
+      setHasHydrated: (state: boolean) => {
+        set({ _hasHydrated: state })
+        if (state) {
+          pendingNotifications.forEach((n) => get().show(n))
+          pendingNotifications.length = 0
+        }
+      },
 
       show: (notification) => {
+        if (!get()._hasHydrated) {
+          pendingNotifications.push(notification)
+          return
+        }
         const title = typeof notification.title === 'string' ? notification.title : 'Hinweis'
         const message = typeof notification.message === 'string' ? notification.message : ''
         const severity = ['info', 'warning', 'critical'].includes(notification.severity || '') 
@@ -47,13 +77,24 @@ export const useNotificationsStore = create<NotificationsState>()(
         const aiDescription = typeof notification.aiDescription === 'string' ? notification.aiDescription : undefined
         const intercomSlug = typeof notification.intercomSlug === 'string' ? notification.intercomSlug : undefined
 
+        const now = Date.now()
+        if (tag) {
+          const notificationHash = hashNotification(tag, message)
+          const recentlyDismissed = get().dismissedRecently.find(
+            (d) => d.hash === notificationHash && (now - d.dismissedAt) < DISMISS_COOLDOWN_MS
+          )
+          if (recentlyDismissed) {
+            return
+          }
+        }
+
         const newNotification: DashboardNotification = {
           id: generateId(),
           title,
           message,
           severity,
           tag,
-          createdAt: Date.now(),
+          createdAt: now,
           cameraEntity,
           aiDescription,
           intercomSlug,
@@ -63,7 +104,14 @@ export const useNotificationsStore = create<NotificationsState>()(
           let newNotifications = [...state.notifications]
           
           if (tag) {
-            newNotifications = newNotifications.filter((n) => n.tag !== tag)
+            const existingIndex = newNotifications.findIndex((n) => n.tag === tag)
+            if (existingIndex >= 0) {
+              const existing = newNotifications[existingIndex]
+              if (existing.message === message && (now - existing.createdAt) < 5000) {
+                return state
+              }
+              newNotifications = newNotifications.filter((n) => n.tag !== tag)
+            }
           }
           
           newNotifications.unshift(newNotification)
@@ -72,14 +120,26 @@ export const useNotificationsStore = create<NotificationsState>()(
             newNotifications = newNotifications.slice(0, 50)
           }
           
-          return { notifications: newNotifications }
+          const cleanedDismissed = state.dismissedRecently.filter(
+            (d) => (now - d.dismissedAt) < DISMISS_COOLDOWN_MS
+          )
+          
+          return { notifications: newNotifications, dismissedRecently: cleanedDismissed }
         })
       },
 
       dismiss: (id) => {
-        set((state) => ({
-          notifications: state.notifications.filter((n) => n.id !== id),
-        }))
+        set((state) => {
+          const notification = state.notifications.find((n) => n.id === id)
+          const now = Date.now()
+          const newDismissed = notification?.tag 
+            ? [...state.dismissedRecently.filter((d) => (now - d.dismissedAt) < DISMISS_COOLDOWN_MS), { hash: hashNotification(notification.tag, notification.message), dismissedAt: now }]
+            : state.dismissedRecently
+          return {
+            notifications: state.notifications.filter((n) => n.id !== id),
+            dismissedRecently: newDismissed.slice(-50),
+          }
+        })
       },
 
       markRead: (id) => {
@@ -113,10 +173,14 @@ export const useNotificationsStore = create<NotificationsState>()(
     }),
     {
       name: 'ha-dashboard-notifications',
-      version: 1,
+      version: 3,
       partialize: (state) => ({
         notifications: state.notifications,
+        dismissedRecently: state.dismissedRecently,
       }),
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true)
+      },
     }
   )
 )
