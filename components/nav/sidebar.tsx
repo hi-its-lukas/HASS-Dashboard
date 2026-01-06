@@ -101,8 +101,9 @@ export function Sidebar() {
     >
       <div className="flex items-center justify-between px-4 py-5" style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
         <AnimatePresence mode="wait">
-          {!collapsed && (
+          {!collapsed ? (
             <motion.div
+              key="title"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -110,16 +111,20 @@ export function Sidebar() {
             >
               <DashboardTitle />
             </motion.div>
+          ) : (
+            <motion.div
+              key="collapsed-icon"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex items-center justify-center"
+            >
+              <span className="text-white font-bold text-lg">H</span>
+            </motion.div>
           )}
         </AnimatePresence>
         
-        {collapsed && (
-          <div className="w-full flex justify-center">
-            <NotificationBell />
-          </div>
-        )}
-        
-        {!collapsed && <NotificationBell />}
+        <NotificationBell />
       </div>
       
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
