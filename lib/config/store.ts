@@ -37,6 +37,7 @@ interface UserLayoutConfig {
   personDetails?: PersonDetailConfig[]
   lights?: string[]
   covers?: string[]
+  awnings?: string[]
   climates?: string[]
   calendars?: string[]
   appliances?: string[] | ApplianceConfig[]

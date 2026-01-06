@@ -39,7 +39,8 @@ import {
   CloudSun,
   Thermometer,
   Fan,
-  Sparkles
+  Sparkles,
+  Umbrella
 } from 'lucide-react'
 import { PushSettings } from '@/components/settings/push-settings'
 
@@ -176,6 +177,7 @@ export default function SettingsPage() {
     personDetails: true,
     lights: true,
     covers: false,
+    awnings: false,
     climates: false,
     calendars: false,
     energy: true,
@@ -714,6 +716,53 @@ export default function SettingsPage() {
                             className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500"
                           />
                           <span className="text-gray-300">{getFriendlyName(entity)}</span>
+                        </label>
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
+              
+              <div className="border border-white/5 rounded-xl overflow-hidden">
+                <button
+                  onClick={() => toggleSection('awnings')}
+                  className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <Umbrella className="w-5 h-5 text-amber-500" />
+                    <span className="text-white font-medium">Markisen {discovered ? `(${discovered.covers.filter(c => c.entity_id.includes('awning') || c.entity_id.includes('markise')).length})` : ''}</span>
+                  </div>
+                  {expandedSections.awnings ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
+                </button>
+                {expandedSections.awnings && (
+                  <div className="p-4 space-y-2 max-h-64 overflow-y-auto">
+                    <p className="text-sm text-gray-400 mb-3">
+                      Wähle die Markisen aus (Cover-Entitäten die als Markisen verwendet werden):
+                    </p>
+                    {!discovered ? (
+                      <p className="text-gray-500 text-sm">Klicke auf "Discover" um Entitäten zu laden</p>
+                    ) : discovered.covers.length === 0 ? (
+                      <p className="text-gray-500 text-sm">Keine Cover-Entitäten gefunden</p>
+                    ) : (
+                      discovered.covers.map(entity => (
+                        <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={(config as { awnings?: string[] }).awnings?.includes(entity.entity_id) || false}
+                            onChange={() => {
+                              const currentAwnings = (config as { awnings?: string[] }).awnings || []
+                              const isSelected = currentAwnings.includes(entity.entity_id)
+                              setConfig(prev => ({
+                                ...prev,
+                                awnings: isSelected
+                                  ? currentAwnings.filter(id => id !== entity.entity_id)
+                                  : [...currentAwnings, entity.entity_id]
+                              }))
+                            }}
+                            className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500"
+                          />
+                          <span className="text-gray-300">{getFriendlyName(entity)}</span>
+                          <span className="text-xs text-gray-500">{entity.entity_id}</span>
                         </label>
                       ))
                     )}
