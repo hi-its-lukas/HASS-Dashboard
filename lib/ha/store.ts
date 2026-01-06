@@ -8,7 +8,7 @@ import { mockStates, generatePowerTrendData } from './mock-data'
 import { useConfigStore } from '@/lib/config/store'
 import { useNotificationsStore } from '@/lib/ui/notifications-store'
 
-interface DashboardPopupEventData {
+interface DashboardPopupEventData extends Record<string, unknown> {
   title?: string
   message?: string
   severity?: string
