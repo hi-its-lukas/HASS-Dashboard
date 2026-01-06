@@ -23,8 +23,16 @@ log_fatal() {
 
 ensure_data_dir() {
   if [ ! -d "$DATA_DIR" ]; then
-    log_info "Creating $DATA_DIR directory"
-    mkdir -p "$DATA_DIR" 2>/dev/null || log_fatal "Cannot create $DATA_DIR"
+    log_fatal "$DATA_DIR does not exist. You must mount a persistent volume at $DATA_DIR to preserve encryption keys and user data across container restarts. Example: docker run -v /path/to/data:/data ..."
+  fi
+
+  if ! mountpoint -q "$DATA_DIR" 2>/dev/null; then
+    if [ "${ALLOW_EPHEMERAL_DATA:-}" = "true" ]; then
+      log_warn "$DATA_DIR is not a mounted volume. Data WILL BE LOST on container restart!"
+      log_warn "This is only acceptable for testing. Set ALLOW_EPHEMERAL_DATA=true to suppress this warning."
+    else
+      log_fatal "$DATA_DIR is not a mounted volume. Refusing to start to prevent encryption key loss. Mount a persistent volume: docker run -v /path/to/data:/data ... or set ALLOW_EPHEMERAL_DATA=true for testing only."
+    fi
   fi
 
   if [ "$(id -u)" = "0" ]; then
@@ -47,12 +55,18 @@ setup_encryption_key() {
   if [ -f "$KEY_FILE" ]; then
     export ENCRYPTION_KEY=$(cat "$KEY_FILE")
     log_info "Loaded existing encryption key from $KEY_FILE"
+    
+    KEY_LEN=$(echo -n "$ENCRYPTION_KEY" | wc -c)
+    if [ "$KEY_LEN" -ne 64 ]; then
+      log_fatal "Existing encryption key at $KEY_FILE is invalid (expected 64 hex chars, got $KEY_LEN). Refusing to start to prevent data corruption."
+    fi
   else
     log_info "Generating new encryption key"
     export ENCRYPTION_KEY=$(head -c 32 /dev/urandom | od -A n -t x1 | tr -d ' \n')
     echo "$ENCRYPTION_KEY" > "$KEY_FILE"
     chmod 600 "$KEY_FILE"
     log_info "Saved encryption key to $KEY_FILE"
+    log_info "IMPORTANT: Back up $KEY_FILE - losing it means losing access to all encrypted tokens!"
   fi
 }
 

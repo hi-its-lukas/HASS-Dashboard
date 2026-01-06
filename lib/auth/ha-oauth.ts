@@ -132,6 +132,9 @@ export async function handleOAuthCallback(code: string, state: string): Promise<
     const accessTokenEncrypted = encrypt(tokenResponse.access_token)
     const refreshTokenEncrypted = tokenResponse.refresh_token ? encrypt(tokenResponse.refresh_token) : null
     
+    // SECURITY: Using Prisma's $executeRaw with tagged template literals.
+    // All ${...} interpolations are automatically parameterized by Prisma,
+    // preventing SQL injection attacks. Do NOT use string concatenation here.
     await prisma.$executeRaw`
       INSERT INTO oauth_tokens (id, user_id, provider, access_token_enc, access_token_nonce, refresh_token_enc, refresh_token_nonce, client_id, expires_at, created_at, updated_at)
       VALUES (
@@ -260,7 +263,15 @@ async function refreshAccessToken(userId: string, tokenRecord: TokenRecordForRef
   }
   
   const refreshToken = decrypt(tokenRecord.refreshTokenEnc, tokenRecord.refreshTokenNonce)
-  const clientId = tokenRecord.clientId || getClientId()
+  const storedClientId = tokenRecord.clientId
+  const currentClientId = getClientId()
+  
+  const validation = validateClientId(storedClientId, currentClientId)
+  if (!validation.valid) {
+    console.warn('[OAuth]', validation.warning)
+  }
+  
+  const clientId = storedClientId || currentClientId
   
   console.log('[OAuth] Refreshing token for user', userId, 'with client_id:', clientId)
   
@@ -307,6 +318,25 @@ function getClientId(): string {
 
 export function getAppBaseUrl(): string {
   return process.env.APP_BASE_URL || 'http://localhost:3000'
+}
+
+export function validateClientId(storedClientId: string | null, currentBaseUrl: string): { valid: boolean; warning?: string } {
+  if (!storedClientId) {
+    return { valid: true }
+  }
+  
+  const normalizeUrl = (url: string) => url.replace(/\/$/, '').toLowerCase()
+  const storedNormalized = normalizeUrl(storedClientId)
+  const currentNormalized = normalizeUrl(currentBaseUrl)
+  
+  if (storedNormalized !== currentNormalized) {
+    return {
+      valid: false,
+      warning: `OAuth client_id mismatch: stored "${storedClientId}" does not match current "${currentBaseUrl}". Token refresh will fail. Re-authenticate to fix.`
+    }
+  }
+  
+  return { valid: true }
 }
 
 export function deriveBaseUrlFromRequest(request: Request): string {
