@@ -34,8 +34,9 @@
 
 html,
 body {
+  width: 100%;
   max-width: 100vw;
-  overflow-x: hidden;
+  overflow-x: hidden !important;
   font-family: 'SF Pro Display', 'SF Pro Text', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

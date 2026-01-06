@@ -127,7 +127,7 @@ export function Sidebar() {
         </AnimatePresence>
       </div>
       
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto overflow-x-hidden">
         {navItems.map(({ href, icon: Icon, label }) => {
           const active = isActive(href)
           return (
@@ -155,15 +155,6 @@ export function Sidebar() {
                   </motion.span>
                 )}
               </AnimatePresence>
-              
-              {collapsed && (
-                <div 
-                  className="absolute left-full ml-2 px-3 py-1.5 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none"
-                  style={{ background: 'rgba(44, 44, 46, 0.95)', backdropFilter: 'blur(8px)' }}
-                >
-                  {label}
-                </div>
-              )}
             </Link>
           )
         })}
@@ -203,15 +194,6 @@ export function Sidebar() {
                       </motion.span>
                     )}
                   </AnimatePresence>
-                  
-                  {collapsed && (
-                    <div 
-                      className="absolute left-full ml-2 px-3 py-1.5 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none"
-                      style={{ background: 'rgba(44, 44, 46, 0.95)', backdropFilter: 'blur(8px)' }}
-                    >
-                      {intercom.name}
-                    </div>
-                  )}
                 </Link>
               )
             })}
