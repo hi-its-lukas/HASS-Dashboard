@@ -1,0 +1,59 @@
+=> ERROR [builder 6/6] RUN npm run build                     45.4s 
+------                                                              
+ > [builder 6/6] RUN npm run build:                                 
+0.428                                                               
+0.428 > hass-dashboard@1.0.0 build                                  
+0.428 > next build                                                  
+0.428                                                               
+2.007   ▲ Next.js 14.2.3
+2.008   - Environments: .env
+2.008 
+2.033    Creating an optimized production build ...
+2.581 > [PWA] Compile server
+2.583 > [PWA] Compile server
+2.584 > [PWA] Compile client (static)
+2.585 > [PWA] Custom worker found: /app/worker/index.js
+2.585 > [PWA] Build custom worker: /app/public/worker-QK9dBtfxIp__HVAb5kASK.js
+2.847 > [PWA] Auto register service worker with: /app/node_modules/next-pwa/register.js
+2.847 > [PWA] Service worker: /app/public/sw.js
+2.847 > [PWA]   url: /sw.js
+2.847 > [PWA]   scope: /
+33.94  ✓ Compiled successfully
+33.94    Linting and checking validity of types ...
+44.85 Failed to compile.
+44.85 
+44.85 ./app/(dashboard)/vacuum/page.tsx:58:46
+44.85 Type error: Argument of type '{ entity_id: string; }' is not assignable to parameter of type 'string'.
+44.85 
+44.85   56 |     try {
+44.85   57 |       if (action === 'full_clean') {
+44.85 > 58 |         await callService('button', 'press', { entity_id: 'button.niels_vollreinigung' })
+44.85      |                                              ^
+44.85   59 |       } else {
+44.85   60 |         await callService('vacuum', action, { entity_id: vacuumEntityId })
+44.85   61 |       }
+------
+[+] build 0/1
+ ⠙ Image hass-dashboard-app Building                          98.6s 
+Dockerfile:21
+
+--------------------
+
+  19 |     ENV NEXT_TELEMETRY_DISABLED=1
+
+  20 |     
+
+  21 | >>> RUN npm run build
+
+  22 |     
+
+  23 |     # Stage 3: Runner
+
+--------------------
+
+failed to solve: process "/bin/sh -c npm run build" did not complete successfully: exit code: 1
+
+WARN[0000] No services to build                         
+[+] up 1/1
+ ✔ Container hass-dashboard Running                            0.0s 
+pi@raspberry-5:~/hass-dashboard$ 

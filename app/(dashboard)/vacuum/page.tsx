@@ -55,9 +55,9 @@ export default function VacuumPage() {
     setLoading(action)
     try {
       if (action === 'full_clean') {
-        await callService('button', 'press', { entity_id: 'button.niels_vollreinigung' })
+        await callService('button', 'press', 'button.niels_vollreinigung')
       } else {
-        await callService('vacuum', action, { entity_id: vacuumEntityId })
+        await callService('vacuum', action, vacuumEntityId)
       }
     } catch (err) {
       console.error('Vacuum action failed:', err)
