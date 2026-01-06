@@ -30,7 +30,7 @@ export function Card({
 }: CardProps) {
   return (
     <motion.div
-      whileTap={hoverable ? { scale: 0.98 } : undefined}
+      whileTap={hoverable ? { scale: 0.97 } : undefined}
       className={cn(
         'card relative',
         hoverable && 'card-hover cursor-pointer',

@@ -41,15 +41,15 @@ export function RoomCard({ name, icon, entityIds, onClick }: RoomCardProps) {
 
   return (
     <motion.button
-      whileTap={{ scale: 0.95 }}
+      whileTap={{ scale: 0.97 }}
       onClick={onClick}
       className={cn(
-        'card flex flex-col items-center justify-center py-6 px-4 min-h-[130px] relative',
-        lightsOn && 'bg-bg-cardHover'
+        'card flex flex-col items-center justify-center py-6 px-4 min-h-[130px] relative transition-shadow duration-200',
+        lightsOn && 'card-active-glow'
       )}
     >
       <div className="relative mb-3">
-        <Icon className={cn('w-8 h-8', lightsOn ? 'text-white' : 'text-text-muted')} />
+        <Icon className={cn('w-8 h-8 transition-colors', lightsOn ? 'text-[var(--accent-yellow)]' : 'text-text-muted')} />
         {onCount && (
           <motion.div
             initial={{ scale: 0 }}
@@ -60,10 +60,13 @@ export function RoomCard({ name, icon, entityIds, onClick }: RoomCardProps) {
           </motion.div>
         )}
       </div>
-      <span className="text-sm font-medium text-white mb-1">{name}</span>
       <span className={cn(
-        'text-xs',
-        lightsOn ? 'text-accent-orange' : 'text-text-muted'
+        'text-sm font-semibold mb-1 tracking-tight transition-colors',
+        lightsOn ? 'text-white' : 'text-text-secondary'
+      )}>{name}</span>
+      <span className={cn(
+        'text-xs transition-colors',
+        lightsOn ? 'text-[var(--accent-yellow)]' : 'text-text-muted'
       )}>
         {status}
       </span>

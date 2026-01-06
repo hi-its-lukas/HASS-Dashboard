@@ -50,7 +50,13 @@ const config: Config = {
         'glow-yellow': '0 0 16px rgba(255, 214, 10, 0.4)',
       },
       fontFamily: {
-        sans: ['-apple-system', 'BlinkMacSystemFont', 'SF Pro Display', 'SF Pro Text', 'system-ui', 'sans-serif'],
+        sans: ['SF Pro Display', 'SF Pro Text', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'sans-serif'],
+      },
+      letterSpacing: {
+        tighter: '-0.02em',
+      },
+      fontWeight: {
+        title: '600',
       },
       backdropBlur: {
         xs: '2px',
