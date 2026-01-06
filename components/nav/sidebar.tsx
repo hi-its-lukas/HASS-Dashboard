@@ -91,7 +91,7 @@ export function Sidebar() {
       initial={false}
       animate={{ width: collapsed ? 80 : 256 }}
       transition={{ duration: 0.2, ease: 'easeInOut' }}
-      className="hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0"
+      className="hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0 overflow-x-hidden"
       style={{
         background: 'rgba(28, 28, 30, 0.8)',
         backdropFilter: 'blur(20px)',
