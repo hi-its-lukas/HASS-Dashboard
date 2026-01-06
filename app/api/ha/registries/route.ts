@@ -76,6 +76,8 @@ export async function GET() {
     const deviceTrackers = states.filter((s: { entity_id: string }) => s.entity_id.startsWith('device_tracker.'))
     const fans = states.filter((s: { entity_id: string }) => s.entity_id.startsWith('fan.'))
     const vacuums = states.filter((s: { entity_id: string }) => s.entity_id.startsWith('vacuum.'))
+    const buttons = states.filter((s: { entity_id: string }) => s.entity_id.startsWith('button.'))
+    const selects = states.filter((s: { entity_id: string }) => s.entity_id.startsWith('select.'))
     
     return NextResponse.json({
       areas,
@@ -101,7 +103,9 @@ export async function GET() {
         automations,
         deviceTrackers,
         fans,
-        vacuums
+        vacuums,
+        buttons,
+        selects
       }
     })
   } catch (error) {

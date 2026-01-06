@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { DashboardConfig, dashboardConfig as staticConfig, PersonConfig, PersonDetailConfig, RoomConfig, ApplianceConfig, IntercomConfig } from '@/config/dashboard'
+import { DashboardConfig, dashboardConfig as staticConfig, PersonConfig, PersonDetailConfig, RoomConfig, ApplianceConfig, IntercomConfig, VacuumConfig } from '@/config/dashboard'
 
 export interface CustomButtonConfig {
   id: string
@@ -42,6 +42,7 @@ interface UserLayoutConfig {
   appliances?: string[] | ApplianceConfig[]
   customButtons?: CustomButtonConfig[]
   intercoms?: IntercomConfig[]
+  vacuum?: VacuumConfig
 }
 
 function entityIdToName(entityId: string): string {
@@ -177,6 +178,7 @@ function mergeWithDefaults(userConfig: UserLayoutConfig): DashboardConfig {
     lights: userConfig.lights || staticConfig.lights,
     covers: userConfig.covers || staticConfig.covers,
     climates: userConfig.climates || [],
+    vacuum: userConfig.vacuum,
   }
 }
 
@@ -247,6 +249,7 @@ export const useConfigStore = create<ConfigStore>((set, get) => ({
       customButtons: updates.customButtons ?? config.customButtons,
       intercoms: updates.intercoms ?? config.intercoms,
       personDetails: updates.personDetails ?? config.personDetails,
+      vacuum: updates.vacuum ?? config.vacuum,
     }
     
     try {

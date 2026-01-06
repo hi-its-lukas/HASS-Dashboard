@@ -67,6 +67,30 @@ export interface IntercomConfig {
   ttsEntityId?: string
 }
 
+export interface VacuumConfig {
+  entityId: string
+  batteryEntityId?: string
+  statusEntityId?: string
+  currentRoomEntityId?: string
+  cleaningProgressEntityId?: string
+  cleaningAreaEntityId?: string
+  cleaningTimeEntityId?: string
+  chargingEntityId?: string
+  cleaningEntityId?: string
+  mopAttachedEntityId?: string
+  errorEntityId?: string
+  mopModeEntityId?: string
+  waterIntensityEntityId?: string
+  filterRemainingEntityId?: string
+  mainBrushRemainingEntityId?: string
+  sideBrushRemainingEntityId?: string
+  sensorRemainingEntityId?: string
+  totalCleaningsEntityId?: string
+  totalAreaEntityId?: string
+  totalTimeEntityId?: string
+  fullCleanButtonEntityId?: string
+}
+
 export interface LightConfig {
   entityId: string
   name?: string
@@ -94,6 +118,7 @@ export interface DashboardConfig {
   calendars?: string[]
   climates?: string[]
   vacuumEntityId?: string
+  vacuum?: VacuumConfig
   
   energy: EnergyConfig
   security: SecurityConfig
