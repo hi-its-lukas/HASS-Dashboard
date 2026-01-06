@@ -31,6 +31,7 @@ model OAuthToken {
   accessTokenNonce    Bytes    @map("access_token_nonce")
   refreshTokenEnc     Bytes?   @map("refresh_token_enc")
   refreshTokenNonce   Bytes?   @map("refresh_token_nonce")
+  clientId            String?  @map("client_id")
   expiresAt           DateTime @map("expires_at")
   createdAt           DateTime @default(now()) @map("created_at")
   updatedAt           DateTime @updatedAt @map("updated_at")

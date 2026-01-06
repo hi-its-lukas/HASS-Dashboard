@@ -146,6 +146,7 @@ export async function handleOAuthCallback(code: string, state: string): Promise<
         accessTokenNonce: accessTokenEncrypted.nonce,
         refreshTokenEnc: refreshTokenEncrypted?.ciphertext ?? null,
         refreshTokenNonce: refreshTokenEncrypted?.nonce ?? null,
+        clientId: baseUrl,
         expiresAt: new Date(Date.now() + tokenResponse.expires_in * 1000)
       },
       update: {
@@ -153,6 +154,7 @@ export async function handleOAuthCallback(code: string, state: string): Promise<
         accessTokenNonce: accessTokenEncrypted.nonce,
         refreshTokenEnc: refreshTokenEncrypted?.ciphertext ?? null,
         refreshTokenNonce: refreshTokenEncrypted?.nonce ?? null,
+        clientId: baseUrl,
         expiresAt: new Date(Date.now() + tokenResponse.expires_in * 1000)
       }
     })
@@ -251,6 +253,7 @@ export async function getStoredToken(userId: string): Promise<string | null> {
 interface TokenRecordForRefresh {
   refreshTokenEnc: Buffer | null
   refreshTokenNonce: Buffer | null
+  clientId: string | null
 }
 
 async function refreshAccessToken(userId: string, tokenRecord: TokenRecordForRefresh, haUrl: string): Promise<void> {
@@ -259,6 +262,9 @@ async function refreshAccessToken(userId: string, tokenRecord: TokenRecordForRef
   }
   
   const refreshToken = decrypt(tokenRecord.refreshTokenEnc, tokenRecord.refreshTokenNonce)
+  const clientId = tokenRecord.clientId || getClientId()
+  
+  console.log('[OAuth] Refreshing token for user', userId, 'with client_id:', clientId)
   
   const tokenUrl = new URL('/auth/token', haUrl)
   const response = await fetch(tokenUrl.toString(), {
@@ -269,15 +275,18 @@ async function refreshAccessToken(userId: string, tokenRecord: TokenRecordForRef
     body: new URLSearchParams({
       grant_type: 'refresh_token',
       refresh_token: refreshToken,
-      client_id: getClientId()
+      client_id: clientId
     })
   })
   
   if (!response.ok) {
-    throw new Error('Token refresh failed')
+    const text = await response.text()
+    console.error('[OAuth] Token refresh failed:', response.status, text)
+    throw new Error(`Token refresh failed: ${response.status}`)
   }
   
   const tokenData: TokenResponse = await response.json()
+  console.log('[OAuth] Token refreshed successfully, new expiry in', tokenData.expires_in, 'seconds')
   
   const accessTokenEncrypted = encrypt(tokenData.access_token)
   const refreshTokenEncrypted = tokenData.refresh_token ? encrypt(tokenData.refresh_token) : null
@@ -287,8 +296,8 @@ async function refreshAccessToken(userId: string, tokenRecord: TokenRecordForRef
     data: {
       accessTokenEnc: accessTokenEncrypted.ciphertext,
       accessTokenNonce: accessTokenEncrypted.nonce,
-      refreshTokenEnc: refreshTokenEncrypted?.ciphertext ?? null,
-      refreshTokenNonce: refreshTokenEncrypted?.nonce ?? null,
+      refreshTokenEnc: refreshTokenEncrypted?.ciphertext ?? tokenRecord.refreshTokenEnc,
+      refreshTokenNonce: refreshTokenEncrypted?.nonce ?? tokenRecord.refreshTokenNonce,
       expiresAt: new Date(Date.now() + tokenData.expires_in * 1000)
     }
   })
