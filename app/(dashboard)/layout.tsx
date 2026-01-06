@@ -12,11 +12,19 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   const backgroundUrl = useConfigStore((s) => s.config.backgroundUrl)
+  const sidebarState = useConfigStore((s) => s.sidebarState)
   const [mounted, setMounted] = useState(false)
+  const [isDesktop, setIsDesktop] = useState(false)
   
   useEffect(() => {
     setMounted(true)
+    const checkDesktop = () => setIsDesktop(window.innerWidth >= 1024)
+    checkDesktop()
+    window.addEventListener('resize', checkDesktop)
+    return () => window.removeEventListener('resize', checkDesktop)
   }, [])
+  
+  const sidebarWidth = sidebarState === 'collapsed' ? 80 : 256
   
   return (
     <>
@@ -28,9 +36,12 @@ export default function DashboardLayout({
           backgroundPosition: 'center',
         } : undefined}
       />
-      <div className="flex min-h-screen relative">
+      <div className="flex min-h-screen relative overflow-x-hidden">
         <Sidebar />
-        <main className="flex-1 pb-6 lg:ml-64">
+        <main 
+          className="flex-1 pb-6 transition-[margin] duration-200 w-full"
+          style={{ marginLeft: mounted && isDesktop ? sidebarWidth : 0 }}
+        >
           {children}
         </main>
       </div>
