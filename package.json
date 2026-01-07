@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start -H 0.0.0.0",
     "lint": "next lint",
-    "create-admin": "npx tsx scripts/create-admin.ts",
+    "create-admin": "node scripts/create-admin.js",
     "ws-proxy": "npx tsx server/ws-proxy.ts",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev"
