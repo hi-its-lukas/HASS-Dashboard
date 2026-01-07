@@ -37,7 +37,8 @@ export class HAWebSocketClient {
   private subscribedEventTypes = new Set<string>()
   private reconnectAttempts = 0
   private maxReconnectAttempts = 10
-  private reconnectDelay = 1000
+  private baseReconnectDelay = 1000
+  private maxReconnectDelay = 60000
   private reconnectTimeout: NodeJS.Timeout | null = null
   private heartbeatInterval: NodeJS.Timeout | null = null
   private isAuthenticated = false
@@ -331,8 +332,12 @@ export class HAWebSocketClient {
     
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++
-      const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1)
-      console.log(`[HA WS] Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts})`)
+      
+      const exponentialDelay = this.baseReconnectDelay * Math.pow(2, this.reconnectAttempts - 1)
+      const jitter = Math.random() * 1000
+      const delay = Math.min(exponentialDelay + jitter, this.maxReconnectDelay)
+      
+      console.log(`[HA WS] Reconnecting in ${Math.round(delay)}ms (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`)
       
       this.clearReconnectTimeout()
       this.reconnectTimeout = setTimeout(() => {

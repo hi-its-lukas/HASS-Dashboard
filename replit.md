@@ -36,7 +36,7 @@ Preferred communication style: Simple, everyday language.
   - `lib/ha/fetch.ts` - Zentraler haFetch() Helper für alle HA-Anfragen
   - `scripts/create-admin.ts` - Admin-Benutzer über CLI erstellen (`npm run create-admin`)
   - Alle HA-Routen nutzen jetzt den haFetch() Helper
-- **Security Hardening**
+- **Security Hardening (Major Audit Fixes)**
   - Session lifetime reduced from 365 to 30 days
   - Token-Substring User-IDs replaced with SHA-256 hashed stable IDs verified against HA API
   - Base URL hardened: Production uses `APP_BASE_URL` only, optional `ALLOWED_HOSTS` allowlist
@@ -44,6 +44,11 @@ Preferred communication style: Simple, everyday language.
   - All UniFi API requests now have 30-second timeout and max response size (10MB)
   - Settings API validates input with Zod schema, 100KB request size limit
   - API keys never exposed to client (only boolean `_hasProtectKey`/`_hasAccessKey` flags)
+  - **Login Timing Attack Prevention**: Constant-time password comparison with dummy hash
+  - **WS-Proxy DoS Prevention**: Singleton PrismaClient, sync encryption key loading at startup
+  - **WS-Proxy Origin Check**: Production enforces Origin header validation
+  - **Encryption Key Safety**: Production requires explicit key (env var or file), no auto-generation
+  - **WebSocket Reconnect Jitter**: Exponential backoff with random jitter prevents connection storms
 - **Internal Authentication System** - Username/password login with RBAC
   - Database schema: User (username, passwordHash, roleId, status), Role, Permission, RolePermission
   - 5 predefined roles: Owner, Admin, Power User, Viewer, Guest

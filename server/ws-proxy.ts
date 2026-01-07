@@ -2,9 +2,54 @@ import { WebSocketServer, WebSocket } from 'ws'
 import { createServer, IncomingMessage } from 'http'
 import { parse } from 'url'
 import { parse as parseCookie } from 'cookie'
+import { PrismaClient } from '@prisma/client'
+import { createDecipheriv } from 'crypto'
+import { existsSync, readFileSync } from 'fs'
+import { join } from 'path'
 
 const WS_PORT = parseInt(process.env.WS_PROXY_PORT || '6000', 10)
 const SQLITE_URL = process.env.SQLITE_URL || 'file:./data/ha-dashboard.db'
+const IS_PRODUCTION = process.env.NODE_ENV === 'production'
+
+const prisma = new PrismaClient({ datasources: { db: { url: SQLITE_URL } } })
+
+let cachedEncryptionKey: Buffer | null = null
+
+function loadEncryptionKey(): Buffer {
+  if (cachedEncryptionKey) {
+    return cachedEncryptionKey
+  }
+
+  const envKey = process.env.ENCRYPTION_KEY
+  if (envKey) {
+    const keyBuffer = Buffer.from(envKey, 'hex')
+    if (keyBuffer.length === 32) {
+      cachedEncryptionKey = keyBuffer
+      return cachedEncryptionKey
+    }
+  }
+
+  const keyPaths = [
+    '/data/.encryption_key',
+    join(process.cwd(), 'data', '.encryption_key')
+  ]
+
+  for (const keyPath of keyPaths) {
+    if (existsSync(keyPath)) {
+      const keyHex = readFileSync(keyPath, 'utf-8').trim()
+      const keyBuffer = Buffer.from(keyHex, 'hex')
+      if (keyBuffer.length === 32) {
+        cachedEncryptionKey = keyBuffer
+        return cachedEncryptionKey
+      }
+    }
+  }
+
+  throw new Error('Encryption key not found. Set ENCRYPTION_KEY environment variable or create data/.encryption_key file.')
+}
+
+cachedEncryptionKey = loadEncryptionKey()
+console.log('[WS-Proxy] Encryption key loaded successfully')
 
 interface HAWebSocketMessage {
   id?: number
@@ -23,22 +68,8 @@ interface ClientConnection {
 
 const connections = new Map<WebSocket, ClientConnection>()
 
-async function getEncryptionKey(): Promise<Buffer> {
-  const fs = await import('fs')
-  const path = await import('path')
-  const keyPath = path.join(process.cwd(), 'data', '.encryption_key')
-  
-  if (fs.existsSync(keyPath)) {
-    const keyHex = fs.readFileSync(keyPath, 'utf-8').trim()
-    return Buffer.from(keyHex, 'hex')
-  }
-  
-  throw new Error('Encryption key not found')
-}
-
-async function decryptToken(value: string): Promise<string> {
-  const crypto = await import('crypto')
-  const key = await getEncryptionKey()
+function decryptToken(value: string): string {
+  const key = cachedEncryptionKey!
   
   const parsed = JSON.parse(value)
   const ciphertext = Buffer.from(parsed.ciphertext, 'base64')
@@ -48,7 +79,7 @@ async function decryptToken(value: string): Promise<string> {
   const authTag = ciphertext.slice(-AUTH_TAG_LENGTH)
   const encryptedData = ciphertext.slice(0, -AUTH_TAG_LENGTH)
   
-  const decipher = crypto.createDecipheriv('aes-256-gcm', key, nonce)
+  const decipher = createDecipheriv('aes-256-gcm', key, nonce)
   decipher.setAuthTag(authTag)
   
   const decrypted = Buffer.concat([
@@ -60,45 +91,31 @@ async function decryptToken(value: string): Promise<string> {
 }
 
 async function getHAConfig(): Promise<{ url: string; token: string } | null> {
-  const { PrismaClient } = await import('@prisma/client')
-  const prisma = new PrismaClient({ datasources: { db: { url: SQLITE_URL } } })
+  const [urlConfig, tokenConfig] = await Promise.all([
+    prisma.systemConfig.findUnique({ where: { key: 'ha_instance_url' } }),
+    prisma.systemConfig.findUnique({ where: { key: 'ha_long_lived_token' } })
+  ])
   
-  try {
-    const [urlConfig, tokenConfig] = await Promise.all([
-      prisma.systemConfig.findUnique({ where: { key: 'ha_instance_url' } }),
-      prisma.systemConfig.findUnique({ where: { key: 'ha_long_lived_token' } })
-    ])
-    
-    if (!urlConfig || !tokenConfig) return null
-    
-    const token = tokenConfig.encrypted 
-      ? await decryptToken(tokenConfig.value)
-      : tokenConfig.value
-    
-    return { url: urlConfig.value, token }
-  } finally {
-    await prisma.$disconnect()
-  }
+  if (!urlConfig || !tokenConfig) return null
+  
+  const token = tokenConfig.encrypted 
+    ? decryptToken(tokenConfig.value)
+    : tokenConfig.value
+  
+  return { url: urlConfig.value, token }
 }
 
 async function validateSession(sessionToken: string): Promise<string | null> {
-  const { PrismaClient } = await import('@prisma/client')
-  const prisma = new PrismaClient({ datasources: { db: { url: SQLITE_URL } } })
+  const session = await prisma.session.findUnique({
+    where: { token: sessionToken },
+    include: { user: true }
+  })
   
-  try {
-    const session = await prisma.session.findUnique({
-      where: { token: sessionToken },
-      include: { user: true }
-    })
-    
-    if (!session || new Date() > session.expiresAt) {
-      return null
-    }
-    
-    return session.userId
-  } finally {
-    await prisma.$disconnect()
+  if (!session || new Date() > session.expiresAt) {
+    return null
   }
+  
+  return session.userId
 }
 
 function extractSessionToken(req: IncomingMessage): string | null {
@@ -107,6 +124,36 @@ function extractSessionToken(req: IncomingMessage): string | null {
   
   const cookies = parseCookie(cookieHeader)
   return cookies['session'] || null
+}
+
+function validateOrigin(req: IncomingMessage): boolean {
+  if (!IS_PRODUCTION) {
+    return true
+  }
+
+  const origin = req.headers.origin
+  if (!origin) {
+    return true
+  }
+
+  const allowedHosts = process.env.ALLOWED_HOSTS?.split(',').map(h => h.trim()) || []
+  const appBaseUrl = process.env.APP_BASE_URL
+
+  if (appBaseUrl) {
+    try {
+      const baseHost = new URL(appBaseUrl).host
+      allowedHosts.push(baseHost)
+    } catch {
+      // Invalid APP_BASE_URL
+    }
+  }
+
+  try {
+    const originHost = new URL(origin).host
+    return allowedHosts.some(allowed => originHost === allowed || originHost.endsWith('.' + allowed))
+  } catch {
+    return false
+  }
 }
 
 async function createHAConnection(config: { url: string; token: string }): Promise<WebSocket> {
@@ -241,6 +288,13 @@ server.on('upgrade', async (request, socket, head) => {
     socket.destroy()
     return
   }
+
+  if (!validateOrigin(request)) {
+    console.warn('[WS-Proxy] Origin check failed:', request.headers.origin)
+    socket.write('HTTP/1.1 403 Forbidden\r\n\r\n')
+    socket.destroy()
+    return
+  }
   
   const sessionToken = extractSessionToken(request)
   
@@ -267,9 +321,18 @@ server.listen(WS_PORT, '0.0.0.0', () => {
   console.log(`[WS-Proxy] WebSocket proxy running on port ${WS_PORT}`)
 })
 
-process.on('SIGTERM', () => {
+process.on('SIGTERM', async () => {
   console.log('[WS-Proxy] Shutting down...')
   wss.close()
   server.close()
+  await prisma.$disconnect()
+  process.exit(0)
+})
+
+process.on('SIGINT', async () => {
+  console.log('[WS-Proxy] Interrupted, shutting down...')
+  wss.close()
+  server.close()
+  await prisma.$disconnect()
   process.exit(0)
 })

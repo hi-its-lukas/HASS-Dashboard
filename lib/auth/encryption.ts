@@ -9,6 +9,8 @@ const AUTH_TAG_LENGTH = 16
 const KEY_FILE_PATH = '/data/.encryption_key'
 const DEV_KEY_FILE_PATH = join(process.cwd(), 'data', '.encryption_key')
 
+const IS_PRODUCTION = process.env.NODE_ENV === 'production'
+
 let cachedKey: Buffer | null = null
 
 function getKeyFilePath(): string {
@@ -18,7 +20,7 @@ function getKeyFilePath(): string {
   return DEV_KEY_FILE_PATH
 }
 
-function ensureKeyFileExists(): void {
+function ensureKeyFileExistsDev(): void {
   const keyPath = getKeyFilePath()
   const keyDir = dirname(keyPath)
   
@@ -45,9 +47,29 @@ function getEncryptionKey(): Buffer {
       cachedKey = keyBuffer
       return cachedKey
     }
+    throw new Error('ENCRYPTION_KEY must be 32 bytes (64 hex characters)')
   }
 
-  ensureKeyFileExists()
+  if (IS_PRODUCTION) {
+    const keyPath = getKeyFilePath()
+    if (existsSync(keyPath)) {
+      const fileKey = readFileSync(keyPath, 'utf8').trim()
+      const keyBuffer = Buffer.from(fileKey, 'hex')
+      if (keyBuffer.length !== 32) {
+        throw new Error('Encryption key file must contain 32 bytes (64 hex characters)')
+      }
+      cachedKey = keyBuffer
+      return cachedKey
+    }
+    throw new Error(
+      'CRITICAL: No encryption key available in production. ' +
+      'Set ENCRYPTION_KEY environment variable (64 hex chars) or create ' +
+      keyPath + ' with a 64-character hex key. ' +
+      'Generate one with: openssl rand -hex 32'
+    )
+  }
+
+  ensureKeyFileExistsDev()
   const keyPath = getKeyFilePath()
   const fileKey = readFileSync(keyPath, 'utf8').trim()
   

@@ -1,0 +1,74 @@
+ROLLE: Du handelst jetzt als Senior Security Engineer und Lead Backend Developer. Ich habe ein strenges Code-Audit durchgeführt und kritische Sicherheitslücken (CVSS 9.0+) sowie massive Architekturfehler identifiziert.
+
+AUFTRAG: Deine Aufgabe ist es, die folgenden Dateien ohne Diskussion und ohne Platzhalter zu refactoring, um die identifizierten Probleme zu 100% zu beheben. Gehe die Punkte streng sequenziell durch.
+
+REGELN FÜR DIE DURCHFÜHRUNG:
+Keine Erklärungen: Schreibe nur den korrigierten Code.
+
+Kein // ... rest of code: Wenn du eine Datei bearbeitest, gib sie vollständig und korrigiert zurück.
+
+Performance: Entferne jegliches Blocking I/O aus dem Hot Path.
+
+Sicherheit: Implementiere "Defense in Depth".
+
+SCHRITT 1: server/ws-proxy.ts (PRIORITÄT: KRITISCH)
+Probleme:
+
+DoS-Gefahr: Du erstellst bei jeder Verbindung (getHAConfig, validateSession) einen new PrismaClient(). Das tötet die Datenbank.
+
+Blocking I/O: getEncryptionKey nutzt fs.readFileSync bei jedem Request. Das blockiert die Node Event Loop.
+
+Security: Fehlender Origin-Check.
+
+Anweisungen für den Fix:
+
+Instanziiere PrismaClient einmalig im globalen Scope oben in der Datei (Singleton).
+
+Lade den Encryption Key einmalig beim Serverstart (synchron) in eine Variable cachedKey. Die Funktion getEncryptionKey darf nur diesen Variable zurückgeben.
+
+Füge im server.on('upgrade') Event einen strikten Check hinzu: Wenn process.env.NODE_ENV === 'production', muss der Origin-Header geprüft werden (sofern vorhanden).
+
+Stelle sicher, dass import Statements oben stehen und nicht in Funktionen verschachtelt sind.
+
+SCHRITT 2: app/api/auth/login/route.ts (PRIORITÄT: KRITISCH)
+Problem: User Enumeration via Timing Attack.
+
+Aktueller Code bricht sofort ab, wenn User nicht gefunden wird (~5ms).
+
+Bei gefundenem User läuft bcrypt (~200ms).
+
+Anweisungen für den Fix:
+
+Implementiere eine "Constant Time" Vergleichslogik.
+
+Definiere einen Dummy-Hash (z.B. einen validen Bcrypt-Hash hardcoden).
+
+Wenn user nicht gefunden wird, führe bcrypt.compare(inputPassword, dummyHash) aus.
+
+Das Ergebnis (validPassword) darf erst ausgewertet werden, nachdem der Vergleich in jedem Fall gelaufen ist.
+
+SCHRITT 3: lib/auth/encryption.ts (PRIORITÄT: HOCH)
+Problem: Unsichere Speicherung von Secrets.
+
+Der Code schreibt den Key via writeFileSync in ./data/.encryption_key.
+
+Anweisungen für den Fix:
+
+Ändere die Logik: Priorisiere IMMER process.env.ENCRYPTION_KEY.
+
+Entferne die Logik, die automatisch eine Datei schreibt, wenn wir im production Mode sind. In Production darf der Key nur aus der Environment-Variable kommen oder muss manuell bereitgestellt sein.
+
+Falls der Key fehlt, wirf einen kritischen Fehler beim Start, anstatt unsicher einen neuen zu generieren und zu speichern.
+
+SCHRITT 4: lib/ha/websocket-client.ts (PRIORITÄT: MITTEL)
+Problem: Connection Storms.
+
+Wenn HA neustartet, hämmern alle Clients gleichzeitig auf den Server ein.
+
+Anweisungen für den Fix:
+
+Implementiere "Exponential Backoff" mit Jitter (Zufallsfaktor) in der handleReconnect-Methode.
+
+Beispiel: const delay = baseDelay * Math.pow(2, attempts) + (Math.random() * 1000).
+
+FÜHRE JETZT DIE ÄNDERUNGEN DURCH. Beginne mit server/ws-proxy.ts.

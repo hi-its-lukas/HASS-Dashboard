@@ -4,6 +4,8 @@ import prisma from '@/lib/db/client'
 import { createSession, setSessionCookie } from '@/lib/auth/session'
 import { csrfProtection } from '@/lib/auth/csrf'
 
+const DUMMY_HASH = '$2a$10$N9qo8uLOickgx2ZMRZoMye.SxLhNqVjBpWrWNKDiuSAp3nQv7LGIS'
+
 export async function POST(request: NextRequest) {
   try {
     const csrfError = csrfProtection(request)
@@ -32,18 +34,15 @@ export async function POST(request: NextRequest) {
       }
     })
     
-    if (!user || !user.passwordHash) {
+    const hashToCompare = user?.passwordHash || DUMMY_HASH
+    const validPassword = await bcrypt.compare(body.password, hashToCompare)
+    
+    if (!user || !user.passwordHash || !validPassword) {
       return NextResponse.json({ error: 'Ungültige Anmeldedaten' }, { status: 401 })
     }
     
     if (user.status !== 'active') {
       return NextResponse.json({ error: 'Konto deaktiviert' }, { status: 403 })
-    }
-    
-    const validPassword = await bcrypt.compare(body.password, user.passwordHash)
-    
-    if (!validPassword) {
-      return NextResponse.json({ error: 'Ungültige Anmeldedaten' }, { status: 401 })
     }
     
     await prisma.user.update({
