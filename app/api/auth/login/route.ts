@@ -45,10 +45,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Konto deaktiviert' }, { status: 403 })
     }
     
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { lastLoginAt: new Date() }
-    })
+    // Update lastLoginAt - don't fail login if this fails (e.g., read-only DB)
+    try {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { lastLoginAt: new Date() }
+      })
+    } catch (updateError) {
+      console.warn('[Auth] Could not update lastLoginAt:', updateError)
+    }
     
     const sessionToken = await createSession(user.id)
     await setSessionCookie(sessionToken)
