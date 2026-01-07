@@ -1154,7 +1154,9 @@ export default function SettingsPage() {
                     <p className="text-sm text-gray-400 mb-3">
                       Wähle Skripte aus, die als Buttons auf der "Mehr"-Seite angezeigt werden sollen:
                     </p>
-                    {discovered.scripts.length === 0 ? (
+                    {!discovered ? (
+                      <p className="text-gray-500 text-sm">Klicke auf "Discover" um Entitäten zu laden</p>
+                    ) : discovered.scripts.length === 0 ? (
                       <p className="text-gray-500 text-sm">Keine Skripte gefunden</p>
                     ) : (
                       <div className="space-y-2 max-h-64 overflow-y-auto">
