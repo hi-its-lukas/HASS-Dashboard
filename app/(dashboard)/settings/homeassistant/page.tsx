@@ -31,7 +31,8 @@ import {
   Thermometer,
   Fan,
   Sparkles,
-  Theater
+  Theater,
+  Search
 } from 'lucide-react'
 
 interface ConnectionStatus {
@@ -188,6 +189,18 @@ export default function HomeAssistantSettingsPage() {
   const [newSensor, setNewSensor] = useState({ label: '', entityId: '', unit: '' })
   const [newIntercom, setNewIntercom] = useState({ name: '', cameraEntityId: '', speakUrl: '', lockEntityId: '' })
   const [editingIntercomIndex, setEditingIntercomIndex] = useState<number | null>(null)
+  const [searchFilters, setSearchFilters] = useState<Record<string, string>>({
+    persons: '',
+    lights: '',
+    covers: '',
+    awnings: '',
+    curtains: '',
+    climates: '',
+    appliances: '',
+    calendars: '',
+    cameras: '',
+    sensors: ''
+  })
   
   useEffect(() => {
     checkAuth()
@@ -277,6 +290,32 @@ export default function HomeAssistantSettingsPage() {
   const getFriendlyName = (entity: { entity_id: string; attributes: Record<string, unknown> }) => {
     return (entity.attributes.friendly_name as string) || entity.entity_id.split('.')[1].replace(/_/g, ' ')
   }
+  
+  const filterEntities = <T extends { entity_id: string; attributes: Record<string, unknown> }>(
+    entities: T[], 
+    searchTerm: string
+  ): T[] => {
+    if (!searchTerm.trim()) return entities
+    const term = searchTerm.toLowerCase()
+    return entities.filter(entity => {
+      const friendlyName = getFriendlyName(entity).toLowerCase()
+      const entityId = entity.entity_id.toLowerCase()
+      return friendlyName.includes(term) || entityId.includes(term)
+    })
+  }
+  
+  const SearchInput = ({ section }: { section: string }) => (
+    <div className="relative mb-3">
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+      <input
+        type="text"
+        placeholder="Suchen..."
+        value={searchFilters[section] || ''}
+        onChange={(e) => setSearchFilters(prev => ({ ...prev, [section]: e.target.value }))}
+        className="w-full pl-9 pr-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-white/20"
+      />
+    </div>
+  )
   
   const saveConfig = async () => {
     setSaving(true)
@@ -419,24 +458,29 @@ export default function HomeAssistantSettingsPage() {
                 {expandedSections.persons ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
               </button>
               {expandedSections.persons && (
-                <div className="p-4 space-y-2">
+                <div className="p-4">
                   {!discovered ? (
                     <p className="text-gray-500 text-sm">Klicke auf "Discover" um Entitäten zu laden</p>
                   ) : discovered.persons.length === 0 ? (
                     <p className="text-gray-500 text-sm">Keine Personen gefunden</p>
                   ) : (
-                    discovered.persons.map(entity => (
-                      <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={config.persons.includes(entity.entity_id)}
-                          onChange={() => toggleEntity('persons', entity.entity_id)}
-                          className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500"
-                        />
-                        <span className="text-gray-300">{getFriendlyName(entity)}</span>
-                        <span className="text-xs text-gray-500">{entity.entity_id}</span>
-                      </label>
-                    ))
+                    <>
+                      <SearchInput section="persons" />
+                      <div className="space-y-2 max-h-64 overflow-y-auto">
+                        {filterEntities(discovered.persons, searchFilters.persons).map(entity => (
+                          <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={config.persons.includes(entity.entity_id)}
+                              onChange={() => toggleEntity('persons', entity.entity_id)}
+                              className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500"
+                            />
+                            <span className="text-gray-300">{getFriendlyName(entity)}</span>
+                            <span className="text-xs text-gray-500">{entity.entity_id}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </>
                   )}
                 </div>
               )}
@@ -454,26 +498,31 @@ export default function HomeAssistantSettingsPage() {
                 {expandedSections.lights ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
               </button>
               {expandedSections.lights && (
-                <div className="p-4 space-y-2 max-h-64 overflow-y-auto">
+                <div className="p-4">
                   {!discovered ? (
                     <p className="text-gray-500 text-sm">Klicke auf "Discover" um Entitäten zu laden</p>
                   ) : discovered.lights.length === 0 ? (
                     <p className="text-gray-500 text-sm">Keine Lichtquellen gefunden</p>
                   ) : (
-                    discovered.lights.map(entity => (
-                      <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={config.lights.includes(entity.entity_id)}
-                          onChange={() => toggleEntity('lights', entity.entity_id)}
-                          className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500"
-                        />
-                        <span className="text-gray-300">{getFriendlyName(entity)}</span>
-                        <span className={`text-xs px-2 py-0.5 rounded ${entity.state === 'on' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-gray-500/20 text-gray-400'}`}>
-                          {entity.state}
-                        </span>
-                      </label>
-                    ))
+                    <>
+                      <SearchInput section="lights" />
+                      <div className="space-y-2 max-h-64 overflow-y-auto">
+                        {filterEntities(discovered.lights, searchFilters.lights).map(entity => (
+                          <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={config.lights.includes(entity.entity_id)}
+                              onChange={() => toggleEntity('lights', entity.entity_id)}
+                              className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500"
+                            />
+                            <span className="text-gray-300">{getFriendlyName(entity)}</span>
+                            <span className={`text-xs px-2 py-0.5 rounded ${entity.state === 'on' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-gray-500/20 text-gray-400'}`}>
+                              {entity.state}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    </>
                   )}
                 </div>
               )}
@@ -491,23 +540,28 @@ export default function HomeAssistantSettingsPage() {
                 {expandedSections.covers ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
               </button>
               {expandedSections.covers && (
-                <div className="p-4 space-y-2 max-h-64 overflow-y-auto">
+                <div className="p-4">
                   {!discovered ? (
                     <p className="text-gray-500 text-sm">Klicke auf "Discover" um Entitäten zu laden</p>
                   ) : discovered.covers.length === 0 ? (
                     <p className="text-gray-500 text-sm">Keine Rollos gefunden</p>
                   ) : (
-                    discovered.covers.map(entity => (
-                      <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={config.covers.includes(entity.entity_id)}
-                          onChange={() => toggleEntity('covers', entity.entity_id)}
-                          className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500"
-                        />
-                        <span className="text-gray-300">{getFriendlyName(entity)}</span>
-                      </label>
-                    ))
+                    <>
+                      <SearchInput section="covers" />
+                      <div className="space-y-2 max-h-64 overflow-y-auto">
+                        {filterEntities(discovered.covers, searchFilters.covers).map(entity => (
+                          <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={config.covers.includes(entity.entity_id)}
+                              onChange={() => toggleEntity('covers', entity.entity_id)}
+                              className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500"
+                            />
+                            <span className="text-gray-300">{getFriendlyName(entity)}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </>
                   )}
                 </div>
               )}
@@ -525,33 +579,38 @@ export default function HomeAssistantSettingsPage() {
                 {expandedSections.awnings ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
               </button>
               {expandedSections.awnings && (
-                <div className="p-4 space-y-2 max-h-64 overflow-y-auto">
+                <div className="p-4">
                   {!discovered ? (
                     <p className="text-gray-500 text-sm">Klicke auf "Discover" um Entitäten zu laden</p>
                   ) : discovered.covers.length === 0 ? (
                     <p className="text-gray-500 text-sm">Keine Markisen gefunden</p>
                   ) : (
-                    discovered.covers.map(entity => (
-                      <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={config.awnings?.includes(entity.entity_id) || false}
-                          onChange={() => {
-                            const currentAwnings = config.awnings || []
-                            const isSelected = currentAwnings.includes(entity.entity_id)
-                            setConfig(prev => ({
-                              ...prev,
-                              awnings: isSelected
-                                ? currentAwnings.filter(id => id !== entity.entity_id)
-                                : [...currentAwnings, entity.entity_id]
-                            }))
-                          }}
-                          className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500"
-                        />
-                        <span className="text-gray-300">{getFriendlyName(entity)}</span>
-                        <span className="text-xs text-gray-500">{entity.entity_id}</span>
-                      </label>
-                    ))
+                    <>
+                      <SearchInput section="awnings" />
+                      <div className="space-y-2 max-h-64 overflow-y-auto">
+                        {filterEntities(discovered.covers, searchFilters.awnings).map(entity => (
+                          <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={config.awnings?.includes(entity.entity_id) || false}
+                              onChange={() => {
+                                const currentAwnings = config.awnings || []
+                                const isSelected = currentAwnings.includes(entity.entity_id)
+                                setConfig(prev => ({
+                                  ...prev,
+                                  awnings: isSelected
+                                    ? currentAwnings.filter(id => id !== entity.entity_id)
+                                    : [...currentAwnings, entity.entity_id]
+                                }))
+                              }}
+                              className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500"
+                            />
+                            <span className="text-gray-300">{getFriendlyName(entity)}</span>
+                            <span className="text-xs text-gray-500">{entity.entity_id}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </>
                   )}
                 </div>
               )}
@@ -569,33 +628,38 @@ export default function HomeAssistantSettingsPage() {
                 {expandedSections.curtains ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
               </button>
               {expandedSections.curtains && (
-                <div className="p-4 space-y-2 max-h-64 overflow-y-auto">
+                <div className="p-4">
                   {!discovered ? (
                     <p className="text-gray-500 text-sm">Klicke auf "Discover" um Entitäten zu laden</p>
                   ) : discovered.covers.length === 0 ? (
                     <p className="text-gray-500 text-sm">Keine Gardinen gefunden</p>
                   ) : (
-                    discovered.covers.map(entity => (
-                      <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={config.curtains?.includes(entity.entity_id) || false}
-                          onChange={() => {
-                            const currentCurtains = config.curtains || []
-                            const isSelected = currentCurtains.includes(entity.entity_id)
-                            setConfig(prev => ({
-                              ...prev,
-                              curtains: isSelected
-                                ? currentCurtains.filter(id => id !== entity.entity_id)
-                                : [...currentCurtains, entity.entity_id]
-                            }))
-                          }}
-                          className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500"
-                        />
-                        <span className="text-gray-300">{getFriendlyName(entity)}</span>
-                        <span className="text-xs text-gray-500">{entity.entity_id}</span>
-                      </label>
-                    ))
+                    <>
+                      <SearchInput section="curtains" />
+                      <div className="space-y-2 max-h-64 overflow-y-auto">
+                        {filterEntities(discovered.covers, searchFilters.curtains).map(entity => (
+                          <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={config.curtains?.includes(entity.entity_id) || false}
+                              onChange={() => {
+                                const currentCurtains = config.curtains || []
+                                const isSelected = currentCurtains.includes(entity.entity_id)
+                                setConfig(prev => ({
+                                  ...prev,
+                                  curtains: isSelected
+                                    ? currentCurtains.filter(id => id !== entity.entity_id)
+                                    : [...currentCurtains, entity.entity_id]
+                                }))
+                              }}
+                              className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500"
+                            />
+                            <span className="text-gray-300">{getFriendlyName(entity)}</span>
+                            <span className="text-xs text-gray-500">{entity.entity_id}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </>
                   )}
                 </div>
               )}
@@ -613,35 +677,38 @@ export default function HomeAssistantSettingsPage() {
                 {expandedSections.climates ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
               </button>
               {expandedSections.climates && (
-                <div className="p-4 space-y-2 max-h-64 overflow-y-auto">
+                <div className="p-4">
                   {!discovered ? (
                     <p className="text-gray-500 text-sm">Klicke auf "Discover" um Entitäten zu laden</p>
                   ) : (
                     <>
-                      {discovered.climates?.map(entity => (
-                        <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={config.climates?.includes(entity.entity_id) || false}
-                            onChange={() => toggleEntity('climates', entity.entity_id)}
-                            className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500"
-                          />
-                          <Thermometer className="w-4 h-4 text-orange-400" />
-                          <span className="text-gray-300">{getFriendlyName(entity)}</span>
-                        </label>
-                      ))}
-                      {discovered.fans?.map(entity => (
-                        <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={config.climates?.includes(entity.entity_id) || false}
-                            onChange={() => toggleEntity('climates', entity.entity_id)}
-                            className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500"
-                          />
-                          <Fan className="w-4 h-4 text-cyan-400" />
-                          <span className="text-gray-300">{getFriendlyName(entity)}</span>
-                        </label>
-                      ))}
+                      <SearchInput section="climates" />
+                      <div className="space-y-2 max-h-64 overflow-y-auto">
+                        {filterEntities(discovered.climates || [], searchFilters.climates).map(entity => (
+                          <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={config.climates?.includes(entity.entity_id) || false}
+                              onChange={() => toggleEntity('climates', entity.entity_id)}
+                              className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500"
+                            />
+                            <Thermometer className="w-4 h-4 text-orange-400" />
+                            <span className="text-gray-300">{getFriendlyName(entity)}</span>
+                          </label>
+                        ))}
+                        {filterEntities(discovered.fans || [], searchFilters.climates).map(entity => (
+                          <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={config.climates?.includes(entity.entity_id) || false}
+                              onChange={() => toggleEntity('climates', entity.entity_id)}
+                              className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500"
+                            />
+                            <Fan className="w-4 h-4 text-cyan-400" />
+                            <span className="text-gray-300">{getFriendlyName(entity)}</span>
+                          </label>
+                        ))}
+                      </div>
                     </>
                   )}
                 </div>
@@ -660,23 +727,28 @@ export default function HomeAssistantSettingsPage() {
                 {expandedSections.calendars ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
               </button>
               {expandedSections.calendars && (
-                <div className="p-4 space-y-2 max-h-64 overflow-y-auto">
+                <div className="p-4">
                   {!discovered ? (
                     <p className="text-gray-500 text-sm">Klicke auf "Discover" um Entitäten zu laden</p>
                   ) : (discovered.calendars?.length || 0) === 0 ? (
                     <p className="text-gray-500 text-sm">Keine Kalender gefunden</p>
                   ) : (
-                    discovered.calendars?.map(entity => (
-                      <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={config.calendars?.includes(entity.entity_id) || false}
-                          onChange={() => toggleEntity('calendars', entity.entity_id)}
-                          className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500"
-                        />
-                        <span className="text-gray-300">{getFriendlyName(entity)}</span>
-                      </label>
-                    ))
+                    <>
+                      <SearchInput section="calendars" />
+                      <div className="space-y-2 max-h-64 overflow-y-auto">
+                        {filterEntities(discovered.calendars || [], searchFilters.calendars).map(entity => (
+                          <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={config.calendars?.includes(entity.entity_id) || false}
+                              onChange={() => toggleEntity('calendars', entity.entity_id)}
+                              className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500"
+                            />
+                            <span className="text-gray-300">{getFriendlyName(entity)}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </>
                   )}
                 </div>
               )}
@@ -694,7 +766,7 @@ export default function HomeAssistantSettingsPage() {
                 {expandedSections.cameras ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
               </button>
               {expandedSections.cameras && (
-                <div className="p-4 space-y-2 max-h-64 overflow-y-auto">
+                <div className="p-4">
                   <p className="text-sm text-amber-400/80 mb-3">
                     Diese Kameras dienen als Backup, falls Unifi Protect nicht konfiguriert ist.
                   </p>
@@ -703,17 +775,22 @@ export default function HomeAssistantSettingsPage() {
                   ) : (discovered.cameras?.length || 0) === 0 ? (
                     <p className="text-gray-500 text-sm">Keine Kameras gefunden</p>
                   ) : (
-                    discovered.cameras?.map(entity => (
-                      <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={config.cameras?.includes(entity.entity_id) || false}
-                          onChange={() => toggleEntity('cameras', entity.entity_id)}
-                          className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500"
-                        />
-                        <span className="text-gray-300">{getFriendlyName(entity)}</span>
-                      </label>
-                    ))
+                    <>
+                      <SearchInput section="cameras" />
+                      <div className="space-y-2 max-h-64 overflow-y-auto">
+                        {filterEntities(discovered.cameras || [], searchFilters.cameras).map(entity => (
+                          <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={config.cameras?.includes(entity.entity_id) || false}
+                              onChange={() => toggleEntity('cameras', entity.entity_id)}
+                              className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500"
+                            />
+                            <span className="text-gray-300">{getFriendlyName(entity)}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </>
                   )}
                 </div>
               )}
@@ -731,33 +808,36 @@ export default function HomeAssistantSettingsPage() {
                 {expandedSections.appliances ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
               </button>
               {expandedSections.appliances && (
-                <div className="p-4 space-y-2 max-h-64 overflow-y-auto">
+                <div className="p-4">
                   {!discovered ? (
                     <p className="text-gray-500 text-sm">Klicke auf "Discover" um Entitäten zu laden</p>
                   ) : (
                     <>
-                      {discovered.sensors?.filter(s => s.attributes.device_class === 'power').map(entity => (
-                        <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={config.appliances?.includes(entity.entity_id) || false}
-                            onChange={() => toggleEntity('appliances', entity.entity_id)}
-                            className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500"
-                          />
-                          <span className="text-gray-300">{getFriendlyName(entity)}</span>
-                        </label>
-                      ))}
-                      {discovered.switches?.map(entity => (
-                        <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={config.appliances?.includes(entity.entity_id) || false}
-                            onChange={() => toggleEntity('appliances', entity.entity_id)}
-                            className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500"
-                          />
-                          <span className="text-gray-300">{getFriendlyName(entity)}</span>
-                        </label>
-                      ))}
+                      <SearchInput section="appliances" />
+                      <div className="space-y-2 max-h-64 overflow-y-auto">
+                        {filterEntities(discovered.sensors?.filter(s => s.attributes.device_class === 'power') || [], searchFilters.appliances).map(entity => (
+                          <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={config.appliances?.includes(entity.entity_id) || false}
+                              onChange={() => toggleEntity('appliances', entity.entity_id)}
+                              className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500"
+                            />
+                            <span className="text-gray-300">{getFriendlyName(entity)}</span>
+                          </label>
+                        ))}
+                        {filterEntities(discovered.switches || [], searchFilters.appliances).map(entity => (
+                          <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={config.appliances?.includes(entity.entity_id) || false}
+                              onChange={() => toggleEntity('appliances', entity.entity_id)}
+                              className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500"
+                            />
+                            <span className="text-gray-300">{getFriendlyName(entity)}</span>
+                          </label>
+                        ))}
+                      </div>
                     </>
                   )}
                 </div>
