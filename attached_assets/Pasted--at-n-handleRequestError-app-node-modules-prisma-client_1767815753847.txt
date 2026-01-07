@@ -1,0 +1,29 @@
+    at $n.handleRequestError (/app/node_modules/@prisma/client/runtime/library.js:121:7505)
+    at $n.handleAndLogRequestError (/app/node_modules/@prisma/client/runtime/library.js:121:6623)
+    at $n.request (/app/node_modules/@prisma/client/runtime/library.js:121:6307)
+    at async l (/app/node_modules/@prisma/client/runtime/library.js:130:9633)
+    at async c (/app/.next/server/app/api/auth/login/route.js:1:1548)
+    at async /app/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:34666
+    at async eS.execute (/app/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:25813)
+    at async eS.handle (/app/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:35920)
+    at async doRender (/app/node_modules/next/dist/server/base-server.js:1377:42)
+    at async cacheEntry.responseCache.get.routeKind (/app/node_modules/next/dist/server/base-server.js:1599:28) {
+  clientVersion: '5.22.0'
+}
+[Auth] Login error: PrismaClientUnknownRequestError: 
+Invalid `prisma.user.update()` invocation:
+
+
+Error occurred during query execution:
+ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(SqliteError { extended_code: 8, message: Some("attempt to write a readonly database") }), transient: false })
+    at $n.handleRequestError (/app/node_modules/@prisma/client/runtime/library.js:121:7505)
+    at $n.handleAndLogRequestError (/app/node_modules/@prisma/client/runtime/library.js:121:6623)
+    at $n.request (/app/node_modules/@prisma/client/runtime/library.js:121:6307)
+    at async l (/app/node_modules/@prisma/client/runtime/library.js:130:9633)
+    at async c (/app/.next/server/app/api/auth/login/route.js:1:1548)
+    at async /app/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:34666
+    at async eS.execute (/app/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:25813)
+    at async eS.handle (/app/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:35920)
+    at async doRender (/app/node_modules/next/dist/server/base-server.js:1377:42)
+    at async cacheEntry.responseCache.get.routeKind (/app/node_modules/next/dist/server/base-server.js:1599:28) {
+  clientVersion: '5.22.0'

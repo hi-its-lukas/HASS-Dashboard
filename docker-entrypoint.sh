@@ -79,6 +79,16 @@ init_database() {
     log_info "Creating new database at $DB_FILE"
     ./node_modules/.bin/prisma db push 2>&1 || log_warn "Initial schema push had warnings"
   fi
+  
+  # Fix database file permissions after creation
+  if [ "$(id -u)" = "0" ]; then
+    log_info "Fixing database file permissions"
+    chown "$APP_UID:$APP_UID" "$DB_FILE" 2>/dev/null || log_warn "Could not chown database file"
+    chmod 664 "$DB_FILE" 2>/dev/null || true
+    # SQLite also needs write permission on the directory for journal files
+    chown -R "$APP_UID:$APP_UID" "$DATA_DIR" 2>/dev/null || log_warn "Could not chown data directory"
+  fi
+  
   log_info "Database ready"
 }
 
