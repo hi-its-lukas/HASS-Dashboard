@@ -1,7 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { csrfProtection } from '@/lib/auth/csrf'
+import { getSessionFromCookie } from '@/lib/auth/session'
 
 export async function POST(req: NextRequest) {
   try {
+    const csrfError = csrfProtection(req)
+    if (csrfError) return csrfError
+    
+    const session = await getSessionFromCookie()
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    
     const { controllerUrl, username, password } = await req.json()
     
     if (!controllerUrl || !username || !password) {

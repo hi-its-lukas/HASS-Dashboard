@@ -91,8 +91,11 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function DELETE() {
+export async function DELETE(request: NextRequest) {
   try {
+    const csrfError = csrfProtection(request)
+    if (csrfError) return csrfError
+    
     const session = await getSessionFromCookie()
     
     if (!session) {

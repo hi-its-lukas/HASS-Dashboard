@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import webpush from 'web-push'
 import { getSubscriptionsForUsers, removeSubscriptionByEndpoint } from '@/lib/push/subscriptions'
+import { csrfProtection } from '@/lib/auth/csrf'
+import { getSessionFromCookie } from '@/lib/auth/session'
 
 let vapidConfigured = false
 
@@ -25,6 +27,14 @@ function configureVapid() {
 }
 
 export async function POST(request: NextRequest) {
+  const csrfError = csrfProtection(request)
+  if (csrfError) return csrfError
+  
+  const session = await getSessionFromCookie()
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+  
   if (!configureVapid()) {
     return NextResponse.json(
       { error: 'VAPID keys not configured' },

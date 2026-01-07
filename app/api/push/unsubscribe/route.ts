@@ -1,8 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { removeSubscription, removeSubscriptionByEndpoint } from '@/lib/push/subscriptions'
+import { csrfProtection } from '@/lib/auth/csrf'
+import { getSessionFromCookie } from '@/lib/auth/session'
 
 export async function POST(request: NextRequest) {
   try {
+    const csrfError = csrfProtection(request)
+    if (csrfError) return csrfError
+    
+    const session = await getSessionFromCookie()
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    
     const body = await request.json()
     const { userId, endpoint } = body
     

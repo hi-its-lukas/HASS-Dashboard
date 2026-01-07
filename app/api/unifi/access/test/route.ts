@@ -1,10 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { AccessClient } from '@/lib/unifi/access-client'
+import { csrfProtection } from '@/lib/auth/csrf'
+import { getSessionFromCookie } from '@/lib/auth/session'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
   try {
+    const csrfError = csrfProtection(request)
+    if (csrfError) return csrfError
+    
+    const session = await getSessionFromCookie()
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    
     const { controllerUrl, apiKey } = await request.json()
     
     if (!controllerUrl || !apiKey) {

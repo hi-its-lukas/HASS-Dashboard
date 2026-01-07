@@ -1,14 +1,18 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { getSessionFromCookie } from '@/lib/auth/session'
 import prisma from '@/lib/db/client'
 import { ProtectClient } from '@/lib/unifi/protect-client'
 import { AccessClient } from '@/lib/unifi/access-client'
 import { decryptUnifiApiKeys, UnifiConfig } from '@/lib/unifi/encryption'
+import { csrfProtection } from '@/lib/auth/csrf'
 
 export const dynamic = 'force-dynamic'
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
+    const csrfError = csrfProtection(request)
+    if (csrfError) return csrfError
+    
     const session = await getSessionFromCookie()
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
