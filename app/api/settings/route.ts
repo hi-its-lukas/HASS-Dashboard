@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSessionFromCookie } from '@/lib/auth/session'
 import prisma from '@/lib/db/client'
 import { encryptUnifiApiKeys, decryptUnifiApiKeys, UnifiConfig } from '@/lib/unifi/encryption'
+import { SettingsRequestSchema, validateRequestSize } from '@/lib/validation/settings'
+import { validateUnifiControllerUrl } from '@/lib/validation/unifi-url'
 
 export const dynamic = 'force-dynamic'
 
@@ -66,8 +68,39 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
     
-    const body = await request.json()
-    let { layoutConfig, sidebarState } = body
+    const rawBody = await request.text()
+    
+    if (!validateRequestSize(rawBody)) {
+      return NextResponse.json({ error: 'Request body too large (max 100KB)' }, { status: 413 })
+    }
+    
+    let body: unknown
+    try {
+      body = JSON.parse(rawBody)
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+    }
+    
+    const validationResult = SettingsRequestSchema.safeParse(body)
+    if (!validationResult.success) {
+      console.error('[API] Settings validation failed:', validationResult.error.issues)
+      return NextResponse.json({ 
+        error: 'Invalid settings format',
+        details: validationResult.error.issues.map(i => `${i.path.join('.')}: ${i.message}`)
+      }, { status: 400 })
+    }
+    
+    let { layoutConfig, sidebarState } = validationResult.data
+    
+    if (layoutConfig?.unifi?.controllerUrl) {
+      const urlValidation = validateUnifiControllerUrl(layoutConfig.unifi.controllerUrl)
+      if (!urlValidation.valid) {
+        return NextResponse.json({ error: `Invalid UniFi URL: ${urlValidation.error}` }, { status: 400 })
+      }
+      if (urlValidation.sanitized) {
+        layoutConfig.unifi.controllerUrl = urlValidation.sanitized
+      }
+    }
     
     if (layoutConfig?.unifi) {
       const existingConfig = await prisma.dashboardConfig.findUnique({

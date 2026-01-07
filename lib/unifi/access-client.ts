@@ -5,6 +5,12 @@ const agent = new https.Agent({
 })
 
 const ACCESS_PORT = 12445
+const REQUEST_TIMEOUT_MS = 30000
+const MAX_RESPONSE_SIZE = 10 * 1024 * 1024
+
+function createAbortSignal(timeoutMs: number = REQUEST_TIMEOUT_MS): AbortSignal {
+  return AbortSignal.timeout(timeoutMs)
+}
 
 export interface AccessDoor {
   unique_id: string
@@ -58,6 +64,7 @@ export class AccessClient {
     
     const response = await fetch(url, {
       ...options,
+      signal: createAbortSignal(),
       headers: {
         'Authorization': `Bearer ${this.apiKey}`,
         'Content-Type': 'application/json',
@@ -68,8 +75,13 @@ export class AccessClient {
     })
     
     if (!response.ok) {
-      const text = await response.text()
-      throw new Error(`Access API error: ${response.status} - ${text}`)
+      const text = await response.text().catch(() => 'Unknown error')
+      throw new Error(`Access API error: ${response.status} - ${text.slice(0, 500)}`)
+    }
+    
+    const contentLength = response.headers.get('content-length')
+    if (contentLength && parseInt(contentLength) > MAX_RESPONSE_SIZE) {
+      throw new Error('Response too large')
     }
     
     const data = await response.json()

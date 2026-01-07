@@ -4,6 +4,13 @@ const agent = new https.Agent({
   rejectUnauthorized: false
 })
 
+const REQUEST_TIMEOUT_MS = 30000
+const MAX_RESPONSE_SIZE = 10 * 1024 * 1024
+
+function createAbortSignal(timeoutMs: number = REQUEST_TIMEOUT_MS): AbortSignal {
+  return AbortSignal.timeout(timeoutMs)
+}
+
 export interface ProtectCamera {
   id: string
   name: string
@@ -54,6 +61,7 @@ export class ProtectClient {
     
     const response = await fetch(url, {
       ...options,
+      signal: createAbortSignal(),
       headers: {
         'X-API-KEY': this.apiKey,
         'Content-Type': 'application/json',
@@ -64,8 +72,13 @@ export class ProtectClient {
     })
     
     if (!response.ok) {
-      const text = await response.text()
-      throw new Error(`Protect API error: ${response.status} - ${text}`)
+      const text = await response.text().catch(() => 'Unknown error')
+      throw new Error(`Protect API error: ${response.status} - ${text.slice(0, 500)}`)
+    }
+    
+    const contentLength = response.headers.get('content-length')
+    if (contentLength && parseInt(contentLength) > MAX_RESPONSE_SIZE) {
+      throw new Error('Response too large')
     }
     
     return response.json()
@@ -110,6 +123,7 @@ export class ProtectClient {
     const url = `${this.baseUrl}/proxy/protect/integration/v1/events/${eventId}/thumbnail`
     
     const response = await fetch(url, {
+      signal: createAbortSignal(),
       headers: {
         'X-API-KEY': this.apiKey
       },
@@ -129,6 +143,7 @@ export class ProtectClient {
     const url = `${this.baseUrl}/proxy/protect/integration/v1/cameras/${cameraId}/snapshot`
     
     const response = await fetch(url, {
+      signal: createAbortSignal(),
       headers: {
         'X-API-KEY': this.apiKey
       },

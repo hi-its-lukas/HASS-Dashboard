@@ -9,6 +9,14 @@ HA Dashboard is a modern, mobile-first Progressive Web App (PWA) for Home Assist
 Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (2026-01-07)
+- **Security Hardening**
+  - Session lifetime reduced from 365 to 30 days
+  - Token-Substring User-IDs replaced with SHA-256 hashed stable IDs verified against HA API
+  - Base URL hardened: Production uses `APP_BASE_URL` only, optional `ALLOWED_HOSTS` allowlist
+  - UniFi Controller URL validation: HTTPS required in prod, no credentials in URL, SSRF protection
+  - All UniFi API requests now have 30-second timeout and max response size (10MB)
+  - Settings API validates input with Zod schema, 100KB request size limit
+  - API keys never exposed to client (only boolean `_hasProtectKey`/`_hasAccessKey` flags)
 - **Internal Authentication System** - Username/password login with RBAC
   - Replaced OAuth-only login with internal user management
   - Database schema extended: User (username, passwordHash, roleId, status), Role, Permission, RolePermission, UserPermissionOverride

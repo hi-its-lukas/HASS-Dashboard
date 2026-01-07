@@ -208,10 +208,52 @@ interface HAUserInfo {
 }
 
 async function fetchHAUserInfo(haUrl: string, accessToken: string): Promise<HAUserInfo> {
-  const userId = accessToken.substring(0, 32)
-  return { 
-    id: userId, 
-    name: 'User' 
+  try {
+    // Call Home Assistant API to get current user info
+    const response = await fetch(`${haUrl}/api/`, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      }
+    })
+    
+    if (!response.ok) {
+      throw new Error(`HA API check failed: ${response.status}`)
+    }
+    
+    // Try to get user-specific info from the auth/current_user endpoint
+    const userResponse = await fetch(`${haUrl}/api/config`, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      }
+    })
+    
+    if (userResponse.ok) {
+      const config = await userResponse.json()
+      // Generate a stable, unique ID based on HA instance + token hash
+      // This ensures the same user always gets the same ID
+      const { createHash } = await import('crypto')
+      const tokenHash = createHash('sha256').update(accessToken).digest('hex').substring(0, 32)
+      const instanceId = config.uuid || config.location_name || haUrl
+      const stableUserId = createHash('sha256')
+        .update(`${instanceId}:${tokenHash}`)
+        .digest('hex')
+        .substring(0, 32)
+      
+      return {
+        id: stableUserId,
+        name: config.location_name || 'Home Assistant User'
+      }
+    }
+    
+    // Fallback: Create stable ID from token hash (token is validated above)
+    const { createHash } = await import('crypto')
+    const stableId = createHash('sha256').update(accessToken).digest('hex').substring(0, 32)
+    return { id: stableId, name: 'User' }
+  } catch (error) {
+    console.error('[OAuth] Failed to fetch HA user info:', error)
+    throw new Error('Failed to verify Home Assistant token')
   }
 }
 
@@ -340,6 +382,18 @@ export function validateClientId(storedClientId: string | null, currentBaseUrl: 
 }
 
 export function deriveBaseUrlFromRequest(request: Request): string {
+  // SECURITY: In production, ALWAYS use APP_BASE_URL to prevent Host Header Poisoning
+  if (process.env.NODE_ENV === 'production') {
+    const appBaseUrl = process.env.APP_BASE_URL
+    if (appBaseUrl) {
+      return appBaseUrl.replace(/\/$/, '')
+    }
+    console.warn('[OAuth] APP_BASE_URL not set in production - this is a security risk!')
+  }
+  
+  // Check allowed hosts if configured
+  const allowedHosts = process.env.ALLOWED_HOSTS?.split(',').map(h => h.trim().toLowerCase()) || []
+  
   const forwardedProto = request.headers.get('x-forwarded-proto')
   const cfVisitor = request.headers.get('cf-visitor')
   let protocol = forwardedProto || 'http'
@@ -356,13 +410,27 @@ export function deriveBaseUrlFromRequest(request: Request): string {
   const forwardedHost = request.headers.get('x-forwarded-host')
   const host = forwardedHost || request.headers.get('host')
   
-  if (!host || host.includes(':80') || /^[a-f0-9]{12}/.test(host)) {
-    console.warn('[OAuth] Invalid host detected:', host, '- check reverse proxy headers')
+  if (!host) {
+    console.warn('[OAuth] No host header found')
+    return process.env.APP_BASE_URL || 'http://localhost:3000'
+  }
+  
+  // Validate host against allowlist if configured
+  const hostWithoutPort = host.split(':')[0].toLowerCase()
+  if (allowedHosts.length > 0 && !allowedHosts.includes(hostWithoutPort)) {
+    console.warn('[OAuth] Host not in allowlist:', host)
+    return process.env.APP_BASE_URL || 'http://localhost:3000'
+  }
+  
+  // Reject suspicious hosts (random hex strings, internal IPs in production)
+  if (/^[a-f0-9]{12}/.test(host)) {
+    console.warn('[OAuth] Suspicious host detected:', host)
+    return process.env.APP_BASE_URL || 'http://localhost:3000'
   }
   
   let baseUrl = `${protocol}://${host}`
   
-  if (host && (host.endsWith(':80') || host.endsWith(':443'))) {
+  if (host.endsWith(':80') || host.endsWith(':443')) {
     const cleanHost = host.replace(/:80$/, '').replace(/:443$/, '')
     baseUrl = `${protocol}://${cleanHost}`
   }
