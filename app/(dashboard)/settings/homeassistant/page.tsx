@@ -304,18 +304,9 @@ export default function HomeAssistantSettingsPage() {
     })
   }
   
-  const SearchInput = ({ section }: { section: string }) => (
-    <div className="relative mb-3">
-      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-      <input
-        type="text"
-        placeholder="Suchen..."
-        value={searchFilters[section] || ''}
-        onChange={(e) => setSearchFilters(prev => ({ ...prev, [section]: e.target.value }))}
-        className="w-full pl-9 pr-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-white/20"
-      />
-    </div>
-  )
+  const updateSearchFilter = (section: string, value: string) => {
+    setSearchFilters(prev => ({ ...prev, [section]: value }))
+  }
   
   const saveConfig = async () => {
     setSaving(true)
@@ -465,7 +456,16 @@ export default function HomeAssistantSettingsPage() {
                     <p className="text-gray-500 text-sm">Keine Personen gefunden</p>
                   ) : (
                     <>
-                      <SearchInput section="persons" />
+                      <div className="relative mb-3">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                        <input
+                          type="text"
+                          placeholder="Suchen..."
+                          value={searchFilters.persons || ''}
+                          onChange={(e) => updateSearchFilter('persons', e.target.value)}
+                          className="w-full pl-9 pr-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-white/20"
+                        />
+                      </div>
                       <div className="space-y-2 max-h-64 overflow-y-auto">
                         {filterEntities(discovered.persons, searchFilters.persons).map(entity => (
                           <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
@@ -505,7 +505,16 @@ export default function HomeAssistantSettingsPage() {
                     <p className="text-gray-500 text-sm">Keine Lichtquellen gefunden</p>
                   ) : (
                     <>
-                      <SearchInput section="lights" />
+                      <div className="relative mb-3">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                        <input
+                          type="text"
+                          placeholder="Suchen..."
+                          value={searchFilters.lights || ''}
+                          onChange={(e) => updateSearchFilter('lights', e.target.value)}
+                          className="w-full pl-9 pr-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-white/20"
+                        />
+                      </div>
                       <div className="space-y-2 max-h-64 overflow-y-auto">
                         {filterEntities(discovered.lights, searchFilters.lights).map(entity => (
                           <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
@@ -547,7 +556,16 @@ export default function HomeAssistantSettingsPage() {
                     <p className="text-gray-500 text-sm">Keine Rollos gefunden</p>
                   ) : (
                     <>
-                      <SearchInput section="covers" />
+                      <div className="relative mb-3">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                        <input
+                          type="text"
+                          placeholder="Suchen..."
+                          value={searchFilters.covers || ''}
+                          onChange={(e) => updateSearchFilter('covers', e.target.value)}
+                          className="w-full pl-9 pr-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-white/20"
+                        />
+                      </div>
                       <div className="space-y-2 max-h-64 overflow-y-auto">
                         {filterEntities(discovered.covers, searchFilters.covers).map(entity => (
                           <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
@@ -586,7 +604,16 @@ export default function HomeAssistantSettingsPage() {
                     <p className="text-gray-500 text-sm">Keine Markisen gefunden</p>
                   ) : (
                     <>
-                      <SearchInput section="awnings" />
+                      <div className="relative mb-3">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                        <input
+                          type="text"
+                          placeholder="Suchen..."
+                          value={searchFilters.awnings || ''}
+                          onChange={(e) => updateSearchFilter('awnings', e.target.value)}
+                          className="w-full pl-9 pr-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-white/20"
+                        />
+                      </div>
                       <div className="space-y-2 max-h-64 overflow-y-auto">
                         {filterEntities(discovered.covers, searchFilters.awnings).map(entity => (
                           <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
@@ -635,7 +662,16 @@ export default function HomeAssistantSettingsPage() {
                     <p className="text-gray-500 text-sm">Keine Gardinen gefunden</p>
                   ) : (
                     <>
-                      <SearchInput section="curtains" />
+                      <div className="relative mb-3">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                        <input
+                          type="text"
+                          placeholder="Suchen..."
+                          value={searchFilters.curtains || ''}
+                          onChange={(e) => updateSearchFilter('curtains', e.target.value)}
+                          className="w-full pl-9 pr-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-white/20"
+                        />
+                      </div>
                       <div className="space-y-2 max-h-64 overflow-y-auto">
                         {filterEntities(discovered.covers, searchFilters.curtains).map(entity => (
                           <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
@@ -682,7 +718,16 @@ export default function HomeAssistantSettingsPage() {
                     <p className="text-gray-500 text-sm">Klicke auf "Discover" um Entitäten zu laden</p>
                   ) : (
                     <>
-                      <SearchInput section="climates" />
+                      <div className="relative mb-3">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                        <input
+                          type="text"
+                          placeholder="Suchen..."
+                          value={searchFilters.climates || ''}
+                          onChange={(e) => updateSearchFilter('climates', e.target.value)}
+                          className="w-full pl-9 pr-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-white/20"
+                        />
+                      </div>
                       <div className="space-y-2 max-h-64 overflow-y-auto">
                         {filterEntities(discovered.climates || [], searchFilters.climates).map(entity => (
                           <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
@@ -734,7 +779,16 @@ export default function HomeAssistantSettingsPage() {
                     <p className="text-gray-500 text-sm">Keine Kalender gefunden</p>
                   ) : (
                     <>
-                      <SearchInput section="calendars" />
+                      <div className="relative mb-3">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                        <input
+                          type="text"
+                          placeholder="Suchen..."
+                          value={searchFilters.calendars || ''}
+                          onChange={(e) => updateSearchFilter('calendars', e.target.value)}
+                          className="w-full pl-9 pr-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-white/20"
+                        />
+                      </div>
                       <div className="space-y-2 max-h-64 overflow-y-auto">
                         {filterEntities(discovered.calendars || [], searchFilters.calendars).map(entity => (
                           <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
@@ -776,7 +830,16 @@ export default function HomeAssistantSettingsPage() {
                     <p className="text-gray-500 text-sm">Keine Kameras gefunden</p>
                   ) : (
                     <>
-                      <SearchInput section="cameras" />
+                      <div className="relative mb-3">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                        <input
+                          type="text"
+                          placeholder="Suchen..."
+                          value={searchFilters.cameras || ''}
+                          onChange={(e) => updateSearchFilter('cameras', e.target.value)}
+                          className="w-full pl-9 pr-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-white/20"
+                        />
+                      </div>
                       <div className="space-y-2 max-h-64 overflow-y-auto">
                         {filterEntities(discovered.cameras || [], searchFilters.cameras).map(entity => (
                           <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
@@ -813,7 +876,16 @@ export default function HomeAssistantSettingsPage() {
                     <p className="text-gray-500 text-sm">Klicke auf "Discover" um Entitäten zu laden</p>
                   ) : (
                     <>
-                      <SearchInput section="appliances" />
+                      <div className="relative mb-3">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                        <input
+                          type="text"
+                          placeholder="Suchen..."
+                          value={searchFilters.appliances || ''}
+                          onChange={(e) => updateSearchFilter('appliances', e.target.value)}
+                          className="w-full pl-9 pr-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-white/20"
+                        />
+                      </div>
                       <div className="space-y-2 max-h-64 overflow-y-auto">
                         {filterEntities(discovered.sensors?.filter(s => s.attributes.device_class === 'power') || [], searchFilters.appliances).map(entity => (
                           <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
