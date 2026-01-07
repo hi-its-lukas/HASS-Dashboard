@@ -49,7 +49,7 @@ export async function GET(
       gif: 'image/gif',
     }[ext || 'jpg'] || 'image/jpeg'
     
-    return new NextResponse(buffer, {
+    return new NextResponse(new Uint8Array(buffer), {
       headers: {
         'Content-Type': contentType,
         'Cache-Control': 'private, max-age=3600',

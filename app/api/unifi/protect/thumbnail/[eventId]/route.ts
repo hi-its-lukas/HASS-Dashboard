@@ -36,7 +36,7 @@ export async function GET(
     const client = new ProtectClient(unifi.controllerUrl, unifi.protectApiKey)
     const thumbnail = await client.getThumbnail(eventId)
     
-    return new NextResponse(thumbnail, {
+    return new NextResponse(new Uint8Array(thumbnail), {
       headers: {
         'Content-Type': 'image/jpeg',
         'Cache-Control': 'public, max-age=3600'
