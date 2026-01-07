@@ -1041,7 +1041,7 @@ export default function HomeAssistantSettingsPage() {
                           s.entity_id.includes('pv')
                         ).map(sensor => (
                           <option key={sensor.entity_id} value={sensor.entity_id}>
-                            {getFriendlyName(sensor)} ({sensor.state} {sensor.attributes?.unit_of_measurement || 'W'})
+                            {getFriendlyName(sensor)} ({sensor.state} {String(sensor.attributes?.unit_of_measurement || 'W')})
                           </option>
                         ))}
                         <optgroup label="Helfer (input_number)">
@@ -1077,7 +1077,7 @@ export default function HomeAssistantSettingsPage() {
                           (s.attributes?.unit_of_measurement === 'W' || s.attributes?.device_class === 'power')
                         ).map(sensor => (
                           <option key={sensor.entity_id} value={sensor.entity_id}>
-                            {getFriendlyName(sensor)} ({sensor.state} {sensor.attributes?.unit_of_measurement || 'W'})
+                            {getFriendlyName(sensor)} ({sensor.state} {String(sensor.attributes?.unit_of_measurement || 'W')})
                           </option>
                         ))}
                         <optgroup label="Helfer (input_number)">
@@ -1114,7 +1114,7 @@ export default function HomeAssistantSettingsPage() {
                           s.entity_id.includes('battery') && s.entity_id.includes('level')
                         ).map(sensor => (
                           <option key={sensor.entity_id} value={sensor.entity_id}>
-                            {getFriendlyName(sensor)} ({sensor.state} {sensor.attributes?.unit_of_measurement || '%'})
+                            {getFriendlyName(sensor)} ({sensor.state} {String(sensor.attributes?.unit_of_measurement || '%')})
                           </option>
                         ))}
                         <optgroup label="Helfer (input_number)">
@@ -1151,7 +1151,7 @@ export default function HomeAssistantSettingsPage() {
                           (s.attributes?.unit_of_measurement === 'W' && s.attributes?.device_class === 'power')
                         ).map(sensor => (
                           <option key={sensor.entity_id} value={sensor.entity_id}>
-                            {getFriendlyName(sensor)} ({sensor.state} {sensor.attributes?.unit_of_measurement || 'W'})
+                            {getFriendlyName(sensor)} ({sensor.state} {String(sensor.attributes?.unit_of_measurement || 'W')})
                           </option>
                         ))}
                         <optgroup label="Alle Sensoren">
@@ -1187,7 +1187,7 @@ export default function HomeAssistantSettingsPage() {
                           s.attributes?.device_class === 'power'
                         ).map(sensor => (
                           <option key={sensor.entity_id} value={sensor.entity_id}>
-                            {getFriendlyName(sensor)} ({sensor.state} {sensor.attributes?.unit_of_measurement || 'W'})
+                            {getFriendlyName(sensor)} ({sensor.state} {String(sensor.attributes?.unit_of_measurement || 'W')})
                           </option>
                         ))}
                         <optgroup label="Helfer (input_number)">
