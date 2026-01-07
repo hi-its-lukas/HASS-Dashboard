@@ -444,7 +444,7 @@ export default function SettingsPage() {
               >
                 <div className="flex items-center gap-3">
                   <Users className="w-5 h-5 text-blue-400" />
-                  <span className="text-white font-medium">Personen {discovered ? `(${discovered.persons.length})` : ''}</span>
+                  <span className="text-white font-medium">Personen {discovered ? `(${config.persons.length}/${discovered.persons.length})` : ''}</span>
                 </div>
                 {expandedSections.persons ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
               </button>
@@ -660,7 +660,7 @@ export default function SettingsPage() {
                 >
                   <div className="flex items-center gap-3">
                     <Lightbulb className="w-5 h-5 text-yellow-400" />
-                    <span className="text-white font-medium">Lichtquellen {discovered ? `(${discovered.lights.length})` : ''}</span>
+                    <span className="text-white font-medium">Lichtquellen {discovered ? `(${config.lights.length}/${discovered.lights.length})` : ''}</span>
                   </div>
                   {expandedSections.lights ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
                 </button>
@@ -697,7 +697,7 @@ export default function SettingsPage() {
                 >
                   <div className="flex items-center gap-3">
                     <LayoutGrid className="w-5 h-5 text-purple-400" />
-                    <span className="text-white font-medium">Rollos {discovered ? `(${discovered.covers.length})` : ''}</span>
+                    <span className="text-white font-medium">Rollos {discovered ? `(${config.covers.length}/${discovered.covers.length})` : ''}</span>
                   </div>
                   {expandedSections.covers ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
                 </button>
@@ -731,7 +731,7 @@ export default function SettingsPage() {
                 >
                   <div className="flex items-center gap-3">
                     <Sun className="w-5 h-5 text-amber-500" />
-                    <span className="text-white font-medium">Markisen ({(config as { awnings?: string[] }).awnings?.length || 0})</span>
+                    <span className="text-white font-medium">Markisen {discovered ? `(${(config as { awnings?: string[] }).awnings?.length || 0}/${discovered.covers.length})` : ''}</span>
                   </div>
                   {expandedSections.awnings ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
                 </button>
@@ -778,7 +778,7 @@ export default function SettingsPage() {
                 >
                   <div className="flex items-center gap-3">
                     <Theater className="w-5 h-5 text-purple-400" />
-                    <span className="text-white font-medium">Gardinen ({(config as { curtains?: string[] }).curtains?.length || 0})</span>
+                    <span className="text-white font-medium">Gardinen {discovered ? `(${(config as { curtains?: string[] }).curtains?.length || 0}/${discovered.covers.length})` : ''}</span>
                   </div>
                   {expandedSections.curtains ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
                 </button>
@@ -825,7 +825,7 @@ export default function SettingsPage() {
                 >
                   <div className="flex items-center gap-3">
                     <Thermometer className="w-5 h-5 text-orange-400" />
-                    <span className="text-white font-medium">Klima / Heizung {discovered ? `(${(discovered.climates?.length || 0) + (discovered.fans?.length || 0)})` : ''}</span>
+                    <span className="text-white font-medium">Klima / Heizung {discovered ? `(${config.climates?.length || 0}/${(discovered.climates?.length || 0) + (discovered.fans?.length || 0)})` : ''}</span>
                   </div>
                   {expandedSections.climates ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
                 </button>
@@ -892,7 +892,7 @@ export default function SettingsPage() {
                 >
                   <div className="flex items-center gap-3">
                     <Calendar className="w-5 h-5 text-cyan-400" />
-                    <span className="text-white font-medium">Kalender ({config.calendars?.length || 0})</span>
+                    <span className="text-white font-medium">Kalender {discovered ? `(${config.calendars?.length || 0}/${discovered.calendars?.length || 0})` : ''}</span>
                   </div>
                   {expandedSections.calendars ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
                 </button>
@@ -1138,7 +1138,7 @@ export default function SettingsPage() {
                 >
                   <div className="flex items-center gap-3">
                     <PlugZap className="w-5 h-5 text-orange-400" />
-                    <span className="text-white font-medium">Geräte / Appliances ({config.appliances?.length || 0})</span>
+                    <span className="text-white font-medium">Geräte / Appliances {discovered ? `(${config.appliances?.length || 0}/${(discovered.sensors?.filter(s => s.attributes.device_class === 'power' || s.entity_id.includes('washer') || s.entity_id.includes('dryer') || s.entity_id.includes('dishwasher') || s.entity_id.includes('heater') || s.entity_id.includes('boiler') || s.entity_id.includes('pump')).length || 0) + (discovered.switches?.length || 0)})` : ''}</span>
                   </div>
                   {expandedSections.appliances ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
                 </button>
@@ -1193,7 +1193,7 @@ export default function SettingsPage() {
                 >
                   <div className="flex items-center gap-3">
                     <Play className="w-5 h-5 text-cyan-400" />
-                    <span className="text-white font-medium">Aktionen ({config.customButtons?.length || 0})</span>
+                    <span className="text-white font-medium">Aktionen {discovered ? `(${config.customButtons?.length || 0}/${discovered.scripts?.length || 0})` : ''}</span>
                   </div>
                   {expandedSections.buttons ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
                 </button>
