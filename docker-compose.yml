@@ -11,5 +11,6 @@ services:
       - NODE_ENV=production
       - ENCRYPTION_KEY=${ENCRYPTION_KEY:-}
       - SQLITE_URL=file:/data/hass-dashboard.db
+      - HOSTNAME=0.0.0.0
     volumes:
       - ./data:/data
