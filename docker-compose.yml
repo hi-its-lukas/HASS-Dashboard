@@ -10,6 +10,6 @@ services:
     environment:
       - NODE_ENV=production
       - ENCRYPTION_KEY=${ENCRYPTION_KEY:-}
-      - DATABASE_URL=${DATABASE_URL:-file:/data/hass-dashboard.db}
+      - SQLITE_URL=file:/data/hass-dashboard.db
     volumes:
       - ./data:/data
