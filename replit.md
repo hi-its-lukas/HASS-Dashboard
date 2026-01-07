@@ -2,13 +2,24 @@
 
 ## Overview
 
-HA Dashboard is a modern, mobile-first Progressive Web App (PWA) for Home Assistant. It provides a sleek interface with dark neumorphism/glassmorphism design for controlling smart home devices, monitoring energy usage, security systems, and family presence. The application uses OAuth authentication with Home Assistant instances and stores user configurations server-side.
+HA Dashboard is a modern, mobile-first Progressive Web App (PWA) for Home Assistant. It provides a sleek interface with dark neumorphism/glassmorphism design for controlling smart home devices, monitoring energy usage, security systems, and family presence. The application uses internal username/password authentication with role-based access control (RBAC). A global Home Assistant token connects all users to the same HA instance. User configurations are stored server-side per user.
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (2026-01-07)
+- **Internal Authentication System** - Username/password login with RBAC
+  - Replaced OAuth-only login with internal user management
+  - Database schema extended: User (username, passwordHash, roleId, status), Role, Permission, RolePermission, UserPermissionOverride
+  - 5 predefined roles: Owner, Admin, Power User, Viewer, Guest
+  - 23 permissions across settings, modules, and actions
+  - Login page shows HA connection status indicator
+  - Default admin user: `admin / admin` (change after first login!)
+  - User management page at `/settings/users`
+  - API routes: `/api/auth/login`, `/api/admin/users`, `/api/admin/users/[id]`, `/api/ha/status`
+  - Permission system with role-based and per-user override support
+  - Prisma now uses `SQLITE_URL` instead of `DATABASE_URL` (to avoid PostgreSQL conflict)
 - **UniFi Integration** - Full UniFi Protect and Access integration
   - Config store extended with `UnifiConfig` type (controllerUrl, username, password, cameras, accessDevices, aiSurveillanceEnabled)
   - UniFi Settings page at `/settings/unifi` for controller configuration
