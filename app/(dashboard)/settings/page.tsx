@@ -40,7 +40,6 @@ import {
   Thermometer,
   Fan,
   Sparkles,
-  Sun,
   Theater
 } from 'lucide-react'
 import { PushSettings } from '@/components/settings/push-settings'
