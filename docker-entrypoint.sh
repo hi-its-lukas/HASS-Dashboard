@@ -71,22 +71,25 @@ setup_encryption_key() {
 }
 
 init_database() {
-  if [ -f "$DB_FILE" ]; then
-    log_info "Existing database found at $DB_FILE"
-    log_info "Syncing database schema..."
-    ./node_modules/.bin/prisma db push --accept-data-loss 2>&1 || log_warn "Schema sync had warnings"
-  else
-    log_info "Creating new database at $DB_FILE"
-    ./node_modules/.bin/prisma db push 2>&1 || log_warn "Initial schema push had warnings"
-  fi
-  
-  # Fix database file permissions after creation
+  # Run Prisma as nextjs user so database is created with correct ownership
   if [ "$(id -u)" = "0" ]; then
-    log_info "Fixing database file permissions"
-    chown "$APP_UID:$APP_UID" "$DB_FILE" 2>/dev/null || log_warn "Could not chown database file"
-    chmod 664 "$DB_FILE" 2>/dev/null || true
-    # SQLite also needs write permission on the directory for journal files
-    chown -R "$APP_UID:$APP_UID" "$DATA_DIR" 2>/dev/null || log_warn "Could not chown data directory"
+    if [ -f "$DB_FILE" ]; then
+      log_info "Existing database found at $DB_FILE"
+      log_info "Syncing database schema..."
+      gosu "$APP_USER" ./node_modules/.bin/prisma db push --accept-data-loss 2>&1 || log_warn "Schema sync had warnings"
+    else
+      log_info "Creating new database at $DB_FILE"
+      gosu "$APP_USER" ./node_modules/.bin/prisma db push 2>&1 || log_warn "Initial schema push had warnings"
+    fi
+  else
+    if [ -f "$DB_FILE" ]; then
+      log_info "Existing database found at $DB_FILE"
+      log_info "Syncing database schema..."
+      ./node_modules/.bin/prisma db push --accept-data-loss 2>&1 || log_warn "Schema sync had warnings"
+    else
+      log_info "Creating new database at $DB_FILE"
+      ./node_modules/.bin/prisma db push 2>&1 || log_warn "Initial schema push had warnings"
+    fi
   fi
   
   log_info "Database ready"
