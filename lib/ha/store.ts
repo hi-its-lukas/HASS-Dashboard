@@ -85,24 +85,14 @@ export const useHAStore = create<HAStore>((set, get) => ({
     }
 
     try {
-      // Get HA instance URL from user's session/config
-      const meRes = await fetch('/api/me')
-      if (!meRes.ok) throw new Error('Not authenticated')
-      const meData = await meRes.json()
-      
-      if (!meData.user?.haInstanceUrl) {
-        throw new Error('Home Assistant URL not configured')
+      const wsAuthRes = await fetch('/api/ha/ws-auth')
+      if (!wsAuthRes.ok) {
+        const data = await wsAuthRes.json()
+        throw new Error(data.error || 'Home Assistant nicht konfiguriert')
       }
+      const wsAuth = await wsAuthRes.json()
       
-      const haUrl = meData.user.haInstanceUrl.replace(/\/$/, '')
-      const wsUrl = haUrl.replace(/^http/, 'ws') + '/api/websocket'
-
-      wsClient = new HAWebSocketClient(wsUrl, async () => {
-        const res = await fetch('/api/ha/token')
-        if (!res.ok) throw new Error('Failed to get token')
-        const { token } = await res.json()
-        return token
-      })
+      wsClient = new HAWebSocketClient(wsAuth.wsUrl, async () => wsAuth.token)
 
       await wsClient.connect()
 

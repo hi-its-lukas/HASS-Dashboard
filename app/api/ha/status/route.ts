@@ -1,50 +1,42 @@
 import { NextResponse } from 'next/server'
+import { getGlobalHAConfig, testHAConnection } from '@/lib/ha/token'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
   try {
-    const haUrl = process.env.HA_URL
-    const haToken = process.env.HA_ACCESS_TOKEN
+    const config = await getGlobalHAConfig()
     
-    if (!haUrl || !haToken) {
+    if (!config.url || !config.token) {
       return NextResponse.json({ 
         connected: false, 
-        error: 'Home Assistant not configured',
+        error: 'Home Assistant nicht konfiguriert',
         configured: false
       })
     }
     
-    const response = await fetch(`${haUrl}/api/`, {
-      headers: {
-        'Authorization': `Bearer ${haToken}`,
-        'Content-Type': 'application/json'
-      },
-      signal: AbortSignal.timeout(5000)
-    })
+    const result = await testHAConnection(config.url, config.token)
     
-    if (!response.ok) {
+    if (!result.success) {
       return NextResponse.json({ 
         connected: false, 
-        error: 'Connection failed',
+        error: result.message,
         configured: true
       })
     }
     
-    const data = await response.json()
-    
     return NextResponse.json({
       connected: true,
       configured: true,
-      version: data.version,
-      message: data.message
+      version: result.version,
+      message: result.message
     })
   } catch (error) {
     console.error('[API] /ha/status error:', error)
     return NextResponse.json({ 
       connected: false, 
-      error: error instanceof Error ? error.message : 'Connection failed',
-      configured: !!process.env.HA_URL
+      error: error instanceof Error ? error.message : 'Verbindungsfehler',
+      configured: false
     })
   }
 }

@@ -9,6 +9,13 @@ HA Dashboard is a modern, mobile-first Progressive Web App (PWA) for Home Assist
 Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (2026-01-07)
+- **Global Long-Lived Access Token** - Replaced per-user OAuth with shared admin-configured HA token
+  - Admin configures URL + Long-Lived Access Token in `/settings/homeassistant`
+  - Token encrypted with AES-256-GCM and stored in SystemConfig table
+  - All 17 HA API routes updated to use `getGlobalHAConfig()` from `lib/ha/token.ts`
+  - New API route `/api/ha/config` for GET/POST HA configuration
+  - `testHAConnection()` validates token before saving
+  - Settings UI shows "(gespeichert)" indicator when token exists
 - **Security Hardening**
   - Session lifetime reduced from 365 to 30 days
   - Token-Substring User-IDs replaced with SHA-256 hashed stable IDs verified against HA API

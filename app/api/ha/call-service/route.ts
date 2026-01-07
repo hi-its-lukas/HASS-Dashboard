@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSessionFromCookie } from '@/lib/auth/session'
-import { getStoredToken } from '@/lib/auth/ha-oauth'
-import prisma from '@/lib/db/client'
+import { getGlobalHAConfig } from '@/lib/ha/token'
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,18 +10,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
     
-    const user = await prisma.user.findUnique({
-      where: { id: session.userId }
-    })
+    const haConfig = await getGlobalHAConfig()
     
-    if (!user?.haInstanceUrl) {
-      return NextResponse.json({ error: 'No Home Assistant instance configured' }, { status: 400 })
-    }
-    
-    const token = await getStoredToken(session.userId)
-    
-    if (!token) {
-      return NextResponse.json({ error: 'Token expired' }, { status: 401 })
+    if (!haConfig.url || !haConfig.token) {
+      return NextResponse.json({ error: 'Home Assistant nicht konfiguriert' }, { status: 400 })
     }
     
     const body = await request.json()
@@ -32,7 +23,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Domain and service are required' }, { status: 400 })
     }
     
-    const serviceUrl = new URL(`/api/services/${domain}/${service}`, user.haInstanceUrl)
+    const serviceUrl = new URL(`/api/services/${domain}/${service}`, haConfig.url)
     
     const serviceData: Record<string, unknown> = { ...data }
     if (entityId) {
@@ -42,7 +33,7 @@ export async function POST(request: NextRequest) {
     const response = await fetch(serviceUrl.toString(), {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${token}`,
+        'Authorization': `Bearer ${haConfig.token}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(serviceData)

@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSessionFromCookie } from '@/lib/auth/session'
-import { getStoredToken } from '@/lib/auth/ha-oauth'
-import prisma from '@/lib/db/client'
+import { getGlobalHAConfig } from '@/lib/ha/token'
 
 export const dynamic = 'force-dynamic'
 
@@ -35,25 +34,17 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
     
-    const user = await prisma.user.findUnique({
-      where: { id: session.userId }
-    })
+    const haConfig = await getGlobalHAConfig()
     
-    if (!user?.haInstanceUrl) {
-      return NextResponse.json({ error: 'No Home Assistant instance configured' }, { status: 400 })
-    }
-    
-    const token = await getStoredToken(session.userId)
-    
-    if (!token) {
-      return NextResponse.json({ error: 'Token expired' }, { status: 401 })
+    if (!haConfig.url || !haConfig.token) {
+      return NextResponse.json({ error: 'Home Assistant nicht konfiguriert' }, { status: 400 })
     }
     
     const [states, areas, entities, devices] = await Promise.all([
-      fetchStates(user.haInstanceUrl, token),
-      fetchAreas(user.haInstanceUrl, token),
-      fetchEntityRegistry(user.haInstanceUrl, token),
-      fetchDeviceRegistry(user.haInstanceUrl, token)
+      fetchStates(haConfig.url, haConfig.token),
+      fetchAreas(haConfig.url, haConfig.token),
+      fetchEntityRegistry(haConfig.url, haConfig.token),
+      fetchDeviceRegistry(haConfig.url, haConfig.token)
     ])
     
     const persons = states.filter((s: { entity_id: string }) => s.entity_id.startsWith('person.'))

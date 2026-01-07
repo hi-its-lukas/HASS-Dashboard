@@ -14,9 +14,17 @@ export async function GET() {
   
   const haConfig = await getGlobalHAConfig()
   
+  if (!haConfig.url || !haConfig.token) {
+    return NextResponse.json(
+      { error: 'Home Assistant nicht konfiguriert' },
+      { status: 400 }
+    )
+  }
+  
+  const wsUrl = haConfig.url.replace(/^http/, 'ws') + '/api/websocket'
+  
   return NextResponse.json({ 
-    hasToken: !!haConfig.token,
-    hasUrl: !!haConfig.url,
-    configured: !!(haConfig.url && haConfig.token)
+    wsUrl,
+    token: haConfig.token
   })
 }

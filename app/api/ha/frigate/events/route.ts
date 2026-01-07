@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSessionFromCookie } from '@/lib/auth/session'
-import { getStoredToken } from '@/lib/auth/ha-oauth'
+import { getGlobalHAConfig } from '@/lib/ha/token'
 
 export const dynamic = 'force-dynamic'
 
@@ -23,14 +23,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
     
-    const token = await getStoredToken(session.userId)
-    if (!token) {
-      return NextResponse.json({ error: 'No token' }, { status: 401 })
-    }
-    
-    const haUrl = session.user.haInstanceUrl?.replace(/\/$/, '')
-    if (!haUrl) {
-      return NextResponse.json({ error: 'No HA URL' }, { status: 400 })
+    const haConfig = await getGlobalHAConfig()
+    if (!haConfig.url || !haConfig.token) {
+      return NextResponse.json({ error: 'Home Assistant nicht konfiguriert' }, { status: 400 })
     }
     
     const { searchParams } = new URL(request.url)
@@ -39,11 +34,11 @@ export async function GET(request: NextRequest) {
     
     const after = Math.floor(Date.now() / 1000) - (hours * 60 * 60)
     
-    const frigateUrl = `${haUrl}/api/frigate/events?after=${after}&limit=${limit}`
+    const frigateUrl = `${haConfig.url}/api/frigate/events?after=${after}&limit=${limit}`
     
     const res = await fetch(frigateUrl, {
       headers: {
-        'Authorization': `Bearer ${token}`,
+        'Authorization': `Bearer ${haConfig.token}`,
       },
     })
     

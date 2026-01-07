@@ -162,6 +162,11 @@ export default function HomeAssistantSettingsPage() {
   const [saving, setSaving] = useState(false)
   const [status, setStatus] = useState<ConnectionStatus | null>(null)
   const [checkingStatus, setCheckingStatus] = useState(false)
+  const [haUrl, setHaUrl] = useState('')
+  const [haToken, setHaToken] = useState('')
+  const [hasToken, setHasToken] = useState(false)
+  const [savingHaConfig, setSavingHaConfig] = useState(false)
+  const [haConfigMessage, setHaConfigMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [discovered, setDiscovered] = useState<DiscoveredEntities | null>(null)
   const [discoveringEntities, setDiscoveringEntities] = useState(false)
   const [config, setConfig] = useState<LayoutConfig>({
@@ -213,8 +218,52 @@ export default function HomeAssistantSettingsPage() {
   useEffect(() => {
     checkAuth()
     loadSettings()
+    loadHaConfig()
     checkConnectionStatus()
   }, [])
+  
+  const loadHaConfig = async () => {
+    try {
+      const res = await fetch('/api/ha/config')
+      if (res.ok) {
+        const data = await res.json()
+        setHaUrl(data.url || '')
+        setHasToken(data.hasToken || false)
+      }
+    } catch (error) {
+      console.error('Failed to load HA config:', error)
+    }
+  }
+  
+  const saveHaConfig = async () => {
+    setSavingHaConfig(true)
+    setHaConfigMessage(null)
+    try {
+      const res = await fetch('/api/ha/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          url: haUrl, 
+          token: haToken || undefined 
+        })
+      })
+      
+      const data = await res.json()
+      
+      if (res.ok) {
+        setHaConfigMessage({ type: 'success', text: `Verbunden! ${data.version ? `Version: ${data.version}` : ''}` })
+        setHasToken(true)
+        setHaToken('')
+        checkConnectionStatus()
+      } else {
+        setHaConfigMessage({ type: 'error', text: data.error || 'Verbindung fehlgeschlagen' })
+      }
+    } catch (error) {
+      setHaConfigMessage({ type: 'error', text: 'Fehler beim Speichern' })
+    } finally {
+      setSavingHaConfig(false)
+    }
+  }
   
   const checkAuth = async () => {
     const res = await fetch('/api/me')
@@ -253,7 +302,7 @@ export default function HomeAssistantSettingsPage() {
   const checkConnectionStatus = async () => {
     setCheckingStatus(true)
     try {
-      const res = await fetch('/api/status')
+      const res = await fetch('/api/ha/status')
       const data = await res.json()
       setStatus(data)
     } catch (error) {
@@ -388,20 +437,54 @@ export default function HomeAssistantSettingsPage() {
         </div>
         
         <div className="bg-[#141b2d]/80 backdrop-blur-lg rounded-2xl p-6 border border-white/5 mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-white">Verbindungsstatus</h2>
+          <h2 className="text-lg font-semibold text-white mb-4">Verbindung konfigurieren</h2>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">Home Assistant URL</label>
+              <input
+                type="url"
+                value={haUrl}
+                onChange={(e) => setHaUrl(e.target.value)}
+                placeholder="https://homeassistant.local:8123"
+                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">
+                Long-Lived Access Token {hasToken && <span className="text-emerald-400">(gespeichert)</span>}
+              </label>
+              <input
+                type="password"
+                value={haToken}
+                onChange={(e) => setHaToken(e.target.value)}
+                placeholder={hasToken ? '••••••••••••••••' : 'Token eingeben'}
+                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Erstelle einen Token unter: Profil → Langlebige Zugriffstoken
+              </p>
+            </div>
+            
+            {haConfigMessage && (
+              <div className={`p-3 rounded-lg ${haConfigMessage.type === 'success' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
+                {haConfigMessage.text}
+              </div>
+            )}
+            
             <button
-              onClick={checkConnectionStatus}
-              disabled={checkingStatus}
-              className="flex items-center gap-2 px-3 py-1.5 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg transition-colors text-sm"
+              onClick={saveHaConfig}
+              disabled={savingHaConfig || !haUrl}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white rounded-lg transition-colors"
             >
-              {checkingStatus ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-              Prüfen
+              {savingHaConfig ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              Speichern & Testen
             </button>
           </div>
           
           {status && (
-            <div className={`flex items-center gap-3 p-4 rounded-xl ${status.connected ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-red-500/10 border border-red-500/20'}`}>
+            <div className={`flex items-center gap-3 p-4 rounded-xl mt-4 ${status.connected ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-red-500/10 border border-red-500/20'}`}>
               {status.connected ? (
                 <CheckCircle className="w-6 h-6 text-emerald-400" />
               ) : (
@@ -418,15 +501,13 @@ export default function HomeAssistantSettingsPage() {
                   <p className="text-sm text-red-400">{status.error}</p>
                 )}
               </div>
-              {status.connected && (
-                <button
-                  onClick={() => router.push('/login?refresh=true')}
-                  className="ml-auto flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors text-sm font-medium"
-                >
-                  <RefreshCw className="w-4 h-4" />
-                  Token erneuern
-                </button>
-              )}
+              <button
+                onClick={checkConnectionStatus}
+                disabled={checkingStatus}
+                className="ml-auto p-2 hover:bg-white/10 rounded-lg transition-colors"
+              >
+                {checkingStatus ? <Loader2 className="w-4 h-4 text-gray-400 animate-spin" /> : <RefreshCw className="w-4 h-4 text-gray-400" />}
+              </button>
             </div>
           )}
         </div>

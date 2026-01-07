@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSessionFromCookie } from '@/lib/auth/session'
-import { getStoredToken } from '@/lib/auth/ha-oauth'
+import { getGlobalHAConfig } from '@/lib/ha/token'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,23 +14,18 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
     
-    const token = await getStoredToken(session.userId)
-    if (!token) {
-      return NextResponse.json({ error: 'No token' }, { status: 401 })
-    }
-    
-    const haUrl = session.user.haInstanceUrl?.replace(/\/$/, '')
-    if (!haUrl) {
-      return NextResponse.json({ error: 'No HA URL' }, { status: 400 })
+    const haConfig = await getGlobalHAConfig()
+    if (!haConfig.url || !haConfig.token) {
+      return NextResponse.json({ error: 'Home Assistant nicht konfiguriert' }, { status: 400 })
     }
     
     const { eventId } = params
     
-    const thumbnailUrl = `${haUrl}/api/frigate/notifications/${eventId}/thumbnail.jpg`
+    const thumbnailUrl = `${haConfig.url}/api/frigate/notifications/${eventId}/thumbnail.jpg`
     
     const res = await fetch(thumbnailUrl, {
       headers: {
-        'Authorization': `Bearer ${token}`,
+        'Authorization': `Bearer ${haConfig.token}`,
       },
     })
     
