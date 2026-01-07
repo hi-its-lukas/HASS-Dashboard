@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { Video, RefreshCw, X, Maximize2 } from 'lucide-react'
+import { Video, RefreshCw, X, Maximize2, ImageOff } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { useHAStore } from '@/lib/ha'
 
@@ -11,17 +11,13 @@ export default function CamerasPage() {
   const getEntityArea = useHAStore((s) => s.getEntityArea)
   const [refreshKey, setRefreshKey] = useState(0)
   const [selectedCamera, setSelectedCamera] = useState<string | null>(null)
+  const [useStream, setUseStream] = useState(true)
   
   const cameraEntities = Object.keys(states).filter((id) => id.startsWith('camera.'))
   
   const handleRefresh = () => {
     setRefreshKey((k) => k + 1)
   }
-  
-  useEffect(() => {
-    const interval = setInterval(handleRefresh, 10000)
-    return () => clearInterval(interval)
-  }, [])
 
   return (
     <div className="px-4 py-6 safe-top max-w-7xl mx-auto">
@@ -42,13 +38,25 @@ export default function CamerasPage() {
           </div>
         </div>
         
-        <button
-          onClick={handleRefresh}
-          className="flex items-center gap-2 px-3 py-2 bg-white/5 hover:bg-white/10 text-white rounded-xl transition-colors"
-        >
-          <RefreshCw className="w-4 h-4" />
-          Aktualisieren
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setUseStream(!useStream)}
+            className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-colors ${
+              useStream 
+                ? 'bg-accent-green/20 text-accent-green' 
+                : 'bg-white/5 text-white hover:bg-white/10'
+            }`}
+          >
+            <Video className="w-4 h-4" />
+            {useStream ? 'Live' : 'Bilder'}
+          </button>
+          <button
+            onClick={handleRefresh}
+            className="flex items-center gap-2 px-3 py-2 bg-white/5 hover:bg-white/10 text-white rounded-xl transition-colors"
+          >
+            <RefreshCw className="w-4 h-4" />
+          </button>
+        </div>
       </motion.header>
 
       {cameraEntities.length === 0 ? (
@@ -83,23 +91,21 @@ export default function CamerasPage() {
                       className="relative aspect-video bg-bg-secondary cursor-pointer group"
                       onClick={() => setSelectedCamera(entityId)}
                     >
-                      <img
-                        key={`${entityId}-${refreshKey}`}
-                        src={`/api/ha/camera/${encodeURIComponent(entityId)}?t=${refreshKey}`}
-                        alt={friendlyName}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          const img = e.target as HTMLImageElement
-                          img.style.display = 'none'
-                        }}
+                      <CameraFeed
+                        entityId={entityId}
+                        friendlyName={friendlyName}
+                        useStream={useStream}
+                        refreshKey={refreshKey}
                       />
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
                         <Maximize2 className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
                       </div>
-                      <div className="absolute bottom-2 left-2 px-2 py-1 bg-red-500/80 rounded text-xs text-white font-medium flex items-center gap-1">
-                        <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
-                        LIVE
-                      </div>
+                      {useStream && (
+                        <div className="absolute bottom-2 left-2 px-2 py-1 bg-red-500/80 rounded text-xs text-white font-medium flex items-center gap-1">
+                          <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                          LIVE
+                        </div>
+                      )}
                     </div>
                     <div className="p-3">
                       <p className="text-sm font-medium text-white capitalize truncate">
@@ -128,6 +134,54 @@ export default function CamerasPage() {
   )
 }
 
+function CameraFeed({
+  entityId,
+  friendlyName,
+  useStream,
+  refreshKey,
+}: {
+  entityId: string
+  friendlyName: string
+  useStream: boolean
+  refreshKey: number
+}) {
+  const [error, setError] = useState(false)
+  const [loading, setLoading] = useState(true)
+  
+  const streamUrl = `/api/ha/camera/${encodeURIComponent(entityId)}/stream?t=${refreshKey}`
+  const imageUrl = `/api/ha/camera/${encodeURIComponent(entityId)}?t=${refreshKey}`
+  
+  const src = useStream ? streamUrl : imageUrl
+  
+  return (
+    <>
+      {loading && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-8 h-8 border-2 border-accent-cyan/30 border-t-accent-cyan rounded-full animate-spin" />
+        </div>
+      )}
+      {error ? (
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500">
+          <ImageOff className="w-8 h-8 mb-2" />
+          <span className="text-xs">Stream nicht verfügbar</span>
+        </div>
+      ) : (
+        <img
+          key={`${entityId}-${useStream ? 'stream' : 'image'}-${refreshKey}`}
+          src={src}
+          alt={friendlyName}
+          className="w-full h-full object-cover"
+          onLoad={() => setLoading(false)}
+          onError={() => {
+            setError(true)
+            setLoading(false)
+          }}
+        />
+      )}
+    </>
+  )
+}
+
 function CameraStreamModal({ 
   entityId, 
   friendlyName, 
@@ -138,6 +192,7 @@ function CameraStreamModal({
   onClose: () => void 
 }) {
   const [streamKey] = useState(() => Date.now())
+  const [error, setError] = useState(false)
   
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -160,12 +215,20 @@ function CameraStreamModal({
       >
         <div className="bg-bg-card rounded-2xl overflow-hidden shadow-2xl">
           <div className="relative aspect-video bg-black">
-            <img
-              key={streamKey}
-              src={`/api/ha/camera/${encodeURIComponent(entityId)}/stream?t=${streamKey}`}
-              alt={friendlyName}
-              className="w-full h-full object-contain"
-            />
+            {error ? (
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500">
+                <ImageOff className="w-12 h-12 mb-2" />
+                <span className="text-sm">Stream nicht verfügbar</span>
+              </div>
+            ) : (
+              <img
+                key={streamKey}
+                src={`/api/ha/camera/${encodeURIComponent(entityId)}/stream?t=${streamKey}`}
+                alt={friendlyName}
+                className="w-full h-full object-contain"
+                onError={() => setError(true)}
+              />
+            )}
             <div className="absolute top-4 left-4 px-3 py-1.5 bg-red-500/90 rounded-lg text-sm text-white font-medium flex items-center gap-2">
               <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
               LIVE STREAM
