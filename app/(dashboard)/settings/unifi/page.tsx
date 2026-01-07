@@ -28,6 +28,8 @@ interface UnifiConfig {
   cameras: string[]
   accessDevices: UnifiAccessDevice[]
   aiSurveillanceEnabled: boolean
+  _hasProtectKey?: boolean
+  _hasAccessKey?: boolean
 }
 
 interface UnifiCamera {
@@ -109,7 +111,10 @@ export default function UnifiSettingsPage() {
   }
   
   const testProtectConnection = async () => {
-    if (!config.controllerUrl || !config.protectApiKey) {
+    const hasNewKey = config.protectApiKey && !config.protectApiKey.includes('••••')
+    const hasSavedKey = config._hasProtectKey
+    
+    if (!config.controllerUrl || (!hasNewKey && !hasSavedKey)) {
       setProtectResult({ success: false, message: 'Controller-URL und Protect API Key erforderlich' })
       return
     }
@@ -118,14 +123,22 @@ export default function UnifiSettingsPage() {
     setProtectResult(null)
     
     try {
-      const res = await fetch('/api/unifi/protect/test', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          controllerUrl: config.controllerUrl,
-          apiKey: config.protectApiKey
+      let res: Response
+      
+      if (hasNewKey) {
+        res = await fetch('/api/unifi/protect/test', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            controllerUrl: config.controllerUrl,
+            apiKey: config.protectApiKey
+          })
         })
-      })
+      } else {
+        res = await fetch('/api/unifi/protect/test-saved', {
+          method: 'POST'
+        })
+      }
       
       const data = await res.json()
       setProtectResult({
@@ -140,7 +153,10 @@ export default function UnifiSettingsPage() {
   }
   
   const testAccessConnection = async () => {
-    if (!config.controllerUrl || !config.accessApiKey) {
+    const hasNewKey = config.accessApiKey && !config.accessApiKey.includes('••••')
+    const hasSavedKey = config._hasAccessKey
+    
+    if (!config.controllerUrl || (!hasNewKey && !hasSavedKey)) {
       setAccessResult({ success: false, message: 'Controller-URL und Access API Key erforderlich' })
       return
     }
@@ -149,14 +165,22 @@ export default function UnifiSettingsPage() {
     setAccessResult(null)
     
     try {
-      const res = await fetch('/api/unifi/access/test', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          controllerUrl: config.controllerUrl,
-          apiKey: config.accessApiKey
+      let res: Response
+      
+      if (hasNewKey) {
+        res = await fetch('/api/unifi/access/test', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            controllerUrl: config.controllerUrl,
+            apiKey: config.accessApiKey
+          })
         })
-      })
+      } else {
+        res = await fetch('/api/unifi/access/test-saved', {
+          method: 'POST'
+        })
+      }
       
       const data = await res.json()
       setAccessResult({
@@ -178,15 +202,27 @@ export default function UnifiSettingsPage() {
     setDiscoveringEntities(true)
     
     try {
-      const res = await fetch('/api/unifi/discover', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          controllerUrl: config.controllerUrl,
-          protectApiKey: config.protectApiKey,
-          accessApiKey: config.accessApiKey
+      const hasNewProtectKey = config.protectApiKey && !config.protectApiKey.includes('••••')
+      const hasNewAccessKey = config.accessApiKey && !config.accessApiKey.includes('••••')
+      const useSavedKeys = !hasNewProtectKey && !hasNewAccessKey && (config._hasProtectKey || config._hasAccessKey)
+      
+      let res: Response
+      
+      if (useSavedKeys) {
+        res = await fetch('/api/unifi/discover-saved', {
+          method: 'POST'
         })
-      })
+      } else {
+        res = await fetch('/api/unifi/discover', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            controllerUrl: config.controllerUrl,
+            protectApiKey: hasNewProtectKey ? config.protectApiKey : undefined,
+            accessApiKey: hasNewAccessKey ? config.accessApiKey : undefined
+          })
+        })
+      }
       
       if (res.ok) {
         const data = await res.json()
@@ -299,13 +335,16 @@ export default function UnifiSettingsPage() {
                 <label className="block text-sm text-gray-400 mb-2">
                   <Video className="w-4 h-4 inline mr-2" />
                   UniFi Protect API Key
+                  {config._hasProtectKey && (
+                    <span className="ml-2 text-emerald-400 text-xs">(gespeichert)</span>
+                  )}
                 </label>
                 <div className="relative">
                   <input
                     type={showProtectKey ? 'text' : 'password'}
                     value={config.protectApiKey}
-                    onChange={(e) => setConfig(prev => ({ ...prev, protectApiKey: e.target.value }))}
-                    placeholder="Protect API Key eingeben"
+                    onChange={(e) => setConfig(prev => ({ ...prev, protectApiKey: e.target.value, _hasProtectKey: false }))}
+                    placeholder={config._hasProtectKey ? "Neuen Key eingeben oder leer lassen" : "Protect API Key eingeben"}
                     className="w-full px-4 py-3 pr-20 bg-[#1a2235] border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
                   />
                   <button
@@ -351,13 +390,16 @@ export default function UnifiSettingsPage() {
                 <label className="block text-sm text-gray-400 mb-2">
                   <DoorOpen className="w-4 h-4 inline mr-2" />
                   UniFi Access API Key
+                  {config._hasAccessKey && (
+                    <span className="ml-2 text-emerald-400 text-xs">(gespeichert)</span>
+                  )}
                 </label>
                 <div className="relative">
                   <input
                     type={showAccessKey ? 'text' : 'password'}
                     value={config.accessApiKey}
-                    onChange={(e) => setConfig(prev => ({ ...prev, accessApiKey: e.target.value }))}
-                    placeholder="Access API Key eingeben"
+                    onChange={(e) => setConfig(prev => ({ ...prev, accessApiKey: e.target.value, _hasAccessKey: false }))}
+                    placeholder={config._hasAccessKey ? "Neuen Key eingeben oder leer lassen" : "Access API Key eingeben"}
                     className="w-full px-4 py-3 pr-20 bg-[#1a2235] border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
                   />
                   <button

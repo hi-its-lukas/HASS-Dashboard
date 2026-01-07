@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSessionFromCookie } from '@/lib/auth/session'
 import prisma from '@/lib/db/client'
+import { encryptUnifiApiKeys, decryptUnifiApiKeys, UnifiConfig } from '@/lib/unifi/encryption'
 
 export const dynamic = 'force-dynamic'
 
@@ -29,8 +30,26 @@ export async function GET() {
       })
     }
     
+    const layoutConfig = JSON.parse(config.layoutConfig)
+    
+    if (layoutConfig.unifi) {
+      const rawUnifi = layoutConfig.unifi as UnifiConfig
+      const decrypted = decryptUnifiApiKeys(rawUnifi)
+      
+      layoutConfig.unifi = {
+        controllerUrl: rawUnifi.controllerUrl || '',
+        cameras: rawUnifi.cameras || [],
+        accessDevices: rawUnifi.accessDevices || [],
+        aiSurveillanceEnabled: rawUnifi.aiSurveillanceEnabled ?? true,
+        protectApiKey: '',
+        accessApiKey: '',
+        _hasProtectKey: !!decrypted.protectApiKey,
+        _hasAccessKey: !!decrypted.accessApiKey
+      }
+    }
+    
     return NextResponse.json({
-      layoutConfig: JSON.parse(config.layoutConfig),
+      layoutConfig,
       sidebarState: config.sidebarState
     })
   } catch (error) {
@@ -48,7 +67,41 @@ export async function POST(request: NextRequest) {
     }
     
     const body = await request.json()
-    const { layoutConfig, sidebarState } = body
+    let { layoutConfig, sidebarState } = body
+    
+    if (layoutConfig?.unifi) {
+      const existingConfig = await prisma.dashboardConfig.findUnique({
+        where: { userId: session.userId }
+      })
+      
+      let existingUnifi: UnifiConfig | null = null
+      if (existingConfig?.layoutConfig) {
+        const parsed = JSON.parse(existingConfig.layoutConfig)
+        if (parsed.unifi) {
+          existingUnifi = decryptUnifiApiKeys(parsed.unifi as UnifiConfig)
+        }
+      }
+      
+      const incomingUnifi = layoutConfig.unifi as UnifiConfig
+      
+      const isMaskedOrEmpty = (val: string | undefined) => 
+        !val || val.includes('••••') || val.trim() === ''
+      
+      const unifiToSave: UnifiConfig = {
+        controllerUrl: incomingUnifi.controllerUrl || '',
+        protectApiKey: isMaskedOrEmpty(incomingUnifi.protectApiKey) && existingUnifi?.protectApiKey
+          ? existingUnifi.protectApiKey
+          : incomingUnifi.protectApiKey || '',
+        accessApiKey: isMaskedOrEmpty(incomingUnifi.accessApiKey) && existingUnifi?.accessApiKey
+          ? existingUnifi.accessApiKey
+          : incomingUnifi.accessApiKey || '',
+        cameras: incomingUnifi.cameras || [],
+        accessDevices: incomingUnifi.accessDevices || [],
+        aiSurveillanceEnabled: incomingUnifi.aiSurveillanceEnabled ?? true
+      }
+      
+      layoutConfig.unifi = encryptUnifiApiKeys(unifiToSave)
+    }
     
     await prisma.dashboardConfig.upsert({
       where: { userId: session.userId },

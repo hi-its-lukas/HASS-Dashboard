@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSessionFromCookie } from '@/lib/auth/session'
 import prisma from '@/lib/db/client'
 import { ProtectClient } from '@/lib/unifi/protect-client'
+import { decryptUnifiApiKeys, UnifiConfig } from '@/lib/unifi/encryption'
 
 export const dynamic = 'force-dynamic'
 
@@ -21,7 +22,7 @@ export async function GET(request: NextRequest) {
     }
     
     const layoutConfig = JSON.parse(config.layoutConfig as string)
-    const unifi = layoutConfig.unifi
+    const unifi = decryptUnifiApiKeys(layoutConfig.unifi as UnifiConfig)
     
     if (!unifi?.controllerUrl || !unifi?.protectApiKey) {
       return NextResponse.json({ error: 'UniFi Protect not configured' }, { status: 400 })

@@ -20,10 +20,26 @@ Preferred communication style: Simple, everyday language.
   - API routes: `/api/auth/login`, `/api/admin/users`, `/api/admin/users/[id]`, `/api/ha/status`
   - Permission system with role-based and per-user override support
   - Prisma now uses `SQLITE_URL` instead of `DATABASE_URL` (to avoid PostgreSQL conflict)
-- **UniFi Integration** - Full UniFi Protect and Access integration
-  - Config store extended with `UnifiConfig` type (controllerUrl, username, password, cameras, accessDevices, aiSurveillanceEnabled)
-  - UniFi Settings page at `/settings/unifi` for controller configuration
-  - API routes: `/api/unifi/test`, `/api/unifi/discover`, `/api/unifi/status`, `/api/unifi/events`, `/api/unifi/thumbnail/[eventId]`
+- **UniFi Integration** - Full UniFi Protect and Access integration with API Key authentication
+  - Config store extended with `UnifiConfig` type (controllerUrl, protectApiKey, accessApiKey, cameras, accessDevices, aiSurveillanceEnabled)
+  - API Keys are encrypted with AES-256-GCM before storage (lib/unifi/encryption.ts)
+  - UniFi Settings page at `/settings/unifi` for controller and API key configuration
+  - Separate API key inputs for Protect and Access with connection test buttons
+  - Keys are masked in UI, shows "(gespeichert)" indicator when a key exists
+  - API routes:
+    - `/api/unifi/protect/test` - Test Protect connection with new key
+    - `/api/unifi/protect/test-saved` - Test Protect connection with saved key
+    - `/api/unifi/protect/events` - Get smart detection events
+    - `/api/unifi/protect/thumbnail/[eventId]` - Get event thumbnail
+    - `/api/unifi/access/test` - Test Access connection with new key
+    - `/api/unifi/access/test-saved` - Test Access connection with saved key
+    - `/api/unifi/access/doors` - List Access doors
+    - `/api/unifi/access/unlock/[doorId]` - Unlock door (requires action:locks permission)
+    - `/api/unifi/discover` - Discover cameras and doors with new keys
+    - `/api/unifi/discover-saved` - Discover cameras and doors with saved keys
+  - UniFi client libraries:
+    - `lib/unifi/protect-client.ts` - ProtectClient for cameras, events, thumbnails, snapshots
+    - `lib/unifi/access-client.ts` - AccessClient for doors, devices, unlock actions
 - **AI Surveillance page** (`/surveillance`) - View smart detection events from UniFi Protect
   - Displays person, vehicle, package, animal, and motion detections
   - Event filtering by type

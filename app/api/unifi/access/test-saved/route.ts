@@ -6,7 +6,7 @@ import { decryptUnifiApiKeys, UnifiConfig } from '@/lib/unifi/encryption'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET() {
+export async function POST() {
   try {
     const session = await getSessionFromCookie()
     if (!session) {
@@ -18,24 +18,38 @@ export async function GET() {
     })
     
     if (!config?.layoutConfig) {
-      return NextResponse.json({ error: 'No config found' }, { status: 404 })
+      return NextResponse.json({ error: 'No saved config' }, { status: 404 })
     }
     
-    const layoutConfig = JSON.parse(config.layoutConfig as string)
+    const layoutConfig = JSON.parse(config.layoutConfig)
+    if (!layoutConfig.unifi) {
+      return NextResponse.json({ error: 'No UniFi config' }, { status: 404 })
+    }
+    
     const unifi = decryptUnifiApiKeys(layoutConfig.unifi as UnifiConfig)
     
-    if (!unifi?.controllerUrl || !unifi?.accessApiKey) {
-      return NextResponse.json({ error: 'UniFi Access not configured' }, { status: 400 })
+    if (!unifi.controllerUrl || !unifi.accessApiKey) {
+      return NextResponse.json({ error: 'Missing credentials' }, { status: 400 })
     }
     
     const client = new AccessClient(unifi.controllerUrl, unifi.accessApiKey)
-    const doors = await client.getDoors()
+    const result = await client.testConnection()
     
-    return NextResponse.json({ doors })
+    if (result.success) {
+      return NextResponse.json({
+        success: true,
+        doors: result.doors
+      })
+    } else {
+      return NextResponse.json(
+        { error: 'Connection failed' },
+        { status: 400 }
+      )
+    }
   } catch (error) {
-    console.error('[API] Access doors error:', error)
+    console.error('[API] Access test-saved error:', error)
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to get doors' },
+      { error: error instanceof Error ? error.message : 'Connection failed' },
       { status: 500 }
     )
   }

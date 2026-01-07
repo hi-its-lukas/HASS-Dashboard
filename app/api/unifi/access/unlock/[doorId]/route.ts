@@ -3,6 +3,7 @@ import { getSessionFromCookie } from '@/lib/auth/session'
 import { hasPermission } from '@/lib/auth/permissions'
 import prisma from '@/lib/db/client'
 import { AccessClient } from '@/lib/unifi/access-client'
+import { decryptUnifiApiKeys, UnifiConfig } from '@/lib/unifi/encryption'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,7 +33,7 @@ export async function POST(
     }
     
     const layoutConfig = JSON.parse(config.layoutConfig as string)
-    const unifi = layoutConfig.unifi
+    const unifi = decryptUnifiApiKeys(layoutConfig.unifi as UnifiConfig)
     
     if (!unifi?.controllerUrl || !unifi?.accessApiKey) {
       return NextResponse.json({ error: 'UniFi Access not configured' }, { status: 400 })
