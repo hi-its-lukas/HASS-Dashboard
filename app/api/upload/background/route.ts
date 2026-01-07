@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSessionFromCookie } from '@/lib/auth/session'
+import { csrfProtection } from '@/lib/auth/csrf'
 import prisma from '@/lib/db/client'
 import { writeFile, mkdir, unlink } from 'fs/promises'
 import { existsSync, readdirSync } from 'fs'
@@ -12,6 +13,9 @@ const UPLOAD_DIR = path.join(DATA_DIR, 'backgrounds')
 
 export async function POST(request: NextRequest) {
   try {
+    const csrfError = csrfProtection(request)
+    if (csrfError) return csrfError
+    
     const session = await getSessionFromCookie()
     
     if (!session) {

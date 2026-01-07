@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSessionFromCookie } from '@/lib/auth/session'
+import { csrfProtection } from '@/lib/auth/csrf'
 import { getGlobalHAConfig, setGlobalHAToken, setGlobalHAUrl, testHAConnection } from '@/lib/ha/token'
 import { hasPermission } from '@/lib/auth/permissions'
 
@@ -26,6 +27,9 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    const csrfError = csrfProtection(request)
+    if (csrfError) return csrfError
+    
     const session = await getSessionFromCookie()
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

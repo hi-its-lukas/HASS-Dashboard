@@ -113,13 +113,3 @@ export async function haFetchRaw(
   }
 }
 
-export async function getHAWebSocketUrl(): Promise<{ wsUrl: string; token: string } | null> {
-  const config = await getGlobalHAConfig()
-  
-  if (!config.url || !config.token) {
-    return null
-  }
-  
-  const wsUrl = config.url.replace(/^http/, 'ws') + '/api/websocket'
-  return { wsUrl, token: config.token }
-}

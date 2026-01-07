@@ -45,16 +45,15 @@ Preferred communication style: Simple, everyday language.
   - Settings API validates input with Zod schema, 100KB request size limit
   - API keys never exposed to client (only boolean `_hasProtectKey`/`_hasAccessKey` flags)
 - **Internal Authentication System** - Username/password login with RBAC
-  - Replaced OAuth-only login with internal user management
-  - Database schema extended: User (username, passwordHash, roleId, status), Role, Permission, RolePermission, UserPermissionOverride
+  - Database schema: User (username, passwordHash, roleId, status), Role, Permission, RolePermission
   - 5 predefined roles: Owner, Admin, Power User, Viewer, Guest
   - 23 permissions across settings, modules, and actions
   - Login page shows HA connection status indicator
-  - Default admin user: `admin / admin` (change after first login!)
+  - **Production: No default admin** - Use `npm run create-admin` to create initial admin
+  - **Dev only**: Default admin (admin/admin) when `NODE_ENV !== production`
   - User management page at `/settings/users`
-  - API routes: `/api/auth/login`, `/api/admin/users`, `/api/admin/users/[id]`, `/api/ha/status`
-  - Permission system with role-based and per-user override support
-  - Prisma now uses `SQLITE_URL` instead of `DATABASE_URL` (to avoid PostgreSQL conflict)
+  - CSRF protection on all state-changing endpoints
+  - Prisma uses `SQLITE_URL` instead of `DATABASE_URL`
 - **UniFi Integration** - Full UniFi Protect and Access integration with API Key authentication
   - Config store extended with `UnifiConfig` type (controllerUrl, protectApiKey, accessApiKey, cameras, accessDevices, aiSurveillanceEnabled)
   - API Keys are encrypted with AES-256-GCM before storage (lib/unifi/encryption.ts)
@@ -149,14 +148,16 @@ Preferred communication style: Simple, everyday language.
 
 ### Backend Architecture
 - **API Routes**: Next.js Route Handlers in `/app/api/` directory
-- **Database**: SQLite via Prisma ORM for user data, sessions, OAuth tokens, and dashboard configurations
-- **Token Security**: AES-256-GCM encryption for storing Home Assistant OAuth tokens at rest (uses `ENCRYPTION_KEY` environment variable)
+- **Database**: SQLite via Prisma ORM for user data, sessions, and dashboard configurations
+- **Token Security**: AES-256-GCM encryption for storing Home Assistant Long-Lived Token at rest
 - **Session Management**: HTTP-only cookies with 30-day expiration for secure authentication
+- **CSRF Protection**: Origin/Referer validation on all state-changing endpoints
 
 ### Authentication Flow
-- OAuth 2.0 with PKCE (Proof Key for Code Exchange) for Home Assistant login
-- Flow: `/login` → `/api/auth/login` → HA authorize → `/api/auth/callback` → session created
-- Sessions stored in database with secure token, linked to encrypted OAuth credentials
+- Internal username/password authentication with bcrypt password hashing
+- Flow: `/login` → POST `/api/auth/login` → session created
+- Global HA token configured by admin in `/settings/homeassistant`
+- Token never exposed to client - all HA calls go through server-side proxy
 
 ### Home Assistant Integration
 - **Proxy Pattern**: All HA API calls go through server-side routes (`/api/ha/*`) - tokens never exposed to browser
@@ -175,17 +176,19 @@ Preferred communication style: Simple, everyday language.
 ### Database
 - **SQLite**: Local file-based database via Prisma ORM
 - **Prisma Client**: `@prisma/client` for database operations
-- Schema includes: `User`, `Session`, `OAuthToken`, `DashboardConfig` tables
+- Schema includes: `User`, `Session`, `Role`, `Permission`, `SystemConfig`, `DashboardConfig` tables
 
 ### Home Assistant
-- OAuth 2.0 authentication with the HA instance
-- REST API for entity states and service calls
-- WebSocket API for real-time state subscriptions
+- Global Long-Lived Access Token (configured by admin, stored encrypted)
+- REST API for entity states and service calls (via server-side proxy)
+- WebSocket via server-side proxy on port 6000 (token stays server-side)
 
 ### Environment Variables
-All environment variables are optional - the app auto-configures:
 - `ENCRYPTION_KEY`: Auto-generated if not set (stored in `/data/.encryption_key`)
-- `DATABASE_URL`: Defaults to `file:/data/ha-dashboard.db`
+- `SQLITE_URL`: SQLite database path (default: `file:/data/ha-dashboard.db`)
+- `APP_BASE_URL`: Public URL for CSRF validation (production)
+- `ALLOWED_HOSTS`: Additional allowed hosts for CSRF (comma-separated)
+- `WS_PROXY_PORT`: WebSocket proxy port (default: 6000)
 
 ### HTTPS
 - HTTPS is handled externally by **Cloudflare Tunnel**

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSessionFromCookie } from '@/lib/auth/session'
+import { csrfProtection } from '@/lib/auth/csrf'
 import prisma from '@/lib/db/client'
 import { encryptUnifiApiKeys, decryptUnifiApiKeys, UnifiConfig } from '@/lib/unifi/encryption'
 import { SettingsRequestSchema, validateRequestSize } from '@/lib/validation/settings'
@@ -62,6 +63,9 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    const csrfError = csrfProtection(request)
+    if (csrfError) return csrfError
+    
     const session = await getSessionFromCookie()
     
     if (!session) {

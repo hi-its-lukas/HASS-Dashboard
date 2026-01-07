@@ -1,265 +1,135 @@
 # HA Dashboard
 
-**Dein Smart Home auf einen Blick** - Eine schöne, einfach zu bedienende App für Home Assistant.
+**Dein Smart Home auf einen Blick** - Eine moderne, benutzerfreundliche App für Home Assistant.
 
 ## Was ist HA Dashboard?
 
-HA Dashboard ist eine **alternative Benutzeroberfläche für Home Assistant**. Statt der Standard-Oberfläche von Home Assistant bekommst du ein modernes Dashboard im Apple Home-Stil, das du auf deinem Handy oder Tablet als App installieren kannst.
+HA Dashboard ist eine **alternative Benutzeroberfläche für Home Assistant** mit modernem Apple Home-Design, die du auf Handy, Tablet oder Desktop als PWA installieren kannst.
 
-### Das kann die App:
+### Features
 
-- **Lichter steuern** - Alle Lampen im Haus ein-/ausschalten, nach Räumen sortiert
-- **Rollläden bedienen** - Jalousien öffnen, schließen oder stoppen
-- **Heizung/Klima regeln** - Temperatur einstellen, Modi wechseln
-- **Kameras ansehen** - Live-Bild von allen Überwachungskameras
-- **Türklingeln** - Video-Gegensprechanlage mit Türöffner
-- **Familie orten** - Wo sind alle gerade? Mit Karte und Aktivitätsdaten
+- **Lichter steuern** - Alle Lampen nach Räumen sortiert
+- **Rollläden bedienen** - Jalousien öffnen, schließen, stoppen
+- **Heizung/Klima regeln** - Temperatur und Modi einstellen
+- **Kameras ansehen** - Live-Feeds von Überwachungskameras
+- **Türsprechanlage** - Video-Gegensprechanlage mit Türöffner
+- **Familie orten** - Standorte mit Karte und Aktivitäten
 - **Kalender** - Termine und Müllabfuhr-Erinnerungen
-- **Wetter** - Aktuelle Temperatur und 5-Tage-Vorhersage
-- **Energie** - Solar, Batterie und Stromverbrauch visualisiert
-- **Aktionen** - Beliebige Home Assistant Skripte per Knopfdruck ausführen
+- **Energie** - Solar, Batterie und Stromverbrauch
+- **UniFi Integration** - Protect Kameras und Access Türen
 
-### Warum HA Dashboard statt Home Assistant App?
+## Sicherheit
 
-| HA Dashboard | Home Assistant App |
-|--------------|-------------------|
-| Schönes Apple Home Design | Funktional, aber technisch |
-| Einfache Bedienung | Viele Optionen können überfordern |
-| Für die ganze Familie | Eher für Technik-Fans |
-| Schneller Zugriff auf das Wichtigste | Zeigt alles auf einmal |
+- **Interne Benutzerverwaltung** - Benutzername/Passwort Login mit Rollen (RBAC)
+- **Kein Token im Browser** - Der HA-Token wird nur serverseitig verwendet
+- **AES-256-GCM Verschlüsselung** - Tokens sind verschlüsselt gespeichert
+- **WebSocket-Proxy** - Echtzeit-Updates ohne Token-Exposure
+- **Session-basiert** - HttpOnly Cookies, 30 Tage Gültigkeit
 
----
+## Schnellstart
 
-## Was brauchst du?
-
-1. **Home Assistant** - Muss bereits laufen (z.B. auf Raspberry Pi, NAS, oder VM)
-2. **Docker** - Zum Ausführen der App
-3. **HTTPS-Zugang** - Cloudflare Tunnel oder anderer Reverse Proxy
-
----
-
-## Installation (Schritt für Schritt)
-
-### Schritt 1: Docker Compose erstellen
-
-Erstelle einen Ordner und darin eine `docker-compose.yml` Datei:
+### 1. Docker Container starten
 
 ```yaml
+# docker-compose.yml
 services:
   ha-dashboard:
-    image: ghcr.io/DEIN-USERNAME/ha-dashboard:latest
-    container_name: ha-dashboard
-    restart: unless-stopped
+    image: ghcr.io/YOUR-USERNAME/ha-dashboard:latest
     ports:
-      - "80:80"
+      - "5000:5000"
+      - "6000:6000"
     volumes:
       - ./data:/data
+    environment:
+      - ENCRYPTION_KEY=<openssl rand -hex 32>
+      - SQLITE_URL=file:/data/ha-dashboard.db
 ```
-
-### Schritt 2: Container starten
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
-Die App läuft jetzt unter `http://DEINE-IP:80`.
-
-### Schritt 3: HTTPS einrichten (wichtig!)
-
-OAuth funktioniert nur über HTTPS. Du brauchst entweder:
-
-- **Cloudflare Tunnel** (empfohlen, kostenlos)
-- Oder einen anderen Reverse Proxy mit SSL-Zertifikat
-
-Nach dem Einrichten hast du eine Domain wie `https://dashboard.deine-domain.de`.
-
-### Schritt 4: Home Assistant vorbereiten
-
-In Home Assistant musst du die App als OAuth-Client registrieren:
-
-1. Gehe zu **Einstellungen > Geräte & Dienste**
-2. Klicke oben auf **Anwendungsanmeldedaten**
-3. Klicke auf **Anwendung hinzufügen**
-4. Fülle aus:
-   - **Name:** `HA Dashboard`
-   - **Redirect URI:** `https://dashboard.deine-domain.de/api/auth/callback`
-5. Klicke auf **Erstellen**
-
-Die Client ID wird automatisch generiert - du musst sie dir nicht merken.
-
-### Schritt 5: Erste Anmeldung
-
-1. Öffne `https://dashboard.deine-domain.de` im Browser
-2. Gib deine **Home Assistant URL** ein (z.B. `https://homeassistant.local:8123`)
-3. Klicke auf **Mit Home Assistant anmelden**
-4. Du wirst zu Home Assistant weitergeleitet - klicke auf **Autorisieren**
-5. Fertig! Du bist eingeloggt.
-
----
-
-## Erste Einrichtung in der App
-
-Nach dem Login ist das Dashboard noch leer. Du musst zuerst einstellen, welche Geräte angezeigt werden sollen.
-
-### Einstellungen öffnen
-
-Klicke auf das **Zahnrad-Symbol** in der Sidebar (Desktop) oder in der unteren Navigation (Handy).
-
-### Was muss eingestellt werden?
-
-#### 1. Dashboard (Startseite)
-
-| Einstellung | Was eintragen | Beispiel |
-|-------------|---------------|----------|
-| Wetter-Entität | Deine Wetter-Integration | `weather.home` |
-| Innentemperatur | Temperatursensor für drinnen | `sensor.wohnzimmer_temperatur` |
-| Hintergrundbild | Optional: Eigenes Foto hochladen | - |
-
-#### 2. Kalender
-
-| Einstellung | Was eintragen | Beispiel |
-|-------------|---------------|----------|
-| Kalender-Vorschau | Kalender für die Startseite | `calendar.familie` |
-| Müllabfuhr-Kalender | Kalender mit Abfuhrterminen | `calendar.abfall` |
-
-#### 3. Lichter
-
-Wähle alle Licht-Entitäten aus, die angezeigt werden sollen. Die App gruppiert sie automatisch nach Räumen basierend auf dem Namen.
-
-**Beispiel:** `light.wohnzimmer_decke` wird automatisch unter "Wohnzimmer" einsortiert.
-
-#### 4. Rollläden
-
-Wähle alle Cover-Entitäten (Jalousien, Rollläden, Garagentore) aus.
-
-#### 5. Klima
-
-Wähle Klimageräte, Heizungen oder Ventilatoren aus (`climate.*` Entitäten).
-
-#### 6. Kameras
-
-Wähle alle Kamera-Entitäten aus (`camera.*`).
-
-#### 7. Personen (Familie)
-
-Wähle Person-Entitäten aus (`person.*`). Die App zeigt dann:
-- Aktueller Standort auf der Karte
-- Zuhause/Unterwegs Status
-- Aktivitätssensoren (Schritte, Batterie) falls vorhanden
-
-#### 8. Aktionen (optional)
-
-Wähle Home Assistant Skripte aus (`script.*`), die als Buttons auf der Aktionen-Seite erscheinen sollen.
-
-**Beispiele:**
-- `script.gute_nacht` - Alle Lichter aus, Rollläden runter
-- `script.staubsauger_starten` - Saugroboter losschicken
-
-#### 9. Intercoms / Türklingeln (optional)
-
-Für jede Gegensprechanlage:
-
-| Feld | Beschreibung |
-|------|--------------|
-| Name | Anzeigename (z.B. "Haustür") |
-| Slug | URL-Pfad (z.B. "haustuere") |
-| Kamera | Kamera-Entität der Klingel |
-| Sprechen-URL | URL zum Sprechen (falls unterstützt) |
-| Türschloss | Lock-Entität zum Öffnen |
-
----
-
-## App auf dem Handy installieren
-
-HA Dashboard ist eine **Progressive Web App (PWA)** - du kannst sie wie eine echte App installieren:
-
-### iPhone/iPad
-1. Öffne die Dashboard-URL in Safari
-2. Tippe auf das **Teilen-Symbol** (Quadrat mit Pfeil)
-3. Wähle **Zum Home-Bildschirm**
-4. Tippe auf **Hinzufügen**
-
-### Android
-1. Öffne die Dashboard-URL in Chrome
-2. Tippe auf die **drei Punkte** oben rechts
-3. Wähle **App installieren** oder **Zum Startbildschirm hinzufügen**
-
----
-
-## Update durchführen
-
-Wenn eine neue Version verfügbar ist:
+### 2. Admin-Benutzer erstellen
 
 ```bash
-# Zum Ordner mit docker-compose.yml wechseln
-cd /pfad/zu/ha-dashboard
-
-# Neues Image herunterladen
-docker-compose pull
-
-# Container neu starten
-docker-compose down
-docker-compose up -d
+docker exec -it ha-dashboard npm run create-admin
 ```
 
----
+### 3. Home Assistant konfigurieren
 
-## Häufige Probleme
+1. Anmelden mit erstelltem Admin
+2. **Einstellungen → Home Assistant**
+3. HA-URL eingeben (z.B. `https://homeassistant.local:8123`)
+4. Long-Lived Access Token aus HA einfügen (Profil → Sicherheit)
+5. Speichern
 
-### "Anmeldung fehlgeschlagen"
-- Prüfe, ob die Redirect URI in Home Assistant korrekt ist
-- HTTPS muss funktionieren (kein HTTP!)
+### 4. Dashboard einrichten
 
-### Dashboard zeigt nichts an
-- Gehe in die Einstellungen und wähle deine Entitäten aus
-- Ohne Konfiguration bleibt das Dashboard leer
+1. **Einstellungen → Lichter** - Licht-Entities auswählen
+2. **Einstellungen → Rollläden** - Cover-Entities auswählen
+3. Weitere Module nach Bedarf konfigurieren
 
-### Karten werden nicht angezeigt
-- Seite neu laden (Strg+F5 oder Cmd+Shift+R)
+## Benutzerrollen
 
-### Status aktualisiert sich nicht
-- WebSocket-Verbindung prüfen (Cloudflare Tunnel muss WebSockets unterstützen)
+| Rolle | Beschreibung |
+|-------|--------------|
+| Owner | Vollzugriff, kann Admins ernennen |
+| Admin | Benutzer verwalten, alle Module |
+| Power User | Alle Module, keine Benutzerverwaltung |
+| Viewer | Nur ansehen, keine Aktionen |
+| Guest | Eingeschränkte Sicht |
 
-### Mehrere Benutzer
-- Jeder Benutzer kann sich separat anmelden
-- Jeder hat seine eigenen Einstellungen und Hintergrundbild
-
----
-
-## Technische Details (für Entwickler)
-
-<details>
-<summary>Klicken zum Aufklappen</summary>
-
-### Stack
-- Next.js 14 (App Router)
-- TypeScript
-- Tailwind CSS
-- Prisma + SQLite
-- OAuth 2.0 mit PKCE
+## Technische Details
 
 ### Architektur
-- Alle Home Assistant API-Aufrufe gehen über den Server (Tokens nie im Browser)
-- OAuth Tokens werden AES-256 verschlüsselt gespeichert
-- WebSocket für Echtzeit-Updates
-- PWA mit Service Worker
 
-### Lokale Entwicklung
+- **Frontend**: Next.js 14 mit App Router, TypeScript, Tailwind CSS
+- **Backend**: Next.js API Routes + WebSocket Proxy
+- **Datenbank**: SQLite via Prisma ORM
+- **Echtzeit**: WebSocket-Proxy auf Port 6000 mit Polling-Fallback
+
+### API-Authentifizierung
+
+```
+Client → Session Cookie → Server → Global HA Token → Home Assistant
+```
+
+Der HA-Token verlässt niemals den Server.
+
+### Ports
+
+| Port | Verwendung |
+|------|------------|
+| 5000 | Web-Interface |
+| 6000 | WebSocket-Proxy |
+
+## Entwicklung
+
 ```bash
+# Dependencies installieren
 npm install
-npx prisma generate
+
+# Datenbank initialisieren
+npm run db:push
+npm run db:seed
+
+# Dev-Server starten
 npm run dev
+
+# WebSocket-Proxy starten (separates Terminal)
+npm run ws-proxy
 ```
 
-### Docker Image selbst bauen
-```bash
-docker build -t ha-dashboard .
-```
+## Umgebungsvariablen
 
-</details>
-
----
+| Variable | Required | Beschreibung |
+|----------|----------|--------------|
+| `ENCRYPTION_KEY` | Ja | 32-Byte Hex für AES-256 |
+| `SQLITE_URL` | Ja | SQLite Datenbankpfad |
+| `APP_BASE_URL` | Prod | Öffentliche URL |
+| `ALLOWED_HOSTS` | Nein | CSRF Allowlist |
+| `WS_PROXY_PORT` | Nein | WebSocket Port (default: 6000) |
 
 ## Lizenz
 
-MIT License - Frei verwendbar und anpassbar.
+MIT

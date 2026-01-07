@@ -104,34 +104,43 @@ async function main() {
   console.log(`Created ${ROLES.length} roles with permissions`)
   
   const existingUsers = await prisma.user.count()
+  const isProduction = process.env.NODE_ENV === 'production'
+  const allowDefaultAdmin = process.env.ALLOW_DEFAULT_ADMIN === 'true'
+  
   if (existingUsers === 0) {
-    const ownerRole = await prisma.role.findUnique({ where: { name: 'owner' } })
-    if (ownerRole) {
-      const passwordHash = await bcrypt.hash('admin', 12)
-      const adminUser = await prisma.user.create({
-        data: {
-          username: 'admin',
-          passwordHash,
-          displayName: 'Administrator',
-          roleId: ownerRole.id,
-          status: 'active'
-        }
-      })
-      
-      await prisma.dashboardConfig.create({
-        data: {
-          userId: adminUser.id,
-          layoutConfig: JSON.stringify({
-            persons: [],
-            lights: [],
-            covers: [],
-            customButtons: []
-          })
-        }
-      })
-      
-      console.log('Created default admin user (username: admin, password: admin)')
-      console.log('IMPORTANT: Change the password after first login!')
+    if (isProduction && !allowDefaultAdmin) {
+      console.log('Production mode: No default admin created.')
+      console.log('Use "npm run create-admin" to create the initial admin user.')
+      console.log('Or set ALLOW_DEFAULT_ADMIN=true to allow default admin creation.')
+    } else {
+      const ownerRole = await prisma.role.findUnique({ where: { name: 'owner' } })
+      if (ownerRole) {
+        const passwordHash = await bcrypt.hash('admin', 12)
+        const adminUser = await prisma.user.create({
+          data: {
+            username: 'admin',
+            passwordHash,
+            displayName: 'Administrator',
+            roleId: ownerRole.id,
+            status: 'active'
+          }
+        })
+        
+        await prisma.dashboardConfig.create({
+          data: {
+            userId: adminUser.id,
+            layoutConfig: JSON.stringify({
+              persons: [],
+              lights: [],
+              covers: [],
+              customButtons: []
+            })
+          }
+        })
+        
+        console.log('Created default admin user (username: admin, password: admin)')
+        console.log('WARNING: Change the password immediately after first login!')
+      }
     }
   } else {
     console.log('Users already exist, skipping default admin creation')

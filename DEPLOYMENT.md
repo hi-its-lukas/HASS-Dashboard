@@ -1,159 +1,163 @@
 # HA Dashboard Deployment Guide
 
-## Prerequisites
+## Übersicht
 
-- Docker and Docker Compose installed
-- Access to your Home Assistant instance (must be HTTPS for OAuth)
+HA Dashboard verwendet **internes User-Management** mit Benutzername/Passwort-Authentifizierung. Ein globaler, vom Admin konfigurierter Home Assistant Long-Lived Access Token verbindet alle Benutzer mit der HA-Instanz.
 
-## Environment Variables
+## Sicherheitsarchitektur
 
-### Required for Production
+- **Kein Token im Browser**: Der HA-Token wird serverseitig gespeichert und niemals an den Client gesendet
+- **AES-256-GCM Verschlüsselung**: Token ist verschlüsselt in der Datenbank gespeichert
+- **WebSocket-Proxy**: Separater Server-Proxy für Echtzeit-Verbindungen (Token bleibt serverseitig)
+- **Session-basierte Auth**: HttpOnly Cookies, 30 Tage Gültigkeit
+- **RBAC**: 5 Rollen mit 23 Berechtigungen
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `APP_BASE_URL` | Public URL of the dashboard | `https://dashboard.yourdomain.com` |
-| `ENCRYPTION_KEY` | 32-byte hex key for token encryption | `openssl rand -hex 32` |
-| `DATABASE_URL` | SQLite database path | `file:/data/ha-dashboard.db` |
+## Voraussetzungen
 
-### Optional (HTTPS with Caddy)
+- Docker und Docker Compose installiert
+- Home Assistant Instanz mit Long-Lived Access Token
+- HTTPS-Zugang (Cloudflare Tunnel empfohlen)
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `DOMAIN` | Domain for Caddy | `dashboard.yourdomain.com` |
-| `ACME_EMAIL` | Email for Let's Encrypt | `your@email.com` |
+## Umgebungsvariablen
 
-### Development Only
+### Erforderlich für Production
 
-| Variable | Description |
-|----------|-------------|
-| `NEXT_PUBLIC_USE_MOCK` | Use mock data instead of real HA |
+| Variable | Beschreibung | Beispiel |
+|----------|--------------|----------|
+| `APP_BASE_URL` | Öffentliche URL des Dashboards | `https://dashboard.example.com` |
+| `ENCRYPTION_KEY` | 32-Byte Hex-Schlüssel für Verschlüsselung | `openssl rand -hex 32` |
+| `SQLITE_URL` | SQLite Datenbankpfad | `file:/data/ha-dashboard.db` |
 
-## Quick Start
+### Optional
 
-### 1. Create Environment File
+| Variable | Beschreibung |
+|----------|--------------|
+| `ALLOWED_HOSTS` | Komma-getrennte Liste erlaubter Hosts für CSRF |
+| `ALLOW_DEFAULT_ADMIN` | `true` um Default-Admin in Production zu erlauben |
+| `WS_PROXY_PORT` | Port für WebSocket-Proxy (default: 6000) |
 
-```bash
-cp .env.example .env
-```
+### Nur Development
 
-### 2. Generate Encryption Key
+| Variable | Beschreibung |
+|----------|--------------|
+| `NEXT_PUBLIC_USE_MOCK` | Mock-Daten statt echter HA-Verbindung |
+
+## Schnellstart
+
+### 1. Encryption Key generieren
 
 ```bash
 openssl rand -hex 32
 ```
 
-Copy the output to `ENCRYPTION_KEY` in `.env`.
+### 2. docker-compose.yml erstellen
 
-### 3. Configure `.env`
-
-```env
-APP_BASE_URL=https://dashboard.yourdomain.com
-ENCRYPTION_KEY=<your-generated-key>
-DATABASE_URL=file:/data/ha-dashboard.db
-DOMAIN=dashboard.yourdomain.com
-ACME_EMAIL=your@email.com
+```yaml
+services:
+  ha-dashboard:
+    image: ghcr.io/YOUR-USERNAME/ha-dashboard:latest
+    container_name: ha-dashboard
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+      - "6000:6000"
+    volumes:
+      - ./data:/data
+    environment:
+      - APP_BASE_URL=https://dashboard.example.com
+      - ENCRYPTION_KEY=<dein-generierter-key>
+      - SQLITE_URL=file:/data/ha-dashboard.db
+      - NODE_ENV=production
 ```
 
-### 4. Start the Application
-
-**Without HTTPS (development/testing):**
-```bash
-docker compose up -d --build
-```
-
-**With HTTPS (production):**
-```bash
-docker compose --profile https up -d --build
-```
-
-## Architecture
-
-### Security Features
-
-- **No tokens in browser**: HA tokens are stored server-side only
-- **Encrypted at rest**: Tokens encrypted with AES-256-GCM
-- **httpOnly cookies**: Session cookies are not accessible via JavaScript
-- **OAuth with PKCE**: Secure authorization code flow
-
-### Database
-
-SQLite database stored in `./data/ha-dashboard.db`:
-- `users`: User accounts linked to HA users
-- `oauth_tokens`: Encrypted access/refresh tokens
-- `dashboard_configs`: Per-user dashboard settings
-- `sessions`: Active user sessions
-
-### User Configuration
-
-User-specific settings are stored in the database and managed via the Settings UI:
-- Home Assistant URL (per user)
-- Entity mappings
-- Dashboard layout
-- Sidebar state
-
-These are **NOT** configured via environment variables.
-
-### API Endpoints
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/auth/login` | POST | Initiate OAuth login |
-| `/api/auth/callback` | GET | OAuth callback handler |
-| `/api/auth/logout` | POST | Logout and clear session |
-| `/api/me` | GET | Get current user info |
-| `/api/settings` | GET/POST | User dashboard config |
-| `/api/status` | GET | HA connection status |
-| `/api/ha/states` | GET | Proxy to HA states |
-| `/api/ha/call-service` | POST | Proxy to HA services |
-| `/api/ha/registries` | GET | Get HA areas/entities |
-
-## HTTPS with Caddy
-
-The included Caddy configuration automatically obtains Let's Encrypt certificates.
-
-1. Set `DOMAIN` and `ACME_EMAIL` in `.env`
-2. Ensure ports 80 and 443 are accessible from the internet
-3. Run with the `https` profile:
+### 3. Container starten
 
 ```bash
-docker compose --profile https up -d
+docker compose up -d
 ```
+
+### 4. Admin-Benutzer erstellen
+
+In Production wird kein Default-Admin erstellt. Erstelle den initialen Admin:
+
+```bash
+docker exec -it ha-dashboard npm run create-admin
+```
+
+### 5. Home Assistant konfigurieren
+
+1. Melde dich mit dem erstellten Admin an
+2. Gehe zu **Einstellungen → Home Assistant**
+3. Gib deine HA-URL ein (z.B. `https://homeassistant.local:8123`)
+4. Erstelle in HA einen **Long-Lived Access Token** (Profil → Sicherheit → Langlebige Zugangstoken)
+5. Füge den Token ein und speichere
+
+## Architektur
+
+### Datenbank (SQLite)
+
+| Tabelle | Beschreibung |
+|---------|--------------|
+| `users` | Benutzerkonten mit Passwort-Hash |
+| `sessions` | Aktive Sessions |
+| `roles` / `permissions` | RBAC System |
+| `system_config` | HA-Token und URL (verschlüsselt) |
+| `dashboard_configs` | Pro-User Dashboard-Einstellungen |
+
+### API-Endpunkte
+
+| Endpunkt | Methode | Beschreibung |
+|----------|---------|--------------|
+| `/api/auth/login` | POST | Login mit Benutzername/Passwort |
+| `/api/auth/logout` | POST | Logout und Session löschen |
+| `/api/me` | GET | Aktuelle Benutzerinfo |
+| `/api/settings` | GET/POST | Dashboard-Konfiguration |
+| `/api/ha/config` | GET/POST | HA-Verbindungseinstellungen (Admin) |
+| `/api/ha/states` | GET | HA Entity States (Proxy) |
+| `/api/ha/call-service` | POST | HA Service aufrufen (Proxy) |
+
+### WebSocket-Proxy
+
+Der WS-Proxy auf Port 6000 ermöglicht Echtzeit-Updates:
+
+```
+Browser → ws://localhost:6000/ws/ha → Server → HA WebSocket
+```
+
+- Client verbindet ohne Token
+- Server validiert Session-Cookie
+- Server verbindet zu HA mit globalem Token
+- Bidirektionale Nachrichtenweiterleitung
+
+### Polling-Fallback
+
+Bei WS-Fehler automatischer Fallback auf Polling:
+- Backoff: 5s → 10s → 20s → 60s
+- Server-seitiger Cache (2s TTL)
 
 ## Updating
 
-### On Raspberry Pi / Ubuntu
-
 ```bash
-cd /path/to/ha-dashboard
-git pull
-docker compose down
-docker compose up -d --build
+docker compose pull
+docker compose up -d
 ```
 
 ## Troubleshooting
 
-### OAuth Redirect Issues
-
-- Ensure `APP_BASE_URL` matches the URL users access
-- HA must be accessible via HTTPS
-- Check that ports 80/443 are forwarded if using Caddy
-
-### Token Expired
-
-- Users will be redirected to login when tokens expire
-- Refresh tokens (if available) are used automatically
-
-### Database Reset
-
-To reset the database:
-```bash
-docker compose down
-rm -rf data/
-docker compose up -d --build
-```
-
-### View Logs
+### Kein Admin vorhanden
 
 ```bash
-docker compose logs -f ha-dashboard
+docker exec -it ha-dashboard npm run create-admin
 ```
+
+### HA-Verbindung schlägt fehl
+
+1. Prüfe die HA-URL (HTTPS erforderlich von extern)
+2. Prüfe ob der Token gültig ist
+3. Teste mit `curl` von innerhalb des Containers
+
+### WebSocket verbindet nicht
+
+1. Prüfe ob Port 6000 erreichbar ist
+2. Prüfe die Logs: `docker logs ha-dashboard`
+3. Fallback auf Polling sollte automatisch greifen
