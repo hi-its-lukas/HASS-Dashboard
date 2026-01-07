@@ -8,6 +8,21 @@ HA Dashboard is a modern, mobile-first Progressive Web App (PWA) for Home Assist
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes (2026-01-07)
+- **UniFi Integration** - Full UniFi Protect and Access integration
+  - Config store extended with `UnifiConfig` type (controllerUrl, username, password, cameras, accessDevices, aiSurveillanceEnabled)
+  - UniFi Settings page at `/settings/unifi` for controller configuration
+  - API routes: `/api/unifi/test`, `/api/unifi/discover`, `/api/unifi/status`, `/api/unifi/events`, `/api/unifi/thumbnail/[eventId]`
+- **AI Surveillance page** (`/surveillance`) - View smart detection events from UniFi Protect
+  - Displays person, vehicle, package, animal, and motion detections
+  - Event filtering by type
+  - Thumbnail previews with detail modal
+  - Auto-refresh every 30 seconds
+- **Updated sidebar navigation**
+  - AI Surveillance link shown when enabled (amber Sparkles icon)
+  - UniFi Access intercoms displayed with purple phone icon for visual distinction
+  - HA intercoms shown with default phone icon
+
 ## Recent Changes (2026-01-04)
 - **New Climate page** (`/climate`) - Control heating, AC, and fans with temperature adjustment and mode selection
 - **Apple Home Design Overhaul** - Complete visual redesign inspired by Apple Home app
@@ -18,7 +33,6 @@ Preferred communication style: Simple, everyday language.
   - Glass-effect navigation sidebar and bottom nav
   - Status pills for lights/covers count on dashboard
   - Room-based grouping with chevron headers
-- **Removed AI Surveillance feature** - Surveillance page, API routes, and settings removed
 - **Intercoms in sidebar navigation** - Configured intercoms now appear in sidebar with phone icon
 - **Live camera streams for intercoms** - MJPEG streaming via `/api/ha/stream/[entityId]`
 - **Improved intercom layout** - Buttons positioned next to video, original aspect ratio preserved

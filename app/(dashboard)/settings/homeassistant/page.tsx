@@ -1,0 +1,921 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { 
+  ArrowLeft,
+  RefreshCw, 
+  CheckCircle, 
+  XCircle, 
+  Loader2,
+  Users,
+  Lightbulb,
+  LayoutGrid,
+  Zap,
+  Save,
+  ChevronDown,
+  ChevronRight,
+  Play,
+  Plus,
+  X,
+  Video,
+  DoorOpen,
+  User,
+  Sun,
+  Home,
+  PlugZap,
+  Pencil,
+  Check,
+  Calendar,
+  CloudSun,
+  Thermometer,
+  Fan,
+  Sparkles,
+  Theater
+} from 'lucide-react'
+
+interface ConnectionStatus {
+  connected: boolean
+  version?: string
+  instanceUrl?: string
+  lastCheck?: string
+  error?: string
+}
+
+interface DiscoveredEntities {
+  persons: Array<{ entity_id: string; state: string; attributes: Record<string, unknown> }>
+  lights: Array<{ entity_id: string; state: string; attributes: Record<string, unknown> }>
+  covers: Array<{ entity_id: string; state: string; attributes: Record<string, unknown> }>
+  scripts: Array<{ entity_id: string; state: string; attributes: Record<string, unknown> }>
+  scenes: Array<{ entity_id: string; state: string; attributes: Record<string, unknown> }>
+  switches: Array<{ entity_id: string; state: string; attributes: Record<string, unknown> }>
+  sensors: Array<{ entity_id: string; state: string; attributes: Record<string, unknown> }>
+  alarms: Array<{ entity_id: string; state: string; attributes: Record<string, unknown> }>
+  weather: Array<{ entity_id: string; state: string; attributes: Record<string, unknown> }>
+  cameras: Array<{ entity_id: string; state: string; attributes: Record<string, unknown> }>
+  binarySensors: Array<{ entity_id: string; state: string; attributes: Record<string, unknown> }>
+  locks: Array<{ entity_id: string; state: string; attributes: Record<string, unknown> }>
+  calendars: Array<{ entity_id: string; state: string; attributes: Record<string, unknown> }>
+  climates: Array<{ entity_id: string; state: string; attributes: Record<string, unknown> }>
+  fans: Array<{ entity_id: string; state: string; attributes: Record<string, unknown> }>
+  vacuums: Array<{ entity_id: string; state: string; attributes: Record<string, unknown> }>
+  buttons: Array<{ entity_id: string; state: string; attributes: Record<string, unknown> }>
+  selects: Array<{ entity_id: string; state: string; attributes: Record<string, unknown> }>
+}
+
+interface IntercomConfig {
+  id: string
+  name: string
+  slug: string
+  cameraEntityId: string
+  speakUrl?: string
+  lockEntityId?: string
+}
+
+interface PersonSensorConfig {
+  id: string
+  label: string
+  entityId: string
+  unit?: string
+}
+
+interface PersonDetailConfig {
+  entityId: string
+  name: string
+  batteryEntityId?: string
+  sensors: PersonSensorConfig[]
+}
+
+interface EnergyConfig {
+  solarEntityId?: string
+  batteryEntityId?: string
+  batteryLevelEntityId?: string
+  gridEntityId?: string
+  houseEntityId?: string
+}
+
+interface VacuumConfig {
+  entityId: string
+  batteryEntityId?: string
+  statusEntityId?: string
+  currentRoomEntityId?: string
+  cleaningProgressEntityId?: string
+  cleaningAreaEntityId?: string
+  cleaningTimeEntityId?: string
+  chargingEntityId?: string
+  cleaningEntityId?: string
+  mopAttachedEntityId?: string
+  errorEntityId?: string
+  mopModeEntityId?: string
+  waterIntensityEntityId?: string
+  filterRemainingEntityId?: string
+  mainBrushRemainingEntityId?: string
+  sideBrushRemainingEntityId?: string
+  sensorRemainingEntityId?: string
+  totalCleaningsEntityId?: string
+  totalAreaEntityId?: string
+  totalTimeEntityId?: string
+  fullCleanButtonEntityId?: string
+}
+
+interface LayoutConfig {
+  persons: string[]
+  personDetails?: PersonDetailConfig[]
+  lights: string[]
+  covers: string[]
+  awnings?: string[]
+  curtains?: string[]
+  climates?: string[]
+  appliances?: string[]
+  calendars?: string[]
+  cameras?: string[]
+  energy?: EnergyConfig
+  vacuum?: VacuumConfig
+  customButtons: Array<{
+    id: string
+    label: string
+    icon: string
+    domain: string
+    service: string
+    entityId?: string
+    data?: Record<string, unknown>
+  }>
+  intercoms?: IntercomConfig[]
+  weatherEntityId?: string
+  temperatureSensorId?: string
+  alarmEntityId?: string
+  powerEntityId?: string
+}
+
+export default function HomeAssistantSettingsPage() {
+  const router = useRouter()
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [status, setStatus] = useState<ConnectionStatus | null>(null)
+  const [checkingStatus, setCheckingStatus] = useState(false)
+  const [discovered, setDiscovered] = useState<DiscoveredEntities | null>(null)
+  const [discoveringEntities, setDiscoveringEntities] = useState(false)
+  const [config, setConfig] = useState<LayoutConfig>({
+    persons: [],
+    lights: [],
+    covers: [],
+    awnings: [],
+    curtains: [],
+    climates: [],
+    appliances: [],
+    calendars: [],
+    cameras: [],
+    energy: {},
+    customButtons: [],
+    intercoms: [],
+  })
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+    persons: true,
+    personDetails: false,
+    lights: true,
+    covers: false,
+    awnings: false,
+    curtains: false,
+    climates: false,
+    calendars: false,
+    cameras: false,
+    energy: false,
+    appliances: false,
+    buttons: false,
+    intercoms: false,
+    vacuum: false
+  })
+  const [newSensor, setNewSensor] = useState({ label: '', entityId: '', unit: '' })
+  const [newIntercom, setNewIntercom] = useState({ name: '', cameraEntityId: '', speakUrl: '', lockEntityId: '' })
+  const [editingIntercomIndex, setEditingIntercomIndex] = useState<number | null>(null)
+  
+  useEffect(() => {
+    checkAuth()
+    loadSettings()
+    checkConnectionStatus()
+  }, [])
+  
+  const checkAuth = async () => {
+    const res = await fetch('/api/me')
+    if (!res.ok) {
+      router.push('/login')
+    }
+  }
+  
+  const loadSettings = async () => {
+    try {
+      const res = await fetch('/api/settings')
+      if (res.ok) {
+        const data = await res.json()
+        if (data.layoutConfig) {
+          setConfig(prev => ({
+            ...prev,
+            ...data.layoutConfig,
+            awnings: data.layoutConfig.awnings || [],
+            curtains: data.layoutConfig.curtains || [],
+            climates: data.layoutConfig.climates || [],
+            appliances: data.layoutConfig.appliances || [],
+            calendars: data.layoutConfig.calendars || [],
+            cameras: data.layoutConfig.cameras || [],
+            energy: data.layoutConfig.energy || {},
+            intercoms: data.layoutConfig.intercoms || [],
+          }))
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load settings:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+  
+  const checkConnectionStatus = async () => {
+    setCheckingStatus(true)
+    try {
+      const res = await fetch('/api/status')
+      const data = await res.json()
+      setStatus(data)
+    } catch (error) {
+      setStatus({ connected: false, error: 'Failed to check status' })
+    } finally {
+      setCheckingStatus(false)
+    }
+  }
+  
+  const discoverEntities = async () => {
+    setDiscoveringEntities(true)
+    try {
+      const res = await fetch('/api/ha/registries')
+      if (res.ok) {
+        const data = await res.json()
+        setDiscovered(data.discovered)
+      }
+    } catch (error) {
+      console.error('Failed to discover entities:', error)
+    } finally {
+      setDiscoveringEntities(false)
+    }
+  }
+  
+  const toggleSection = (section: string) => {
+    setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }))
+  }
+  
+  const toggleEntity = (type: 'persons' | 'lights' | 'covers' | 'climates' | 'appliances' | 'calendars' | 'cameras', entityId: string) => {
+    setConfig(prev => {
+      const current = prev[type] as string[] || []
+      const isSelected = current.includes(entityId)
+      return {
+        ...prev,
+        [type]: isSelected 
+          ? current.filter(id => id !== entityId)
+          : [...current, entityId]
+      }
+    })
+  }
+  
+  const getFriendlyName = (entity: { entity_id: string; attributes: Record<string, unknown> }) => {
+    return (entity.attributes.friendly_name as string) || entity.entity_id.split('.')[1].replace(/_/g, ' ')
+  }
+  
+  const saveConfig = async () => {
+    setSaving(true)
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ layoutConfig: config })
+      })
+      if (res.ok) {
+        router.push('/settings')
+      }
+    } catch (error) {
+      console.error('Failed to save settings:', error)
+    } finally {
+      setSaving(false)
+    }
+  }
+  
+  const generateSlug = (name: string) => {
+    return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+  }
+  
+  const addIntercom = () => {
+    if (!newIntercom.name || !newIntercom.cameraEntityId) return
+    
+    const intercom: IntercomConfig = {
+      id: `intercom-${Date.now()}`,
+      name: newIntercom.name,
+      slug: generateSlug(newIntercom.name),
+      cameraEntityId: newIntercom.cameraEntityId,
+      speakUrl: newIntercom.speakUrl || undefined,
+      lockEntityId: newIntercom.lockEntityId || undefined,
+    }
+    
+    setConfig(prev => ({
+      ...prev,
+      intercoms: [...(prev.intercoms || []), intercom]
+    }))
+    
+    setNewIntercom({ name: '', cameraEntityId: '', speakUrl: '', lockEntityId: '' })
+  }
+  
+  const removeIntercom = (index: number) => {
+    setConfig(prev => ({
+      ...prev,
+      intercoms: (prev.intercoms || []).filter((_, i) => i !== index)
+    }))
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#1a1f2e] to-[#0d1117] flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-white animate-spin" />
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-[#1a1f2e] to-[#0d1117] p-4 md:p-6">
+      <div className="max-w-2xl mx-auto">
+        <div className="flex items-center gap-3 mb-6">
+          <button 
+            onClick={() => router.push('/settings')}
+            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5 text-white" />
+          </button>
+          <Home className="w-8 h-8 text-blue-400" />
+          <h1 className="text-2xl font-bold text-white">Home Assistant</h1>
+        </div>
+        
+        <div className="bg-[#141b2d]/80 backdrop-blur-lg rounded-2xl p-6 border border-white/5 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-white">Verbindungsstatus</h2>
+            <button
+              onClick={checkConnectionStatus}
+              disabled={checkingStatus}
+              className="flex items-center gap-2 px-3 py-1.5 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg transition-colors text-sm"
+            >
+              {checkingStatus ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+              Prüfen
+            </button>
+          </div>
+          
+          {status && (
+            <div className={`flex items-center gap-3 p-4 rounded-xl ${status.connected ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-red-500/10 border border-red-500/20'}`}>
+              {status.connected ? (
+                <CheckCircle className="w-6 h-6 text-emerald-400" />
+              ) : (
+                <XCircle className="w-6 h-6 text-red-400" />
+              )}
+              <div>
+                <p className={`font-medium ${status.connected ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {status.connected ? 'Verbunden' : 'Nicht verbunden'}
+                </p>
+                {status.version && (
+                  <p className="text-sm text-gray-400">Version: {status.version}</p>
+                )}
+                {status.error && (
+                  <p className="text-sm text-red-400">{status.error}</p>
+                )}
+              </div>
+              {status.connected && (
+                <button
+                  onClick={() => router.push('/login?refresh=true')}
+                  className="ml-auto flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors text-sm font-medium"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  Token erneuern
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+        
+        <div className="bg-[#141b2d]/80 backdrop-blur-lg rounded-2xl p-6 border border-white/5 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-white">Entity Discovery</h2>
+            <button
+              onClick={discoverEntities}
+              disabled={discoveringEntities}
+              className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 rounded-lg transition-colors text-sm"
+            >
+              {discoveringEntities ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
+              Discover
+            </button>
+          </div>
+          
+          <div className="space-y-4">
+            <div className="border border-white/5 rounded-xl overflow-hidden">
+              <button
+                onClick={() => toggleSection('persons')}
+                className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <Users className="w-5 h-5 text-blue-400" />
+                  <span className="text-white font-medium">Personen {discovered ? `(${config.persons.length}/${discovered.persons.length})` : ''}</span>
+                </div>
+                {expandedSections.persons ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
+              </button>
+              {expandedSections.persons && (
+                <div className="p-4 space-y-2">
+                  {!discovered ? (
+                    <p className="text-gray-500 text-sm">Klicke auf "Discover" um Entitäten zu laden</p>
+                  ) : discovered.persons.length === 0 ? (
+                    <p className="text-gray-500 text-sm">Keine Personen gefunden</p>
+                  ) : (
+                    discovered.persons.map(entity => (
+                      <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={config.persons.includes(entity.entity_id)}
+                          onChange={() => toggleEntity('persons', entity.entity_id)}
+                          className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500"
+                        />
+                        <span className="text-gray-300">{getFriendlyName(entity)}</span>
+                        <span className="text-xs text-gray-500">{entity.entity_id}</span>
+                      </label>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+            
+            <div className="border border-white/5 rounded-xl overflow-hidden">
+              <button
+                onClick={() => toggleSection('lights')}
+                className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <Lightbulb className="w-5 h-5 text-yellow-400" />
+                  <span className="text-white font-medium">Lichtquellen {discovered ? `(${config.lights.length}/${discovered.lights.length})` : ''}</span>
+                </div>
+                {expandedSections.lights ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
+              </button>
+              {expandedSections.lights && (
+                <div className="p-4 space-y-2 max-h-64 overflow-y-auto">
+                  {!discovered ? (
+                    <p className="text-gray-500 text-sm">Klicke auf "Discover" um Entitäten zu laden</p>
+                  ) : discovered.lights.length === 0 ? (
+                    <p className="text-gray-500 text-sm">Keine Lichtquellen gefunden</p>
+                  ) : (
+                    discovered.lights.map(entity => (
+                      <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={config.lights.includes(entity.entity_id)}
+                          onChange={() => toggleEntity('lights', entity.entity_id)}
+                          className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500"
+                        />
+                        <span className="text-gray-300">{getFriendlyName(entity)}</span>
+                        <span className={`text-xs px-2 py-0.5 rounded ${entity.state === 'on' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-gray-500/20 text-gray-400'}`}>
+                          {entity.state}
+                        </span>
+                      </label>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+            
+            <div className="border border-white/5 rounded-xl overflow-hidden">
+              <button
+                onClick={() => toggleSection('covers')}
+                className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <LayoutGrid className="w-5 h-5 text-purple-400" />
+                  <span className="text-white font-medium">Rollos {discovered ? `(${config.covers.length}/${discovered.covers.length})` : ''}</span>
+                </div>
+                {expandedSections.covers ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
+              </button>
+              {expandedSections.covers && (
+                <div className="p-4 space-y-2 max-h-64 overflow-y-auto">
+                  {!discovered ? (
+                    <p className="text-gray-500 text-sm">Klicke auf "Discover" um Entitäten zu laden</p>
+                  ) : discovered.covers.length === 0 ? (
+                    <p className="text-gray-500 text-sm">Keine Rollos gefunden</p>
+                  ) : (
+                    discovered.covers.map(entity => (
+                      <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={config.covers.includes(entity.entity_id)}
+                          onChange={() => toggleEntity('covers', entity.entity_id)}
+                          className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500"
+                        />
+                        <span className="text-gray-300">{getFriendlyName(entity)}</span>
+                      </label>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+            
+            <div className="border border-white/5 rounded-xl overflow-hidden">
+              <button
+                onClick={() => toggleSection('awnings')}
+                className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <Sun className="w-5 h-5 text-amber-500" />
+                  <span className="text-white font-medium">Markisen {discovered ? `(${config.awnings?.length || 0}/${discovered.covers.length})` : ''}</span>
+                </div>
+                {expandedSections.awnings ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
+              </button>
+              {expandedSections.awnings && (
+                <div className="p-4 space-y-2 max-h-64 overflow-y-auto">
+                  {!discovered ? (
+                    <p className="text-gray-500 text-sm">Klicke auf "Discover" um Entitäten zu laden</p>
+                  ) : discovered.covers.length === 0 ? (
+                    <p className="text-gray-500 text-sm">Keine Markisen gefunden</p>
+                  ) : (
+                    discovered.covers.map(entity => (
+                      <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={config.awnings?.includes(entity.entity_id) || false}
+                          onChange={() => {
+                            const currentAwnings = config.awnings || []
+                            const isSelected = currentAwnings.includes(entity.entity_id)
+                            setConfig(prev => ({
+                              ...prev,
+                              awnings: isSelected
+                                ? currentAwnings.filter(id => id !== entity.entity_id)
+                                : [...currentAwnings, entity.entity_id]
+                            }))
+                          }}
+                          className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500"
+                        />
+                        <span className="text-gray-300">{getFriendlyName(entity)}</span>
+                        <span className="text-xs text-gray-500">{entity.entity_id}</span>
+                      </label>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+            
+            <div className="border border-white/5 rounded-xl overflow-hidden">
+              <button
+                onClick={() => toggleSection('curtains')}
+                className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <Theater className="w-5 h-5 text-purple-400" />
+                  <span className="text-white font-medium">Gardinen {discovered ? `(${config.curtains?.length || 0}/${discovered.covers.length})` : ''}</span>
+                </div>
+                {expandedSections.curtains ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
+              </button>
+              {expandedSections.curtains && (
+                <div className="p-4 space-y-2 max-h-64 overflow-y-auto">
+                  {!discovered ? (
+                    <p className="text-gray-500 text-sm">Klicke auf "Discover" um Entitäten zu laden</p>
+                  ) : discovered.covers.length === 0 ? (
+                    <p className="text-gray-500 text-sm">Keine Gardinen gefunden</p>
+                  ) : (
+                    discovered.covers.map(entity => (
+                      <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={config.curtains?.includes(entity.entity_id) || false}
+                          onChange={() => {
+                            const currentCurtains = config.curtains || []
+                            const isSelected = currentCurtains.includes(entity.entity_id)
+                            setConfig(prev => ({
+                              ...prev,
+                              curtains: isSelected
+                                ? currentCurtains.filter(id => id !== entity.entity_id)
+                                : [...currentCurtains, entity.entity_id]
+                            }))
+                          }}
+                          className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500"
+                        />
+                        <span className="text-gray-300">{getFriendlyName(entity)}</span>
+                        <span className="text-xs text-gray-500">{entity.entity_id}</span>
+                      </label>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+            
+            <div className="border border-white/5 rounded-xl overflow-hidden">
+              <button
+                onClick={() => toggleSection('climates')}
+                className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <Thermometer className="w-5 h-5 text-orange-400" />
+                  <span className="text-white font-medium">Klima / Heizung {discovered ? `(${config.climates?.length || 0}/${(discovered.climates?.length || 0) + (discovered.fans?.length || 0)})` : ''}</span>
+                </div>
+                {expandedSections.climates ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
+              </button>
+              {expandedSections.climates && (
+                <div className="p-4 space-y-2 max-h-64 overflow-y-auto">
+                  {!discovered ? (
+                    <p className="text-gray-500 text-sm">Klicke auf "Discover" um Entitäten zu laden</p>
+                  ) : (
+                    <>
+                      {discovered.climates?.map(entity => (
+                        <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={config.climates?.includes(entity.entity_id) || false}
+                            onChange={() => toggleEntity('climates', entity.entity_id)}
+                            className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500"
+                          />
+                          <Thermometer className="w-4 h-4 text-orange-400" />
+                          <span className="text-gray-300">{getFriendlyName(entity)}</span>
+                        </label>
+                      ))}
+                      {discovered.fans?.map(entity => (
+                        <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={config.climates?.includes(entity.entity_id) || false}
+                            onChange={() => toggleEntity('climates', entity.entity_id)}
+                            className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500"
+                          />
+                          <Fan className="w-4 h-4 text-cyan-400" />
+                          <span className="text-gray-300">{getFriendlyName(entity)}</span>
+                        </label>
+                      ))}
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+            
+            <div className="border border-white/5 rounded-xl overflow-hidden">
+              <button
+                onClick={() => toggleSection('calendars')}
+                className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <Calendar className="w-5 h-5 text-cyan-400" />
+                  <span className="text-white font-medium">Kalender {discovered ? `(${config.calendars?.length || 0}/${discovered.calendars?.length || 0})` : ''}</span>
+                </div>
+                {expandedSections.calendars ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
+              </button>
+              {expandedSections.calendars && (
+                <div className="p-4 space-y-2 max-h-64 overflow-y-auto">
+                  {!discovered ? (
+                    <p className="text-gray-500 text-sm">Klicke auf "Discover" um Entitäten zu laden</p>
+                  ) : (discovered.calendars?.length || 0) === 0 ? (
+                    <p className="text-gray-500 text-sm">Keine Kalender gefunden</p>
+                  ) : (
+                    discovered.calendars?.map(entity => (
+                      <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={config.calendars?.includes(entity.entity_id) || false}
+                          onChange={() => toggleEntity('calendars', entity.entity_id)}
+                          className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500"
+                        />
+                        <span className="text-gray-300">{getFriendlyName(entity)}</span>
+                      </label>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+            
+            <div className="border border-white/5 rounded-xl overflow-hidden">
+              <button
+                onClick={() => toggleSection('cameras')}
+                className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <Video className="w-5 h-5 text-red-400" />
+                  <span className="text-white font-medium">Kameras (Backup) {discovered ? `(${config.cameras?.length || 0}/${discovered.cameras?.length || 0})` : ''}</span>
+                </div>
+                {expandedSections.cameras ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
+              </button>
+              {expandedSections.cameras && (
+                <div className="p-4 space-y-2 max-h-64 overflow-y-auto">
+                  <p className="text-sm text-amber-400/80 mb-3">
+                    Diese Kameras dienen als Backup, falls Unifi Protect nicht konfiguriert ist.
+                  </p>
+                  {!discovered ? (
+                    <p className="text-gray-500 text-sm">Klicke auf "Discover" um Entitäten zu laden</p>
+                  ) : (discovered.cameras?.length || 0) === 0 ? (
+                    <p className="text-gray-500 text-sm">Keine Kameras gefunden</p>
+                  ) : (
+                    discovered.cameras?.map(entity => (
+                      <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={config.cameras?.includes(entity.entity_id) || false}
+                          onChange={() => toggleEntity('cameras', entity.entity_id)}
+                          className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500"
+                        />
+                        <span className="text-gray-300">{getFriendlyName(entity)}</span>
+                      </label>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+            
+            <div className="border border-white/5 rounded-xl overflow-hidden">
+              <button
+                onClick={() => toggleSection('appliances')}
+                className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <PlugZap className="w-5 h-5 text-orange-400" />
+                  <span className="text-white font-medium">Geräte / Appliances {discovered ? `(${config.appliances?.length || 0}/${(discovered.sensors?.filter(s => s.attributes.device_class === 'power').length || 0) + (discovered.switches?.length || 0)})` : ''}</span>
+                </div>
+                {expandedSections.appliances ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
+              </button>
+              {expandedSections.appliances && (
+                <div className="p-4 space-y-2 max-h-64 overflow-y-auto">
+                  {!discovered ? (
+                    <p className="text-gray-500 text-sm">Klicke auf "Discover" um Entitäten zu laden</p>
+                  ) : (
+                    <>
+                      {discovered.sensors?.filter(s => s.attributes.device_class === 'power').map(entity => (
+                        <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={config.appliances?.includes(entity.entity_id) || false}
+                            onChange={() => toggleEntity('appliances', entity.entity_id)}
+                            className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500"
+                          />
+                          <span className="text-gray-300">{getFriendlyName(entity)}</span>
+                        </label>
+                      ))}
+                      {discovered.switches?.map(entity => (
+                        <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={config.appliances?.includes(entity.entity_id) || false}
+                            onChange={() => toggleEntity('appliances', entity.entity_id)}
+                            className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500"
+                          />
+                          <span className="text-gray-300">{getFriendlyName(entity)}</span>
+                        </label>
+                      ))}
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+            
+            <div className="border border-white/5 rounded-xl overflow-hidden">
+              <button
+                onClick={() => toggleSection('buttons')}
+                className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <Play className="w-5 h-5 text-cyan-400" />
+                  <span className="text-white font-medium">Aktionen {discovered ? `(${config.customButtons?.length || 0}/${discovered.scripts?.length || 0})` : ''}</span>
+                </div>
+                {expandedSections.buttons ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
+              </button>
+              {expandedSections.buttons && (
+                <div className="p-4 space-y-2 max-h-64 overflow-y-auto">
+                  {!discovered ? (
+                    <p className="text-gray-500 text-sm">Klicke auf "Discover" um Entitäten zu laden</p>
+                  ) : discovered.scripts.length === 0 ? (
+                    <p className="text-gray-500 text-sm">Keine Skripte gefunden</p>
+                  ) : (
+                    discovered.scripts.map(entity => {
+                      const isSelected = config.customButtons?.some(b => b.entityId === entity.entity_id)
+                      return (
+                        <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => {
+                              if (isSelected) {
+                                setConfig(prev => ({
+                                  ...prev,
+                                  customButtons: prev.customButtons?.filter(b => b.entityId !== entity.entity_id) || []
+                                }))
+                              } else {
+                                const newButton = {
+                                  id: `btn-${Date.now()}`,
+                                  label: getFriendlyName(entity),
+                                  icon: 'play',
+                                  domain: 'script',
+                                  service: 'turn_on',
+                                  entityId: entity.entity_id
+                                }
+                                setConfig(prev => ({
+                                  ...prev,
+                                  customButtons: [...(prev.customButtons || []), newButton]
+                                }))
+                              }
+                            }}
+                            className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500"
+                          />
+                          <span className="text-gray-300">{getFriendlyName(entity)}</span>
+                        </label>
+                      )
+                    })
+                  )}
+                </div>
+              )}
+            </div>
+            
+            <div className="border border-white/5 rounded-xl overflow-hidden">
+              <button
+                onClick={() => toggleSection('intercoms')}
+                className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <DoorOpen className="w-5 h-5 text-green-400" />
+                  <span className="text-white font-medium">Intercoms (HA) ({config.intercoms?.length || 0})</span>
+                </div>
+                {expandedSections.intercoms ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
+              </button>
+              {expandedSections.intercoms && (
+                <div className="p-4 space-y-4">
+                  <p className="text-sm text-amber-400/80">
+                    Diese Intercoms dienen als Backup, falls Unifi Access nicht konfiguriert ist.
+                  </p>
+                  
+                  {config.intercoms?.map((intercom, index) => (
+                    <div key={intercom.id} className="p-3 bg-white/5 rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-white font-medium">{intercom.name}</span>
+                        <button
+                          onClick={() => removeIntercom(index)}
+                          className="p-1 hover:bg-red-500/20 rounded text-red-400"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                      <div className="text-xs text-gray-400 space-y-1">
+                        <p>Kamera: {intercom.cameraEntityId}</p>
+                        {intercom.lockEntityId && <p>Schloss: {intercom.lockEntityId}</p>}
+                      </div>
+                    </div>
+                  ))}
+                  
+                  <div className="space-y-3 pt-3 border-t border-white/10">
+                    <input
+                      type="text"
+                      placeholder="Name (z.B. Haustür)"
+                      value={newIntercom.name}
+                      onChange={(e) => setNewIntercom(prev => ({ ...prev, name: e.target.value }))}
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm"
+                    />
+                    <select
+                      value={newIntercom.cameraEntityId}
+                      onChange={(e) => setNewIntercom(prev => ({ ...prev, cameraEntityId: e.target.value }))}
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm"
+                    >
+                      <option value="">Kamera auswählen...</option>
+                      {discovered?.cameras?.map(c => (
+                        <option key={c.entity_id} value={c.entity_id}>{getFriendlyName(c)}</option>
+                      ))}
+                    </select>
+                    <select
+                      value={newIntercom.lockEntityId}
+                      onChange={(e) => setNewIntercom(prev => ({ ...prev, lockEntityId: e.target.value }))}
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm"
+                    >
+                      <option value="">Schloss auswählen (optional)...</option>
+                      {discovered?.locks?.map(l => (
+                        <option key={l.entity_id} value={l.entity_id}>{getFriendlyName(l)}</option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={addIntercom}
+                      disabled={!newIntercom.name || !newIntercom.cameraEntityId}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-green-500/20 hover:bg-green-500/30 text-green-400 rounded-lg transition-colors disabled:opacity-50"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Intercom hinzufügen
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+        
+        <div className="flex gap-3">
+          <button
+            onClick={() => router.push('/settings')}
+            className="flex-1 px-6 py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl transition-colors"
+          >
+            Abbrechen
+          </button>
+          <button
+            onClick={saveConfig}
+            disabled={saving}
+            className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl transition-colors disabled:opacity-50"
+          >
+            {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+            Speichern
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}

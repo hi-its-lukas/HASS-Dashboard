@@ -20,7 +20,8 @@ import {
   Play,
   Bot,
   Sun,
-  Theater
+  Theater,
+  Sparkles
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useConfigStore } from '@/lib/config/store'
@@ -67,6 +68,10 @@ export function Sidebar() {
   const setSidebarState = useConfigStore((s) => s.setSidebarState)
   const isLoaded = useConfigStore((s) => s.isLoaded)
   const intercoms = useConfigStore((s) => s.config.intercoms)
+  const unifi = useConfigStore((s) => s.unifi)
+  
+  const unifiAccessIntercoms = unifi?.accessDevices || []
+  const aiSurveillanceEnabled = unifi?.aiSurveillanceEnabled ?? false
   
   const collapsed = sidebarState === 'collapsed'
   
@@ -163,14 +168,72 @@ export function Sidebar() {
           )
         })}
         
-        {intercoms && intercoms.length > 0 && (
+        {aiSurveillanceEnabled && (
+          <Link
+            href="/surveillance"
+            className={cn(
+              'flex items-center gap-3 px-3 py-3 rounded-xl transition-all group relative',
+              pathname === '/surveillance'
+                ? 'text-white' 
+                : 'text-text-secondary hover:text-white'
+            )}
+            style={pathname === '/surveillance' ? { background: 'rgba(255, 255, 255, 0.12)' } : undefined}
+          >
+            <Sparkles className="w-5 h-5 flex-shrink-0 text-amber-400" />
+            <AnimatePresence mode="wait">
+              {!collapsed && (
+                <motion.span
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  className="font-medium text-sm"
+                >
+                  AI Surveillance
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </Link>
+        )}
+        
+        {(unifiAccessIntercoms.length > 0 || (intercoms && intercoms.length > 0)) && (
           <>
             {!collapsed && (
               <div className="pt-4 pb-2 px-3">
                 <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">Intercoms</span>
               </div>
             )}
-            {intercoms.map((intercom) => {
+            {unifiAccessIntercoms.map((device) => {
+              const href = `/intercom/unifi/${device.id}`
+              const active = pathname === href
+              return (
+                <Link
+                  key={device.id}
+                  href={href}
+                  className={cn(
+                    'flex items-center gap-3 px-3 py-3 rounded-xl transition-all group relative',
+                    active 
+                      ? 'text-white' 
+                      : 'text-text-secondary hover:text-white'
+                  )}
+                  style={active ? { background: 'rgba(255, 255, 255, 0.12)' } : undefined}
+                >
+                  <Phone className="w-5 h-5 flex-shrink-0 text-purple-400" />
+                  <AnimatePresence mode="wait">
+                    {!collapsed && (
+                      <motion.span
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -10 }}
+                        className="font-medium text-sm truncate"
+                      >
+                        {device.name}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </Link>
+              )
+            })}
+            {intercoms?.map((intercom) => {
               const href = `/intercom/${intercom.slug}`
               const active = pathname === href
               return (

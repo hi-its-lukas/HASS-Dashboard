@@ -11,6 +11,22 @@ export interface CustomButtonConfig {
   data?: Record<string, unknown>
 }
 
+export interface UnifiAccessDevice {
+  id: string
+  name: string
+  type: string
+  doorId?: string
+}
+
+export interface UnifiConfig {
+  controllerUrl?: string
+  username?: string
+  password?: string
+  cameras?: string[]
+  accessDevices?: UnifiAccessDevice[]
+  aiSurveillanceEnabled?: boolean
+}
+
 interface UserLayoutConfig {
   dashboardTitle?: string
   weatherEntityId?: string
@@ -41,10 +57,12 @@ interface UserLayoutConfig {
   curtains?: string[]
   climates?: string[]
   calendars?: string[]
+  cameras?: string[]
   appliances?: string[] | ApplianceConfig[]
   customButtons?: CustomButtonConfig[]
   intercoms?: IntercomConfig[]
   vacuum?: VacuumConfig
+  unifi?: UnifiConfig
 }
 
 function entityIdToName(entityId: string): string {
@@ -118,6 +136,8 @@ interface ConfigStore {
   sidebarState: 'expanded' | 'collapsed'
   climates: string[]
   calendars: string[]
+  cameras: string[]
+  unifi: UnifiConfig | null
   
   loadConfig: () => Promise<void>
   fetchConfig: () => Promise<void>
@@ -193,6 +213,8 @@ export const useConfigStore = create<ConfigStore>((set, get) => ({
   sidebarState: 'expanded',
   climates: [],
   calendars: [],
+  cameras: [],
+  unifi: null,
 
   loadConfig: async () => {
     try {
@@ -218,7 +240,9 @@ export const useConfigStore = create<ConfigStore>((set, get) => ({
         isAuthenticated: true,
         sidebarState: data.sidebarState || 'expanded',
         climates: data.layoutConfig?.climates || [],
-        calendars: data.layoutConfig?.calendars || []
+        calendars: data.layoutConfig?.calendars || [],
+        cameras: data.layoutConfig?.cameras || [],
+        unifi: data.layoutConfig?.unifi || null
       })
     } catch (error) {
       console.error('[ConfigStore] Error loading config:', error)
