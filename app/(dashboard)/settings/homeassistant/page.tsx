@@ -918,6 +918,181 @@ export default function HomeAssistantSettingsPage() {
             
             <div className="border border-white/5 rounded-xl overflow-hidden">
               <button
+                onClick={() => toggleSection('energy')}
+                className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <Zap className="w-5 h-5 text-yellow-400" />
+                  <span className="text-white font-medium">Energie / Solar</span>
+                </div>
+                {expandedSections.energy ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
+              </button>
+              {expandedSections.energy && (
+                <div className="p-4 space-y-4">
+                  <p className="text-sm text-gray-400">
+                    Wähle die Sensoren für dein Energie-Dashboard. Du kannst auch Summen-Sensoren oder Helfer-Entitäten verwenden.
+                  </p>
+                  
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm text-gray-400 mb-1">Solar-Produktion (W)</label>
+                      <select
+                        value={config.energy?.solarEntityId || ''}
+                        onChange={(e) => setConfig(prev => ({
+                          ...prev,
+                          energy: { ...prev.energy, solarEntityId: e.target.value || undefined }
+                        }))}
+                        className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                      >
+                        <option value="">-- Nicht konfiguriert --</option>
+                        {discovered?.sensors?.filter(s => 
+                          s.attributes?.device_class === 'power' || 
+                          s.attributes?.unit_of_measurement === 'W' ||
+                          s.entity_id.includes('solar') ||
+                          s.entity_id.includes('pv')
+                        ).map(sensor => (
+                          <option key={sensor.entity_id} value={sensor.entity_id}>
+                            {getFriendlyName(sensor)} ({sensor.state} {sensor.attributes?.unit_of_measurement || 'W'})
+                          </option>
+                        ))}
+                        <optgroup label="Alle Sensoren">
+                          {discovered?.sensors?.map(sensor => (
+                            <option key={sensor.entity_id} value={sensor.entity_id}>
+                              {getFriendlyName(sensor)} ({sensor.state})
+                            </option>
+                          ))}
+                        </optgroup>
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm text-gray-400 mb-1">Batterie-Leistung (W)</label>
+                      <select
+                        value={config.energy?.batteryEntityId || ''}
+                        onChange={(e) => setConfig(prev => ({
+                          ...prev,
+                          energy: { ...prev.energy, batteryEntityId: e.target.value || undefined }
+                        }))}
+                        className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                      >
+                        <option value="">-- Nicht konfiguriert --</option>
+                        {discovered?.sensors?.filter(s => 
+                          s.entity_id.includes('battery') && 
+                          (s.attributes?.unit_of_measurement === 'W' || s.attributes?.device_class === 'power')
+                        ).map(sensor => (
+                          <option key={sensor.entity_id} value={sensor.entity_id}>
+                            {getFriendlyName(sensor)} ({sensor.state} {sensor.attributes?.unit_of_measurement || 'W'})
+                          </option>
+                        ))}
+                        <optgroup label="Alle Sensoren">
+                          {discovered?.sensors?.map(sensor => (
+                            <option key={sensor.entity_id} value={sensor.entity_id}>
+                              {getFriendlyName(sensor)} ({sensor.state})
+                            </option>
+                          ))}
+                        </optgroup>
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm text-gray-400 mb-1">Batterie-Level (%)</label>
+                      <select
+                        value={config.energy?.batteryLevelEntityId || ''}
+                        onChange={(e) => setConfig(prev => ({
+                          ...prev,
+                          energy: { ...prev.energy, batteryLevelEntityId: e.target.value || undefined }
+                        }))}
+                        className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                      >
+                        <option value="">-- Nicht konfiguriert --</option>
+                        {discovered?.sensors?.filter(s => 
+                          s.attributes?.device_class === 'battery' || 
+                          s.attributes?.unit_of_measurement === '%' ||
+                          s.entity_id.includes('battery') && s.entity_id.includes('level')
+                        ).map(sensor => (
+                          <option key={sensor.entity_id} value={sensor.entity_id}>
+                            {getFriendlyName(sensor)} ({sensor.state} {sensor.attributes?.unit_of_measurement || '%'})
+                          </option>
+                        ))}
+                        <optgroup label="Alle Sensoren">
+                          {discovered?.sensors?.map(sensor => (
+                            <option key={sensor.entity_id} value={sensor.entity_id}>
+                              {getFriendlyName(sensor)} ({sensor.state})
+                            </option>
+                          ))}
+                        </optgroup>
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm text-gray-400 mb-1">Netz-Leistung (W) - positiv = Bezug, negativ = Einspeisung</label>
+                      <select
+                        value={config.energy?.gridEntityId || ''}
+                        onChange={(e) => setConfig(prev => ({
+                          ...prev,
+                          energy: { ...prev.energy, gridEntityId: e.target.value || undefined }
+                        }))}
+                        className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                      >
+                        <option value="">-- Nicht konfiguriert --</option>
+                        {discovered?.sensors?.filter(s => 
+                          s.entity_id.includes('grid') || 
+                          s.entity_id.includes('netz') ||
+                          (s.attributes?.unit_of_measurement === 'W' && s.attributes?.device_class === 'power')
+                        ).map(sensor => (
+                          <option key={sensor.entity_id} value={sensor.entity_id}>
+                            {getFriendlyName(sensor)} ({sensor.state} {sensor.attributes?.unit_of_measurement || 'W'})
+                          </option>
+                        ))}
+                        <optgroup label="Alle Sensoren">
+                          {discovered?.sensors?.map(sensor => (
+                            <option key={sensor.entity_id} value={sensor.entity_id}>
+                              {getFriendlyName(sensor)} ({sensor.state})
+                            </option>
+                          ))}
+                        </optgroup>
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm text-gray-400 mb-1">Hausverbrauch (W) - Summen-Sensor</label>
+                      <select
+                        value={config.energy?.houseEntityId || ''}
+                        onChange={(e) => setConfig(prev => ({
+                          ...prev,
+                          energy: { ...prev.energy, houseEntityId: e.target.value || undefined }
+                        }))}
+                        className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                      >
+                        <option value="">-- Nicht konfiguriert --</option>
+                        {discovered?.sensors?.filter(s => 
+                          s.entity_id.includes('house') || 
+                          s.entity_id.includes('home') ||
+                          s.entity_id.includes('consumption') ||
+                          s.entity_id.includes('verbrauch') ||
+                          s.entity_id.includes('load') ||
+                          (s.attributes?.unit_of_measurement === 'W' && s.attributes?.device_class === 'power')
+                        ).map(sensor => (
+                          <option key={sensor.entity_id} value={sensor.entity_id}>
+                            {getFriendlyName(sensor)} ({sensor.state} {sensor.attributes?.unit_of_measurement || 'W'})
+                          </option>
+                        ))}
+                        <optgroup label="Alle Sensoren">
+                          {discovered?.sensors?.map(sensor => (
+                            <option key={sensor.entity_id} value={sensor.entity_id}>
+                              {getFriendlyName(sensor)} ({sensor.state})
+                            </option>
+                          ))}
+                        </optgroup>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <div className="border border-white/5 rounded-xl overflow-hidden">
+              <button
                 onClick={() => toggleSection('buttons')}
                 className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 transition-colors"
               >
