@@ -10,8 +10,10 @@
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
+    "@types/bcryptjs": "^2.4.6",
     "@types/leaflet": "^1.9.21",
     "@types/ws": "^8.18.1",
+    "bcryptjs": "^3.0.3",
     "framer-motion": "^11.2.6",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.378.0",

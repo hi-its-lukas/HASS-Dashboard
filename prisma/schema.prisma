@@ -10,17 +10,95 @@ datasource db {
 
 model User {
   id            String   @id @default(uuid())
+  username      String?  @unique
+  passwordHash  String?  @map("password_hash")
+  displayName   String?  @map("display_name")
+  roleId        String?  @map("role_id")
+  status        String   @default("active")
+  personEntityId String? @map("person_entity_id")
+  lastLoginAt   DateTime? @map("last_login_at")
+  
   haUserId      String?  @unique @map("ha_user_id")
   haName        String?  @map("ha_name")
   haInstanceUrl String?  @map("ha_instance_url")
+  
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
-  oauthTokens     OAuthToken[]
-  dashboardConfig DashboardConfig?
-  sessions        Session[]
+  role              Role?    @relation(fields: [roleId], references: [id])
+  oauthTokens       OAuthToken[]
+  dashboardConfig   DashboardConfig?
+  sessions          Session[]
+  permissionOverrides UserPermissionOverride[]
 
   @@map("users")
+}
+
+model Role {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  displayName String   @map("display_name")
+  description String?
+  isSystem    Boolean  @default(false) @map("is_system")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  users       User[]
+  permissions RolePermission[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  category    String
+  displayName String   @map("display_name")
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  rolePermissions RolePermission[]
+  userOverrides   UserPermissionOverride[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  id           String   @id @default(uuid())
+  roleId       String   @map("role_id")
+  permissionId String   @map("permission_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model UserPermissionOverride {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  permissionId String   @map("permission_id")
+  granted      Boolean  @default(true)
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, permissionId])
+  @@map("user_permission_overrides")
+}
+
+model SystemConfig {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String
+  encrypted Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("system_config")
 }
 
 model OAuthToken {
@@ -78,4 +156,3 @@ model PushSubscription {
 
   @@map("push_subscriptions")
 }
-
