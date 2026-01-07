@@ -130,6 +130,7 @@ export interface DashboardConfig {
   intercoms: IntercomConfig[]
   lights: (string | LightConfig)[]
   covers: (string | CoverConfig)[]
+  awnings?: string[]
 }
 
 export const dashboardConfig: DashboardConfig = {
@@ -158,6 +159,7 @@ export const dashboardConfig: DashboardConfig = {
   intercoms: [],
   lights: [],
   covers: [],
+  awnings: [],
 }
 
 export default dashboardConfig

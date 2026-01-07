@@ -1,0 +1,59 @@
+ => ERROR [builder 6/6] RUN npm run build                             45.0s 
+------                                                                      
+ > [builder 6/6] RUN npm run build:                                         
+0.421                                                                       
+0.421 > hass-dashboard@1.0.0 build                                          
+0.421 > next build                                                          
+0.421                                                                       
+2.008   ▲ Next.js 14.2.3
+2.009   - Environments: .env
+2.009 
+2.034    Creating an optimized production build ...
+2.585 > [PWA] Compile server
+2.587 > [PWA] Compile server
+2.588 > [PWA] Compile client (static)
+2.589 > [PWA] Custom worker found: /app/worker/index.js
+2.589 > [PWA] Build custom worker: /app/public/worker-mQO58xUnac2OILtNG2H9L.js
+2.849 > [PWA] Auto register service worker with: /app/node_modules/next-pwa/register.js
+2.849 > [PWA] Service worker: /app/public/sw.js
+2.849 > [PWA]   url: /sw.js
+2.849 > [PWA]   scope: /
+33.43  ✓ Compiled successfully
+33.43    Linting and checking validity of types ...
+44.55 Failed to compile.
+44.55 
+44.55 ./app/(dashboard)/awnings/page.tsx:25:37
+44.55 Type error: Property 'awnings' does not exist on type 'DashboardConfig'.
+44.55 
+44.55   23 |   const [collapsedRooms, setCollapsedRooms] = useState<Record<string, boolean>>({})
+44.55   24 |   
+44.55 > 25 |   const configuredAwnings = (config.awnings || [])
+44.55      |                                     ^
+44.55   26 |     .map((a) => typeof a === 'string' ? a : a)
+44.55   27 |     .filter(Boolean)
+44.55   28 |   
+------
+[+] build 0/1
+ ⠙ Image hass-dashboard-app Building                                  99.2s 
+Dockerfile:21
+
+--------------------
+
+  19 |     ENV NEXT_TELEMETRY_DISABLED=1
+
+  20 |     
+
+  21 | >>> RUN npm run build
+
+  22 |     
+
+  23 |     # Stage 3: Runner
+
+--------------------
+
+failed to solve: process "/bin/sh -c npm run build" did not complete successfully: exit code: 1
+
+WARN[0000] No services to build                         
+[+] up 1/1
+ ✔ Container hass-dashboard Running                                    0.0s 
+pi@raspberry-5:~/hass-dashboard$ 
