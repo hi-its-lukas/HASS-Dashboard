@@ -78,6 +78,14 @@ export async function GET() {
     const vacuums = states.filter((s: { entity_id: string }) => s.entity_id.startsWith('vacuum.'))
     const buttons = states.filter((s: { entity_id: string }) => s.entity_id.startsWith('button.'))
     const selects = states.filter((s: { entity_id: string }) => s.entity_id.startsWith('select.'))
+    const inputNumbers = states.filter((s: { entity_id: string }) => s.entity_id.startsWith('input_number.'))
+    const inputTexts = states.filter((s: { entity_id: string }) => s.entity_id.startsWith('input_text.'))
+    const inputSelects = states.filter((s: { entity_id: string }) => s.entity_id.startsWith('input_select.'))
+    const inputDatetimes = states.filter((s: { entity_id: string }) => s.entity_id.startsWith('input_datetime.'))
+    const inputButtons = states.filter((s: { entity_id: string }) => s.entity_id.startsWith('input_button.'))
+    const timers = states.filter((s: { entity_id: string }) => s.entity_id.startsWith('timer.'))
+    const counters = states.filter((s: { entity_id: string }) => s.entity_id.startsWith('counter.'))
+    const numbers = states.filter((s: { entity_id: string }) => s.entity_id.startsWith('number.'))
     
     return NextResponse.json({
       areas,
@@ -105,7 +113,15 @@ export async function GET() {
         fans,
         vacuums,
         buttons,
-        selects
+        selects,
+        inputNumbers,
+        inputTexts,
+        inputSelects,
+        inputDatetimes,
+        inputButtons,
+        timers,
+        counters,
+        numbers
       }
     })
   } catch (error) {
