@@ -38,6 +38,7 @@ interface UserLayoutConfig {
   lights?: string[]
   covers?: string[]
   awnings?: string[]
+  curtains?: string[]
   climates?: string[]
   calendars?: string[]
   appliances?: string[] | ApplianceConfig[]

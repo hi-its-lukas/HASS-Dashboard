@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { Sun, ChevronUp, ChevronDown, Square, Settings, ChevronRight } from 'lucide-react'
+import { Theater, ChevronUp, ChevronDown, Square, Settings, ChevronRight } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { useHAStore } from '@/lib/ha'
 import { useConfig } from '@/lib/config/store'
@@ -11,10 +11,10 @@ import { cn } from '@/lib/utils'
 interface RoomGroup {
   id: string
   name: string
-  awnings: string[]
+  curtains: string[]
 }
 
-export default function AwningsPage() {
+export default function CurtainsPage() {
   const config = useConfig()
   const states = useHAStore((s) => s.states)
   const callService = useHAStore((s) => s.callService)
@@ -22,16 +22,16 @@ export default function AwningsPage() {
   const [activeAction, setActiveAction] = useState<string | null>(null)
   const [collapsedRooms, setCollapsedRooms] = useState<Record<string, boolean>>({})
   
-  const configuredAwnings = (config.awnings || [])
-    .map((a) => typeof a === 'string' ? a : a)
+  const configuredCurtains = ((config as { curtains?: string[] }).curtains || [])
+    .map((c) => typeof c === 'string' ? c : c)
     .filter(Boolean)
   
-  const uniqueAwnings = [...new Set(configuredAwnings)]
+  const uniqueCurtains = [...new Set(configuredCurtains)]
   
   const roomGroups = useMemo(() => {
     const groups: Record<string, string[]> = {}
     
-    uniqueAwnings.forEach((entityId) => {
+    uniqueCurtains.forEach((entityId) => {
       const areaName = getEntityArea(entityId) || 'Sonstige'
       
       if (!groups[areaName]) {
@@ -41,7 +41,7 @@ export default function AwningsPage() {
     })
     
     const sortedGroups = Object.entries(groups)
-      .map(([name, awnings]) => ({ id: name, name, awnings }))
+      .map(([name, curtains]) => ({ id: name, name, curtains }))
       .sort((a, b) => {
         if (a.name === 'Sonstige') return 1
         if (b.name === 'Sonstige') return -1
@@ -49,14 +49,14 @@ export default function AwningsPage() {
       })
     
     return sortedGroups
-  }, [uniqueAwnings, getEntityArea])
+  }, [uniqueCurtains, getEntityArea])
   
   const handleAction = async (entityId: string, action: 'open' | 'close' | 'stop') => {
     setActiveAction(`${entityId}_${action}`)
     try {
       await callService('cover', `${action}_cover`, entityId)
     } catch (error) {
-      console.error('Failed to control awning:', error)
+      console.error('Failed to control curtain:', error)
     } finally {
       setActiveAction(null)
     }
@@ -65,24 +65,24 @@ export default function AwningsPage() {
   const handleAllAction = async (action: 'open' | 'close') => {
     setActiveAction(`all_${action}`)
     try {
-      for (const entityId of uniqueAwnings) {
+      for (const entityId of uniqueCurtains) {
         await callService('cover', `${action}_cover`, entityId)
       }
     } catch (error) {
-      console.error('Failed to control all awnings:', error)
+      console.error('Failed to control all curtains:', error)
     } finally {
       setActiveAction(null)
     }
   }
   
-  const handleRoomAction = async (roomAwnings: string[], action: 'open' | 'close') => {
+  const handleRoomAction = async (roomCurtains: string[], action: 'open' | 'close') => {
     setActiveAction(`room_${action}`)
     try {
-      for (const entityId of roomAwnings) {
+      for (const entityId of roomCurtains) {
         await callService('cover', `${action}_cover`, entityId)
       }
     } catch (error) {
-      console.error('Failed to control room awnings:', error)
+      console.error('Failed to control room curtains:', error)
     } finally {
       setActiveAction(null)
     }
@@ -103,13 +103,13 @@ export default function AwningsPage() {
         className="flex items-center justify-between mb-6"
       >
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center">
-            <Sun className="w-5 h-5 text-amber-500" />
+          <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center">
+            <Theater className="w-5 h-5 text-purple-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-white">Markisen</h1>
+            <h1 className="text-2xl font-bold text-white">Gardinen</h1>
             <p className="text-xs text-text-secondary">
-              {uniqueAwnings.length} Markisen
+              {uniqueCurtains.length} Gardinen
             </p>
           </div>
         </div>
@@ -121,27 +121,27 @@ export default function AwningsPage() {
             className="flex items-center gap-2 px-3 py-2 bg-accent-green/20 hover:bg-accent-green/30 text-accent-green rounded-xl transition-colors disabled:opacity-50"
           >
             <ChevronDown className="w-4 h-4" />
-            Alle aus
+            Alle auf
           </button>
           <button
             onClick={() => handleAllAction('close')}
             disabled={activeAction?.startsWith('all')}
-            className="flex items-center gap-2 px-3 py-2 bg-accent-orange/20 hover:bg-accent-orange/30 text-accent-orange rounded-xl transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-3 py-2 bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 rounded-xl transition-colors disabled:opacity-50"
           >
             <ChevronUp className="w-4 h-4" />
-            Alle ein
+            Alle zu
           </button>
         </div>
       </motion.header>
 
-      {uniqueAwnings.length === 0 ? (
+      {uniqueCurtains.length === 0 ? (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center py-12"
         >
-          <Sun className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-          <p className="text-text-secondary mb-2">Keine Markisen konfiguriert</p>
+          <Theater className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+          <p className="text-text-secondary mb-2">Keine Gardinen konfiguriert</p>
           <a 
             href="/settings" 
             className="inline-flex items-center gap-2 px-4 py-2 bg-accent-cyan/20 hover:bg-accent-cyan/30 text-accent-cyan rounded-xl transition-colors"
@@ -165,7 +165,7 @@ export default function AwningsPage() {
                 <div className="flex items-center justify-between mb-3">
                   <button
                     onClick={() => toggleRoomCollapse(room.name)}
-                    className="flex items-center gap-2 text-white hover:text-amber-500 transition-colors"
+                    className="flex items-center gap-2 text-white hover:text-purple-400 transition-colors"
                   >
                     {isCollapsed ? (
                       <ChevronRight className="w-5 h-5" />
@@ -174,31 +174,31 @@ export default function AwningsPage() {
                     )}
                     <h2 className="text-lg font-semibold">{room.name}</h2>
                     <span className="text-sm text-text-muted">
-                      ({room.awnings.length})
+                      ({room.curtains.length})
                     </span>
                   </button>
                   
                   <div className="flex gap-2">
                     <button
-                      onClick={() => handleRoomAction(room.awnings, 'open')}
+                      onClick={() => handleRoomAction(room.curtains, 'open')}
                       disabled={activeAction?.startsWith('room')}
                       className="text-xs px-3 py-1 bg-accent-green/20 hover:bg-accent-green/30 text-accent-green rounded-lg transition-colors disabled:opacity-50"
                     >
-                      Aus
+                      Auf
                     </button>
                     <button
-                      onClick={() => handleRoomAction(room.awnings, 'close')}
+                      onClick={() => handleRoomAction(room.curtains, 'close')}
                       disabled={activeAction?.startsWith('room')}
-                      className="text-xs px-3 py-1 bg-accent-orange/20 hover:bg-accent-orange/30 text-accent-orange rounded-lg transition-colors disabled:opacity-50"
+                      className="text-xs px-3 py-1 bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 rounded-lg transition-colors disabled:opacity-50"
                     >
-                      Ein
+                      Zu
                     </button>
                   </div>
                 </div>
                 
                 {!isCollapsed && (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {room.awnings.map((entityId, index) => {
+                    {room.curtains.map((entityId, index) => {
                       const state = states[entityId]
                       const position = state?.attributes?.current_position as number | undefined
                       const friendlyName = (state?.attributes?.friendly_name as string) || entityId.split('.')[1].replace(/_/g, ' ')
@@ -215,9 +215,9 @@ export default function AwningsPage() {
                           <Card className="p-4">
                             <div className="flex items-center justify-between mb-4">
                               <div className="flex items-center gap-3">
-                                <Sun className={cn(
+                                <Theater className={cn(
                                   'w-6 h-6',
-                                  isOpen ? 'text-accent-green' : isClosed ? 'text-accent-orange' : 'text-amber-500'
+                                  isOpen ? 'text-accent-green' : isClosed ? 'text-purple-400' : 'text-purple-400'
                                 )} />
                                 <div>
                                   <p className="text-sm font-medium text-white capitalize">
@@ -234,7 +234,7 @@ export default function AwningsPage() {
                               <div className="mb-4">
                                 <div className="h-2 bg-bg-secondary rounded-full overflow-hidden">
                                   <div 
-                                    className="h-full bg-amber-500 transition-all"
+                                    className="h-full bg-purple-500 transition-all"
                                     style={{ width: `${position}%` }}
                                   />
                                 </div>
@@ -248,7 +248,7 @@ export default function AwningsPage() {
                                 className="flex-1 flex items-center justify-center gap-1 py-2 bg-accent-green/20 hover:bg-accent-green/30 text-accent-green rounded-lg transition-colors disabled:opacity-50"
                               >
                                 <ChevronDown className="w-4 h-4" />
-                                Aus
+                                Auf
                               </button>
                               <button
                                 onClick={() => handleAction(entityId, 'stop')}
@@ -261,10 +261,10 @@ export default function AwningsPage() {
                               <button
                                 onClick={() => handleAction(entityId, 'close')}
                                 disabled={activeAction?.startsWith(entityId)}
-                                className="flex-1 flex items-center justify-center gap-1 py-2 bg-accent-orange/20 hover:bg-accent-orange/30 text-accent-orange rounded-lg transition-colors disabled:opacity-50"
+                                className="flex-1 flex items-center justify-center gap-1 py-2 bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 rounded-lg transition-colors disabled:opacity-50"
                               >
                                 <ChevronUp className="w-4 h-4" />
-                                Ein
+                                Zu
                               </button>
                             </div>
                           </Card>

@@ -19,7 +19,8 @@ import {
   Calendar,
   Play,
   Bot,
-  Umbrella
+  Sun,
+  Theater
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useConfigStore } from '@/lib/config/store'
@@ -49,7 +50,8 @@ const navItems = [
   { href: '/', icon: Home, label: 'Home' },
   { href: '/lights', icon: Lightbulb, label: 'Lichtquellen' },
   { href: '/covers', icon: Blinds, label: 'Rollos' },
-  { href: '/awnings', icon: Umbrella, label: 'Markisen' },
+  { href: '/awnings', icon: Sun, label: 'Markisen' },
+  { href: '/curtains', icon: Theater, label: 'Gardinen' },
   { href: '/climate', icon: Thermometer, label: 'Klima' },
   { href: '/calendar', icon: Calendar, label: 'Kalender' },
   { href: '/cameras', icon: Video, label: 'Kameras' },
