@@ -2,9 +2,8 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { AlertCircle, Loader2 } from 'lucide-react'
+import { AlertCircle, Loader2, CheckCircle, Home } from 'lucide-react'
 
-const HA_URL_STORAGE_KEY = 'ha-dashboard-instance-url'
 const DASHBOARD_TITLE_KEY = 'ha-dashboard-title'
 
 function LoginForm() {
@@ -12,35 +11,47 @@ function LoginForm() {
   const searchParams = useSearchParams()
   const errorMessage = searchParams.get('error')
   
-  const [haUrl, setHaUrl] = useState('')
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(errorMessage)
   const [dashboardTitle, setDashboardTitle] = useState('HA Dashboard')
+  const [haStatus, setHaStatus] = useState<'checking' | 'connected' | 'disconnected'>('checking')
   const redirectPath = searchParams.get('redirect') || '/'
   
   useEffect(() => {
-    const savedUrl = localStorage.getItem(HA_URL_STORAGE_KEY)
-    if (savedUrl) {
-      setHaUrl(savedUrl)
-    }
     const savedTitle = localStorage.getItem(DASHBOARD_TITLE_KEY)
     if (savedTitle) {
       setDashboardTitle(savedTitle)
     }
+    
+    checkHAConnection()
   }, [])
+  
+  const checkHAConnection = async () => {
+    try {
+      const res = await fetch('/api/ha/status')
+      if (res.ok) {
+        const data = await res.json()
+        setHaStatus(data.connected ? 'connected' : 'disconnected')
+      } else {
+        setHaStatus('disconnected')
+      }
+    } catch {
+      setHaStatus('disconnected')
+    }
+  }
   
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
     
-    localStorage.setItem(HA_URL_STORAGE_KEY, haUrl)
-    
     try {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ haUrl, redirect: redirectPath })
+        body: JSON.stringify({ username, password })
       })
       
       const data = await response.json()
@@ -49,7 +60,7 @@ function LoginForm() {
         throw new Error(data.error || 'Login failed')
       }
       
-      window.location.href = data.authUrl
+      router.push(redirectPath)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed')
       setLoading(false)
@@ -71,9 +82,41 @@ function LoginForm() {
         <h1 className="text-2xl font-bold text-white text-center mb-2 mt-4">
           {dashboardTitle}
         </h1>
-        <p className="text-center mb-8" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
-          Mit Home Assistant anmelden
+        <p className="text-center mb-6" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+          Anmelden
         </p>
+        
+        <div className="flex items-center justify-center gap-2 mb-6 p-3 rounded-xl" 
+          style={{ 
+            background: haStatus === 'connected' 
+              ? 'rgba(48, 209, 88, 0.15)' 
+              : haStatus === 'disconnected' 
+                ? 'rgba(255, 69, 58, 0.15)' 
+                : 'rgba(255, 255, 255, 0.05)',
+            border: haStatus === 'connected' 
+              ? '1px solid rgba(48, 209, 88, 0.3)' 
+              : haStatus === 'disconnected' 
+                ? '1px solid rgba(255, 69, 58, 0.3)' 
+                : '1px solid rgba(255, 255, 255, 0.1)'
+          }}
+        >
+          {haStatus === 'checking' ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+              <span className="text-sm text-gray-400">Home Assistant prüfen...</span>
+            </>
+          ) : haStatus === 'connected' ? (
+            <>
+              <CheckCircle className="w-4 h-4" style={{ color: '#30d158' }} />
+              <span className="text-sm" style={{ color: '#30d158' }}>Home Assistant verbunden</span>
+            </>
+          ) : (
+            <>
+              <AlertCircle className="w-4 h-4" style={{ color: '#ff453a' }} />
+              <span className="text-sm" style={{ color: '#ff453a' }}>Home Assistant nicht konfiguriert</span>
+            </>
+          )}
+        </div>
         
         {error && (
           <div 
@@ -85,27 +128,45 @@ function LoginForm() {
           </div>
         )}
         
-        <form onSubmit={handleLogin} className="space-y-6">
+        <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label htmlFor="haUrl" className="block text-sm font-medium mb-2" style={{ color: 'rgba(255, 255, 255, 0.8)' }}>
-              Home Assistant URL
+            <label htmlFor="username" className="block text-sm font-medium mb-2" style={{ color: 'rgba(255, 255, 255, 0.8)' }}>
+              Benutzername
             </label>
             <input
-              type="url"
-              id="haUrl"
-              value={haUrl}
-              onChange={(e) => setHaUrl(e.target.value)}
-              placeholder="https://your-home-assistant.local:8123"
+              type="text"
+              id="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Benutzername"
               required
-              className="w-full px-4 py-3 rounded-xl text-white focus:outline-none focus:ring-2"
+              autoComplete="username"
+              className="w-full px-4 py-3 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-white/30"
               style={{
                 background: 'rgba(255, 255, 255, 0.08)',
                 border: '1px solid rgba(255, 255, 255, 0.1)',
               }}
             />
-            <p className="mt-2 text-xs" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
-              Gib die URL deiner Home Assistant-Instanz ein
-            </p>
+          </div>
+          
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium mb-2" style={{ color: 'rgba(255, 255, 255, 0.8)' }}>
+              Passwort
+            </label>
+            <input
+              type="password"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Passwort"
+              required
+              autoComplete="current-password"
+              className="w-full px-4 py-3 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-white/30"
+              style={{
+                background: 'rgba(255, 255, 255, 0.08)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+              }}
+            />
           </div>
           
           <button
@@ -120,17 +181,20 @@ function LoginForm() {
             {loading ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
-                Verbinden...
+                Anmelden...
               </>
             ) : (
-              'Mit Home Assistant anmelden'
+              <>
+                <Home className="w-5 h-5" />
+                Anmelden
+              </>
             )}
           </button>
         </form>
         
         <div className="mt-8 pt-6" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
           <p className="text-xs text-center" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>
-            Deine Zugangsdaten werden nie gespeichert. Die Authentifizierung erfolgt direkt über Home Assistant mit OAuth.
+            Standard-Login: admin / admin
           </p>
         </div>
       </div>
