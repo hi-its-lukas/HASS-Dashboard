@@ -9,13 +9,33 @@ HA Dashboard is a modern, mobile-first Progressive Web App (PWA) for Home Assist
 Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (2026-01-07)
-- **Global Long-Lived Access Token** - Replaced per-user OAuth with shared admin-configured HA token
-  - Admin configures URL + Long-Lived Access Token in `/settings/homeassistant`
-  - Token encrypted with AES-256-GCM and stored in SystemConfig table
-  - All 17 HA API routes updated to use `getGlobalHAConfig()` from `lib/ha/token.ts`
-  - New API route `/api/ha/config` for GET/POST HA configuration
-  - `testHAConnection()` validates token before saving
-  - Settings UI shows "(gespeichert)" indicator when token exists
+- **OAuth KOMPLETT ENTFERNT** - Nur noch internes User-Management
+  - Alle OAuth-Routen, Callbacks und Token-Storage entfernt
+  - OAuthToken Model aus Prisma-Schema entfernt
+  - Keine OAuth-Callbacks oder Redirects mehr
+  - Authentifizierung nur über Benutzername/Passwort
+- **Global Long-Lived Access Token** - Admin-konfigurierter HA-Token für alle Benutzer
+  - Admin konfiguriert URL + Long-Lived Access Token in `/settings/homeassistant`
+  - Token verschlüsselt mit AES-256-GCM in SystemConfig Tabelle
+  - Alle HA API-Routen nutzen `getGlobalHAConfig()` aus `lib/ha/token.ts`
+  - Neue API-Route `/api/ha/config` für GET/POST HA-Konfiguration
+  - `testHAConnection()` validiert Token vor Speicherung
+  - Settings UI zeigt "(gespeichert)" Indikator wenn Token existiert
+- **WebSocket-Proxy Server** - Token bleibt serverseitig
+  - Separater WS-Proxy auf Port 6000 (`npm run ws-proxy`)
+  - Client verbindet zum Proxy ohne Token
+  - Proxy verbindet zu HA mit Token und leitet bidirektional weiter
+  - Session-Authentifizierung für alle WS-Verbindungen
+  - Unauthentifizierte Verbindungen werden abgelehnt
+- **Polling-Fallback mit Auto-Mode**
+  - WebSocket-Proxy ist primär, Polling nur wenn WS ausfällt
+  - Automatische Wiederverbindung mit Backoff (5s, 10s, 20s, 60s)
+  - Server-seitiger State-Cache für Polling (2s TTL)
+  - `/api/ha/poll` Endpoint für Polling
+- **Neue Helper und Scripts**
+  - `lib/ha/fetch.ts` - Zentraler haFetch() Helper für alle HA-Anfragen
+  - `scripts/create-admin.ts` - Admin-Benutzer über CLI erstellen (`npm run create-admin`)
+  - Alle HA-Routen nutzen jetzt den haFetch() Helper
 - **Security Hardening**
   - Session lifetime reduced from 365 to 30 days
   - Token-Substring User-IDs replaced with SHA-256 hashed stable IDs verified against HA API

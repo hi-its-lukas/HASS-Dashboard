@@ -18,15 +18,10 @@ model User {
   personEntityId String? @map("person_entity_id")
   lastLoginAt   DateTime? @map("last_login_at")
   
-  haUserId      String?  @unique @map("ha_user_id")
-  haName        String?  @map("ha_name")
-  haInstanceUrl String?  @map("ha_instance_url")
-  
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
   role              Role?    @relation(fields: [roleId], references: [id])
-  oauthTokens       OAuthToken[]
   dashboardConfig   DashboardConfig?
   sessions          Session[]
   permissionOverrides UserPermissionOverride[]
@@ -101,24 +96,6 @@ model SystemConfig {
   @@map("system_config")
 }
 
-model OAuthToken {
-  id                  String   @id @default(uuid())
-  userId              String   @map("user_id")
-  provider            String   @default("home_assistant")
-  accessTokenEnc      Bytes    @map("access_token_enc")
-  accessTokenNonce    Bytes    @map("access_token_nonce")
-  refreshTokenEnc     Bytes?   @map("refresh_token_enc")
-  refreshTokenNonce   Bytes?   @map("refresh_token_nonce")
-  clientId            String?  @map("client_id")
-  expiresAt           DateTime @map("expires_at")
-  createdAt           DateTime @default(now()) @map("created_at")
-  updatedAt           DateTime @updatedAt @map("updated_at")
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, provider])
-  @@map("oauth_tokens")
-}
 
 model DashboardConfig {
   id           String   @id @default(uuid())

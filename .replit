@@ -24,6 +24,10 @@ author = "agent"
 task = "workflow.run"
 args = "Next.js Dev Server"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "WS Proxy"
+
 [[workflows.workflow]]
 name = "Next.js Dev Server"
 author = "agent"
@@ -36,6 +40,18 @@ task = "shell.exec"
 args = "npm run dev"
 waitForPort = 5000
 
+[[workflows.workflow]]
+name = "WS Proxy"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npx tsx server/ws-proxy.ts"
+waitForPort = 6000
+
 [[ports]]
 localPort = 3000
 externalPort = 3000
@@ -43,6 +59,10 @@ externalPort = 3000
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[[ports]]
+localPort = 6000
+externalPort = 6000
 
 [deployment]
 deploymentTarget = "autoscale"

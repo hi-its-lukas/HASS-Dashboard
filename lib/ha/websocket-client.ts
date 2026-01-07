@@ -16,6 +16,7 @@ import {
 
 type StateChangeCallback = (entityId: string, newState: HAState, oldState: HAState | null) => void
 type EventCallback<T = Record<string, unknown>> = (data: T, rawEvent: HAEvent<T>) => void
+type CloseCallback = (code: number, reason: string) => void
 
 type ConnectResolve = () => void
 type ConnectReject = (reason: Error) => void
@@ -31,6 +32,7 @@ export class HAWebSocketClient {
   private messageId = 1
   private pendingRequests = new Map<number, PendingRequest>()
   private stateChangeCallbacks: StateChangeCallback[] = []
+  private closeCallbacks: CloseCallback[] = []
   private eventCallbacks = new Map<string, Set<EventCallback<Record<string, unknown>>>>()
   private subscribedEventTypes = new Set<string>()
   private reconnectAttempts = 0
@@ -79,6 +81,8 @@ export class HAWebSocketClient {
           console.log('[HA WS] Disconnected:', event.code, event.reason)
           this.isAuthenticated = false
           this.stopHeartbeat()
+          
+          this.closeCallbacks.forEach(cb => cb(event.code, event.reason))
           
           if (!this.isDisconnecting) {
             this.handleReconnect()
@@ -258,6 +262,13 @@ export class HAWebSocketClient {
     this.stateChangeCallbacks.push(callback)
     return () => {
       this.stateChangeCallbacks = this.stateChangeCallbacks.filter((cb) => cb !== callback)
+    }
+  }
+
+  onClose(callback: CloseCallback): () => void {
+    this.closeCallbacks.push(callback)
+    return () => {
+      this.closeCallbacks = this.closeCallbacks.filter((cb) => cb !== callback)
     }
   }
 

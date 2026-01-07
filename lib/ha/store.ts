@@ -1,11 +1,7 @@
-// Home Assistant State Store using Zustand
-// Last updated: 2026-01-03 - Refactored to use dynamic per-user config
-
 import { create } from 'zustand'
 import { HAState } from './types'
 import { HAWebSocketClient, HAArea, HADevice, HAEntityRegistryEntry } from './websocket-client'
 import { mockStates, generatePowerTrendData } from './mock-data'
-import { useConfigStore } from '@/lib/config/store'
 import { useNotificationsStore } from '@/lib/ui/notifications-store'
 
 interface DashboardPopupEventData extends Record<string, unknown> {
@@ -25,25 +21,19 @@ interface PowerTrendPoint {
   avg: number
 }
 
+type ConnectionMode = 'websocket' | 'polling' | 'connecting' | 'disconnected'
+
 interface HAStore {
-  // Connection state
   connected: boolean
   connecting: boolean
+  connectionMode: ConnectionMode
   error: string | null
   useMock: boolean
-
-  // Entity states
   states: Record<string, HAState>
-
-  // Registry data
   areas: HAArea[]
   devices: HADevice[]
   entityRegistry: HAEntityRegistryEntry[]
-
-  // Derived data
   powerTrend: PowerTrendPoint[]
-
-  // Actions
   connect: () => Promise<void>
   disconnect: () => void
   getState: (entityId: string) => HAState | undefined
@@ -53,10 +43,18 @@ interface HAStore {
 }
 
 let wsClient: HAWebSocketClient | null = null
+let pollInterval: NodeJS.Timeout | null = null
+let wsRetryTimeout: NodeJS.Timeout | null = null
+let wsRetryCount = 0
+
+const WS_PROXY_PORT = 6000
+const POLL_INTERVAL = 5000
+const WS_RETRY_DELAYS = [5000, 10000, 20000, 60000]
 
 export const useHAStore = create<HAStore>((set, get) => ({
   connected: false,
   connecting: false,
+  connectionMode: 'disconnected',
   error: null,
   useMock: process.env.NEXT_PUBLIC_USE_MOCK === 'true',
 
@@ -71,83 +69,20 @@ export const useHAStore = create<HAStore>((set, get) => ({
 
     if (connecting || connected) return
 
-    set({ connecting: true, error: null })
+    set({ connecting: true, error: null, connectionMode: 'connecting' })
 
     if (useMock) {
-      // Use mock data
       set({
         connected: true,
         connecting: false,
+        connectionMode: 'websocket',
         states: mockStates,
         powerTrend: generatePowerTrendData(),
       })
       return
     }
 
-    try {
-      const wsAuthRes = await fetch('/api/ha/ws-auth')
-      if (!wsAuthRes.ok) {
-        const data = await wsAuthRes.json()
-        throw new Error(data.error || 'Home Assistant nicht konfiguriert')
-      }
-      const wsAuth = await wsAuthRes.json()
-      
-      wsClient = new HAWebSocketClient(wsAuth.wsUrl, async () => wsAuth.token)
-
-      await wsClient.connect()
-
-      // Get initial states and registries in parallel
-      const [states, areas, devices, entityRegistry] = await Promise.all([
-        wsClient.getStates(),
-        wsClient.getAreaRegistry().catch(() => []),
-        wsClient.getDeviceRegistry().catch(() => []),
-        wsClient.getEntityRegistry().catch(() => [])
-      ])
-      
-      const statesMap: Record<string, HAState> = {}
-      states.forEach((s) => {
-        statesMap[s.entity_id] = s
-      })
-
-      // Subscribe to state changes
-      await wsClient.subscribeToStateChanges()
-      wsClient.onStateChange((entityId, newState) => {
-        set((state) => ({
-          states: { ...state.states, [entityId]: newState },
-        }))
-      })
-
-      // Subscribe to dashboard popup events
-      await wsClient.subscribeToEvents('dashboard_popup')
-      wsClient.onEvent<DashboardPopupEventData>('dashboard_popup', (data) => {
-        useNotificationsStore.getState().show({
-          title: data.title,
-          message: data.message,
-          severity: data.severity as 'info' | 'warning' | 'critical',
-          tag: data.tag,
-          cameraEntity: data.camera_entity,
-          aiDescription: data.ai_description,
-          intercomSlug: data.intercom_slug,
-        })
-      })
-
-      set({
-        connected: true,
-        connecting: false,
-        states: statesMap,
-        areas,
-        devices,
-        entityRegistry,
-        powerTrend: generatePowerTrendData(),
-      })
-    } catch (err) {
-      console.error('[HA Store] Connection error:', err)
-      set({
-        connected: false,
-        connecting: false,
-        error: err instanceof Error ? err.message : 'Connection failed',
-      })
-    }
+    await tryWebSocketConnection()
   },
 
   disconnect: () => {
@@ -155,169 +90,213 @@ export const useHAStore = create<HAStore>((set, get) => ({
       wsClient.disconnect()
       wsClient = null
     }
-    set({ connected: false, connecting: false })
-  },
-
-  getState: (entityId: string) => {
-    return get().states[entityId]
-  },
-
-  callService: async (domain, service, entityId, data) => {
-    const { useMock } = get()
-
-    if (useMock) {
-      // Simulate service call in mock mode
-      if (entityId) {
-        const currentState = get().states[entityId]
-        if (currentState) {
-          let newState = currentState.state
-          if (service === 'turn_on') newState = 'on'
-          if (service === 'turn_off') newState = 'off'
-          if (service === 'toggle') newState = currentState.state === 'on' ? 'off' : 'on'
-          
-          if (domain === 'alarm_control_panel') {
-            if (service === 'alarm_disarm') newState = 'disarmed'
-            if (service === 'alarm_arm_home') newState = 'armed_home'
-            if (service === 'alarm_arm_away') newState = 'armed_away'
-            if (service === 'alarm_arm_night') newState = 'armed_night'
-          }
-
-          set((state) => ({
-            states: {
-              ...state.states,
-              [entityId]: {
-                ...currentState,
-                state: newState,
-                last_changed: new Date().toISOString(),
-                last_updated: new Date().toISOString(),
-              },
-            },
-          }))
-        }
-      }
-      return
+    if (pollInterval) {
+      clearInterval(pollInterval)
+      pollInterval = null
     }
+    if (wsRetryTimeout) {
+      clearTimeout(wsRetryTimeout)
+      wsRetryTimeout = null
+    }
+    set({
+      connected: false,
+      connecting: false,
+      connectionMode: 'disconnected',
+      error: null,
+    })
+  },
 
-    if (wsClient) {
-      await wsClient.callService({
-        domain,
-        service,
-        serviceData: data,
-        target: entityId ? { entity_id: entityId } : undefined,
+  getState: (entityId: string) => get().states[entityId],
+
+  callService: async (domain: string, service: string, entityId?: string, data?: Record<string, unknown>) => {
+    try {
+      const response = await fetch('/api/ha/services', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          domain,
+          service,
+          target: entityId ? { entity_id: entityId } : undefined,
+          service_data: data,
+        }),
       })
+
+      if (!response.ok) {
+        throw new Error('Service call failed')
+      }
+    } catch (error) {
+      console.error('[HA Store] Service call error:', error)
+      throw error
     }
   },
 
-  updateState: (entityId, state) => {
+  updateState: (entityId: string, state: HAState) => {
     set((s) => ({
       states: { ...s.states, [entityId]: state },
     }))
   },
 
   getEntityArea: (entityId: string) => {
-    const { areas, devices, entityRegistry } = get()
-    const entity = entityRegistry.find(e => e.entity_id === entityId)
+    const { entityRegistry, devices, areas } = get()
+    const entity = entityRegistry.find((e) => e.entity_id === entityId)
     if (!entity) return null
-    
-    let areaId = entity.area_id
-    if (!areaId && entity.device_id) {
-      const device = devices.find(d => d.id === entity.device_id)
-      areaId = device?.area_id
+    if (entity.area_id) {
+      const area = areas.find((a) => a.area_id === entity.area_id)
+      return area?.name || null
     }
-    
-    if (!areaId) return null
-    const area = areas.find(a => a.area_id === areaId)
-    return area?.name || null
+    if (entity.device_id) {
+      const device = devices.find((d) => d.id === entity.device_id)
+      if (device?.area_id) {
+        const area = areas.find((a) => a.area_id === device.area_id)
+        return area?.name || null
+      }
+    }
+    return null
   },
 }))
 
-// Selector hooks for specific data
-export const useConnectionStatus = () => useHAStore((s) => ({
-  connected: s.connected,
-  connecting: s.connecting,
-  error: s.error,
-}))
-
-export const useEntityState = (entityId: string) => useHAStore((s) => s.states[entityId])
-
-export const useLightsCount = () => {
-  const config = useConfigStore((s) => s.config)
-  const lightsGroup = useHAStore((s) => s.states[config.lightsGroupEntityId])
-  const states = useHAStore((s) => s.states)
+async function tryWebSocketConnection() {
+  const store = useHAStore.getState()
   
-  if (!lightsGroup) return { on: 0, total: 0 }
-  
-  const rawIds = lightsGroup.attributes?.entity_id
-  const lightIds = Array.isArray(rawIds) ? rawIds as string[] : []
-  const onCount = lightIds.filter((id) => states[id]?.state === 'on').length
-  
-  return { on: onCount, total: lightIds.length }
-}
-
-export const usePower = () => {
-  const config = useConfigStore((s) => s.config)
-  const powerState = useHAStore((s) => s.states[config.powerEntityId])
-  return powerState ? parseInt(powerState.state) || 0 : 0
-}
-
-export interface Weather {
-  temperature: number
-  condition: string
-}
-
-export const useWeather = (): Weather => {
-  const config = useConfigStore((s) => s.config)
-  const weatherState = useHAStore((s) => s.states[config.weatherEntityId])
-  
-  if (!weatherState) {
-    return { temperature: 0, condition: 'unknown' }
-  }
-  
-  const rawTemp = weatherState.attributes?.temperature
-  const temperature = typeof rawTemp === 'number' ? rawTemp : 0
-  
-  return {
-    temperature,
-    condition: weatherState.state,
-  }
-}
-
-export const useAlarmState = () => {
-  const config = useConfigStore((s) => s.config)
-  const alarmState = useHAStore((s) => s.states[config.security.alarmEntityId])
-  return alarmState?.state || 'unknown'
-}
-
-export const usePersonsAtHome = () => {
-  const states = useHAStore((s) => s.states)
-  const persons = useConfigStore((s) => s.config.persons)
-  
-  const atHome = persons.filter((p) => states[p.entityId]?.state === 'home')
-  return atHome.length
-}
-
-export const useRoomLightsStatus = (roomEntityIds: string[]) => {
-  const states = useHAStore((s) => s.states)
-  
-  const lightIds = roomEntityIds.filter((id) => id.startsWith('light.'))
-  const onCount = lightIds.filter((id) => states[id]?.state === 'on').length
-  
-  if (onCount === 0) return 'All off'
-  if (onCount === 1) return '1 light on'
-  return `${onCount} lights on`
-}
-
-export const useEnergy = () => {
-  const states = useHAStore((s) => s.states)
-  const energy = useConfigStore((s) => s.config.energy)
-  
-  return {
-    solar: parseInt(states[energy.solarEntityId]?.state || '0'),
-    battery: parseInt(states[energy.batteryLevelEntityId]?.state || '0'),
-    batteryPower: parseInt(states[energy.batteryEntityId]?.state || '0'),
-    grid: parseInt(states[energy.gridEntityId]?.state || '0'),
-    house: parseInt(states[energy.houseEntityId]?.state || '0'),
+  try {
+    const protocol = typeof window !== 'undefined' && window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+    const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost'
+    const wsUrl = `${protocol}//${hostname}:${WS_PROXY_PORT}/ws/ha`
+    
+    wsClient = new HAWebSocketClient(wsUrl, async () => '')
+    
+    await wsClient.connect()
+    
+    wsRetryCount = 0
+    
+    if (pollInterval) {
+      clearInterval(pollInterval)
+      pollInterval = null
+    }
+    
+    const [states, areas, devices, entityRegistry] = await Promise.all([
+      wsClient.getStates(),
+      wsClient.getAreaRegistry().catch(() => []),
+      wsClient.getDeviceRegistry().catch(() => []),
+      wsClient.getEntityRegistry().catch(() => [])
+    ])
+    
+    const statesMap: Record<string, HAState> = {}
+    states.forEach((s) => { statesMap[s.entity_id] = s })
+    
+    useHAStore.setState({
+      connected: true,
+      connecting: false,
+      connectionMode: 'websocket',
+      states: statesMap,
+      areas,
+      devices,
+      entityRegistry,
+      powerTrend: generatePowerTrendData(),
+    })
+    
+    await wsClient.subscribeToStateChanges()
+    wsClient.onStateChange((entityId, newState) => {
+      useHAStore.setState((state) => ({
+        states: { ...state.states, [entityId]: newState },
+      }))
+    })
+    
+    await wsClient.subscribeToEvents('dashboard_popup')
+    wsClient.onEvent<DashboardPopupEventData>('dashboard_popup', (data) => {
+      useNotificationsStore.getState().show({
+        title: data.title,
+        message: data.message,
+        severity: data.severity as 'info' | 'warning' | 'critical',
+        tag: data.tag,
+        cameraEntity: data.camera_entity,
+        aiDescription: data.ai_description,
+        intercomSlug: data.intercom_slug,
+      })
+    })
+    
+    wsClient.onClose(() => {
+      console.log('[HA Store] WebSocket closed, switching to polling')
+      wsClient = null
+      startPolling()
+      scheduleWsRetry()
+    })
+    
+  } catch (error) {
+    console.error('[HA Store] WebSocket connection failed:', error)
+    wsClient = null
+    startPolling()
+    scheduleWsRetry()
   }
 }
 
-export const usePowerTrend = () => useHAStore((s) => s.powerTrend)
+function scheduleWsRetry() {
+  if (wsRetryTimeout) {
+    clearTimeout(wsRetryTimeout)
+  }
+  
+  const delay = WS_RETRY_DELAYS[Math.min(wsRetryCount, WS_RETRY_DELAYS.length - 1)]
+  wsRetryCount++
+  
+  console.log(`[HA Store] Will retry WebSocket in ${delay / 1000}s`)
+  
+  wsRetryTimeout = setTimeout(() => {
+    const { connectionMode } = useHAStore.getState()
+    if (connectionMode !== 'websocket') {
+      tryWebSocketConnection()
+    }
+  }, delay)
+}
+
+async function startPolling() {
+  useHAStore.setState({ 
+    connectionMode: 'polling',
+    connecting: false
+  })
+  
+  if (pollInterval) return
+  
+  await pollStates()
+  
+  pollInterval = setInterval(async () => {
+    const { connectionMode } = useHAStore.getState()
+    if (connectionMode === 'websocket') {
+      if (pollInterval) {
+        clearInterval(pollInterval)
+        pollInterval = null
+      }
+      return
+    }
+    
+    await pollStates()
+  }, POLL_INTERVAL)
+}
+
+async function pollStates() {
+  try {
+    const response = await fetch('/api/ha/poll')
+    
+    if (!response.ok) {
+      throw new Error(`Poll failed: ${response.status}`)
+    }
+    
+    const data = await response.json()
+    
+    if (data.states) {
+      const statesMap: Record<string, HAState> = {}
+      data.states.forEach((s: HAState) => { statesMap[s.entity_id] = s })
+      
+      useHAStore.setState((state) => ({
+        connected: true,
+        states: statesMap,
+        powerTrend: state.powerTrend.length ? state.powerTrend : generatePowerTrendData(),
+      }))
+    }
+    
+  } catch (error) {
+    console.error('[HA Store] Polling error:', error)
+    useHAStore.setState({
+      error: error instanceof Error ? error.message : 'Polling failed'
+    })
+  }
+}

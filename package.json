@@ -6,14 +6,20 @@
     "dev": "next dev -H 0.0.0.0 -p 5000",
     "build": "next build",
     "start": "next start -H 0.0.0.0",
-    "lint": "next lint"
+    "lint": "next lint",
+    "create-admin": "npx tsx scripts/create-admin.ts",
+    "ws-proxy": "npx tsx server/ws-proxy.ts",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
     "@types/bcryptjs": "^2.4.6",
+    "@types/cookie": "^0.6.0",
     "@types/leaflet": "^1.9.21",
     "@types/ws": "^8.18.1",
     "bcryptjs": "^3.0.3",
+    "cookie": "^1.1.1",
     "framer-motion": "^11.2.6",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.378.0",
