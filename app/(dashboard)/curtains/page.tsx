@@ -114,7 +114,7 @@ export default function CurtainsPage() {
           </div>
         </div>
         
-        <div className="flex gap-2 mr-12">
+        <div className="flex gap-2">
           <button
             onClick={() => handleAllAction('open')}
             disabled={activeAction?.startsWith('all')}

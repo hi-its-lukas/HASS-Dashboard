@@ -53,7 +53,7 @@ export default function DashboardLayout({
       <MobileNav />
       <NotificationModal />
       <NotificationCenter />
-      <div className="fixed top-4 right-4 z-30">
+      <div className="fixed bottom-20 right-4 z-30 lg:bottom-4">
         <NotificationBell />
       </div>
     </>
