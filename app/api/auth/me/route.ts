@@ -11,8 +11,8 @@ export async function GET() {
     
     return NextResponse.json({
       userId: session.userId,
-      name: session.user.haName,
-      instanceUrl: session.user.haInstanceUrl
+      username: session.user.username,
+      displayName: session.user.displayName
     })
   } catch (error) {
     console.error('[Auth] Error getting user:', error)

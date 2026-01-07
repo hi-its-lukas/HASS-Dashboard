@@ -31,7 +31,7 @@ export async function setSessionCookie(token: string): Promise<void> {
   })
 }
 
-export async function getSessionFromCookie(): Promise<{ userId: string; user: { id: string; haName: string | null; haInstanceUrl: string | null } } | null> {
+export async function getSessionFromCookie(): Promise<{ userId: string; user: { id: string; username: string | null; displayName: string | null } } | null> {
   const cookieStore = await cookies()
   const token = cookieStore.get(SESSION_COOKIE_NAME)?.value
   
@@ -53,8 +53,8 @@ export async function getSessionFromCookie(): Promise<{ userId: string; user: { 
     userId: session.userId,
     user: {
       id: session.user.id,
-      haName: session.user.haName,
-      haInstanceUrl: session.user.haInstanceUrl
+      username: session.user.username,
+      displayName: session.user.displayName
     }
   }
 }
