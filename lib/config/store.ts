@@ -179,6 +179,8 @@ function mergeWithDefaults(userConfig: UserLayoutConfig): DashboardConfig {
     intercoms: userConfig.intercoms || staticConfig.intercoms,
     lights: userConfig.lights || staticConfig.lights,
     covers: userConfig.covers || staticConfig.covers,
+    awnings: userConfig.awnings || [],
+    curtains: userConfig.curtains || [],
     climates: userConfig.climates || [],
     vacuum: userConfig.vacuum,
   }

@@ -731,7 +731,7 @@ export default function SettingsPage() {
                 >
                   <div className="flex items-center gap-3">
                     <Sun className="w-5 h-5 text-amber-500" />
-                    <span className="text-white font-medium">Markisen {discovered ? `(${discovered.covers.filter(c => c.entity_id.includes('awning') || c.entity_id.includes('markise')).length})` : ''}</span>
+                    <span className="text-white font-medium">Markisen ({(config as { awnings?: string[] }).awnings?.length || 0})</span>
                   </div>
                   {expandedSections.awnings ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
                 </button>
@@ -778,7 +778,7 @@ export default function SettingsPage() {
                 >
                   <div className="flex items-center gap-3">
                     <Theater className="w-5 h-5 text-purple-400" />
-                    <span className="text-white font-medium">Gardinen {discovered ? `(${discovered.covers.filter(c => c.entity_id.includes('curtain') || c.entity_id.includes('gardine') || c.entity_id.includes('vorhang')).length})` : ''}</span>
+                    <span className="text-white font-medium">Gardinen ({(config as { curtains?: string[] }).curtains?.length || 0})</span>
                   </div>
                   {expandedSections.curtains ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
                 </button>
