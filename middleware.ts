@@ -16,18 +16,33 @@ const PUBLIC_PREFIXES = [
   '/manifest',
 ]
 
+const SAFE_METHODS = ['GET', 'HEAD', 'OPTIONS']
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
-
-  if (PUBLIC_PATHS.includes(pathname)) {
-    return NextResponse.next()
-  }
+  const method = request.method
 
   if (PUBLIC_PREFIXES.some(prefix => pathname.startsWith(prefix))) {
     return NextResponse.next()
   }
 
   if (pathname.endsWith('.ico') || pathname.endsWith('.png') || pathname.endsWith('.svg')) {
+    return NextResponse.next()
+  }
+
+  if (pathname.startsWith('/api/') && !SAFE_METHODS.includes(method)) {
+    const origin = request.headers.get('origin')
+    const referer = request.headers.get('referer')
+    
+    if (!origin && !referer) {
+      return NextResponse.json(
+        { error: 'Missing Origin or Referer header' },
+        { status: 403 }
+      )
+    }
+  }
+
+  if (PUBLIC_PATHS.includes(pathname)) {
     return NextResponse.next()
   }
 

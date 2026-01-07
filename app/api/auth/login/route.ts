@@ -2,9 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import prisma from '@/lib/db/client'
 import { createSession, setSessionCookie } from '@/lib/auth/session'
+import { csrfProtection } from '@/lib/auth/csrf'
 
 export async function POST(request: NextRequest) {
   try {
+    const csrfError = csrfProtection(request)
+    if (csrfError) {
+      return csrfError
+    }
+    
     const body = await request.json()
     
     if (!body.username || !body.password) {
