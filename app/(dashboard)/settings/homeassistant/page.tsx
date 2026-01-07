@@ -62,6 +62,14 @@ interface DiscoveredEntities {
   vacuums: Array<{ entity_id: string; state: string; attributes: Record<string, unknown> }>
   buttons: Array<{ entity_id: string; state: string; attributes: Record<string, unknown> }>
   selects: Array<{ entity_id: string; state: string; attributes: Record<string, unknown> }>
+  inputNumbers: Array<{ entity_id: string; state: string; attributes: Record<string, unknown> }>
+  inputTexts: Array<{ entity_id: string; state: string; attributes: Record<string, unknown> }>
+  inputSelects: Array<{ entity_id: string; state: string; attributes: Record<string, unknown> }>
+  inputDatetimes: Array<{ entity_id: string; state: string; attributes: Record<string, unknown> }>
+  inputButtons: Array<{ entity_id: string; state: string; attributes: Record<string, unknown> }>
+  timers: Array<{ entity_id: string; state: string; attributes: Record<string, unknown> }>
+  counters: Array<{ entity_id: string; state: string; attributes: Record<string, unknown> }>
+  numbers: Array<{ entity_id: string; state: string; attributes: Record<string, unknown> }>
 }
 
 interface IntercomConfig {
@@ -955,6 +963,13 @@ export default function HomeAssistantSettingsPage() {
                             {getFriendlyName(sensor)} ({sensor.state} {sensor.attributes?.unit_of_measurement || 'W'})
                           </option>
                         ))}
+                        <optgroup label="Helfer (input_number)">
+                          {discovered?.inputNumbers?.map(entity => (
+                            <option key={entity.entity_id} value={entity.entity_id}>
+                              {getFriendlyName(entity)} ({entity.state})
+                            </option>
+                          ))}
+                        </optgroup>
                         <optgroup label="Alle Sensoren">
                           {discovered?.sensors?.map(sensor => (
                             <option key={sensor.entity_id} value={sensor.entity_id}>
@@ -984,6 +999,13 @@ export default function HomeAssistantSettingsPage() {
                             {getFriendlyName(sensor)} ({sensor.state} {sensor.attributes?.unit_of_measurement || 'W'})
                           </option>
                         ))}
+                        <optgroup label="Helfer (input_number)">
+                          {discovered?.inputNumbers?.map(entity => (
+                            <option key={entity.entity_id} value={entity.entity_id}>
+                              {getFriendlyName(entity)} ({entity.state})
+                            </option>
+                          ))}
+                        </optgroup>
                         <optgroup label="Alle Sensoren">
                           {discovered?.sensors?.map(sensor => (
                             <option key={sensor.entity_id} value={sensor.entity_id}>
@@ -1014,6 +1036,13 @@ export default function HomeAssistantSettingsPage() {
                             {getFriendlyName(sensor)} ({sensor.state} {sensor.attributes?.unit_of_measurement || '%'})
                           </option>
                         ))}
+                        <optgroup label="Helfer (input_number)">
+                          {discovered?.inputNumbers?.map(entity => (
+                            <option key={entity.entity_id} value={entity.entity_id}>
+                              {getFriendlyName(entity)} ({entity.state})
+                            </option>
+                          ))}
+                        </optgroup>
                         <optgroup label="Alle Sensoren">
                           {discovered?.sensors?.map(sensor => (
                             <option key={sensor.entity_id} value={sensor.entity_id}>
@@ -1055,7 +1084,7 @@ export default function HomeAssistantSettingsPage() {
                     </div>
                     
                     <div>
-                      <label className="block text-sm text-gray-400 mb-1">Hausverbrauch (W) - Summen-Sensor</label>
+                      <label className="block text-sm text-gray-400 mb-1">Hausverbrauch (W) - Summen-Sensor oder Helfer</label>
                       <select
                         value={config.energy?.houseEntityId || ''}
                         onChange={(e) => setConfig(prev => ({
@@ -1070,13 +1099,30 @@ export default function HomeAssistantSettingsPage() {
                           s.entity_id.includes('home') ||
                           s.entity_id.includes('consumption') ||
                           s.entity_id.includes('verbrauch') ||
+                          s.entity_id.includes('stromverbrauch') ||
                           s.entity_id.includes('load') ||
-                          (s.attributes?.unit_of_measurement === 'W' && s.attributes?.device_class === 'power')
+                          s.entity_id.includes('power') ||
+                          s.attributes?.unit_of_measurement === 'W' ||
+                          s.attributes?.device_class === 'power'
                         ).map(sensor => (
                           <option key={sensor.entity_id} value={sensor.entity_id}>
                             {getFriendlyName(sensor)} ({sensor.state} {sensor.attributes?.unit_of_measurement || 'W'})
                           </option>
                         ))}
+                        <optgroup label="Helfer (input_number)">
+                          {discovered?.inputNumbers?.map(entity => (
+                            <option key={entity.entity_id} value={entity.entity_id}>
+                              {getFriendlyName(entity)} ({entity.state})
+                            </option>
+                          ))}
+                        </optgroup>
+                        <optgroup label="Helfer (number)">
+                          {discovered?.numbers?.map(entity => (
+                            <option key={entity.entity_id} value={entity.entity_id}>
+                              {getFriendlyName(entity)} ({entity.state})
+                            </option>
+                          ))}
+                        </optgroup>
                         <optgroup label="Alle Sensoren">
                           {discovered?.sensors?.map(sensor => (
                             <option key={sensor.entity_id} value={sensor.entity_id}>
