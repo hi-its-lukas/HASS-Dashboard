@@ -73,7 +73,7 @@ export default function SecurityPage() {
                   <Shield className="w-6 h-6 text-accent-green" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-white">{getAlarmStateLabel(alarmState)}</h2>
+                  <h2 className="text-xl font-bold text-white">{getAlarmStateLabel(alarmState.state)}</h2>
                   <p className="text-sm text-text-secondary">
                     {activeZones.length} zone{activeZones.length !== 1 ? 's' : ''} active
                   </p>
@@ -92,22 +92,22 @@ export default function SecurityPage() {
             <SecurityActionCard 
               action="stay" 
               onClick={() => handleAlarmAction('stay')}
-              active={alarmState === 'armed_home'}
+              active={alarmState.state === 'armed_home'}
             />
             <SecurityActionCard 
               action="away" 
               onClick={() => handleAlarmAction('away')}
-              active={alarmState === 'armed_away'}
+              active={alarmState.state === 'armed_away'}
             />
             <SecurityActionCard 
               action="outside" 
               onClick={() => handleAlarmAction('outside')}
-              active={alarmState === 'armed_night'}
+              active={alarmState.state === 'armed_night'}
             />
             <SecurityActionCard 
               action="disarm" 
               onClick={() => handleAlarmAction('disarm')}
-              active={alarmState === 'disarmed'}
+              active={alarmState.state === 'disarmed'}
             />
           </motion.section>
         </div>
