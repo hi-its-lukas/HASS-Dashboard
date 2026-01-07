@@ -13,6 +13,9 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# Set production database path for build
+ENV SQLITE_URL="file:/data/hass-dashboard.db"
+
 # Generate Prisma client for linux-arm64-openssl-3.0.x
 RUN npx prisma generate
 
@@ -61,6 +64,6 @@ USER root
 EXPOSE 80
 
 ENV PORT=80
-ENV DATABASE_URL="file:/data/hass-dashboard.db"
+ENV SQLITE_URL="file:/data/hass-dashboard.db"
 
 ENTRYPOINT ["./docker-entrypoint.sh"]
