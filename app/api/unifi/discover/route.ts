@@ -1,93 +1,54 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { ProtectClient } from '@/lib/unifi/protect-client'
+import { AccessClient } from '@/lib/unifi/access-client'
 
-interface UnifiCamera {
-  id: string
-  name: string
-  type: string
-  state: string
-  host: string
-}
+export const dynamic = 'force-dynamic'
 
-interface UnifiAccessDevice {
-  id: string
-  name: string
-  type: string
-  doorId?: string
-}
-
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    const { controllerUrl, username, password } = await req.json()
+    const { controllerUrl, protectApiKey, accessApiKey } = await request.json()
     
-    if (!controllerUrl || !username || !password) {
-      return NextResponse.json({ error: 'Missing credentials' }, { status: 400 })
+    if (!controllerUrl) {
+      return NextResponse.json(
+        { error: 'Controller URL required' },
+        { status: 400 }
+      )
     }
     
-    const baseUrl = controllerUrl.replace(/\/$/, '')
+    const cameras: { id: string; name: string; type: string; state: string; host: string }[] = []
+    const accessDevices: { id: string; name: string; type: string; doorId?: string }[] = []
     
-    const loginRes = await fetch(`${baseUrl}/api/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password }),
-      credentials: 'include'
-    })
-    
-    if (!loginRes.ok) {
-      return NextResponse.json({ error: 'Login failed' }, { status: 401 })
-    }
-    
-    const cookies = loginRes.headers.get('set-cookie') || ''
-    
-    const cameras: UnifiCamera[] = []
-    const accessDevices: UnifiAccessDevice[] = []
-    
-    try {
-      const protectRes = await fetch(`${baseUrl}/proxy/protect/api/bootstrap`, {
-        headers: { 'Cookie': cookies }
-      })
-      
-      if (protectRes.ok) {
-        const protectData = await protectRes.json()
+    if (protectApiKey) {
+      try {
+        const protectClient = new ProtectClient(controllerUrl, protectApiKey)
+        const protectCameras = await protectClient.getCameras()
         
-        if (protectData.cameras) {
-          for (const cam of protectData.cameras) {
-            cameras.push({
-              id: cam.id,
-              name: cam.name || 'Unnamed Camera',
-              type: cam.type || 'Unknown',
-              state: cam.state || 'UNKNOWN',
-              host: cam.host || ''
-            })
-          }
-        }
+        cameras.push(...protectCameras.map(cam => ({
+          id: cam.id,
+          name: cam.name,
+          type: cam.modelKey || cam.type,
+          state: cam.state,
+          host: cam.host
+        })))
+      } catch (error) {
+        console.error('[API] Protect discovery error:', error)
       }
-    } catch (e) {
-      console.error('[Unifi Discover] Protect error:', e)
     }
     
-    try {
-      const accessRes = await fetch(`${baseUrl}/proxy/access/api/v2/device`, {
-        headers: { 'Cookie': cookies }
-      })
-      
-      if (accessRes.ok) {
-        const accessData = await accessRes.json()
+    if (accessApiKey) {
+      try {
+        const accessClient = new AccessClient(controllerUrl, accessApiKey)
+        const doors = await accessClient.getDoors()
         
-        if (Array.isArray(accessData)) {
-          for (const device of accessData) {
-            if (device.type?.includes('UA-G3') || device.type?.includes('reader') || device.capabilities?.includes('intercom')) {
-              accessDevices.push({
-                id: device.id || device._id,
-                name: device.name || device.alias || 'Unnamed Device',
-                type: device.type || 'Unknown',
-                doorId: device.door_id
-              })
-            }
-          }
-        }
+        accessDevices.push(...doors.map(door => ({
+          id: door.unique_id,
+          name: door.name,
+          type: door.type || 'door',
+          doorId: door.unique_id
+        })))
+      } catch (error) {
+        console.error('[API] Access discovery error:', error)
       }
-    } catch (e) {
-      console.error('[Unifi Discover] Access error:', e)
     }
     
     return NextResponse.json({
@@ -95,7 +56,10 @@ export async function POST(req: NextRequest) {
       accessDevices
     })
   } catch (error) {
-    console.error('[Unifi Discover] Error:', error)
-    return NextResponse.json({ error: 'Discovery failed' }, { status: 500 })
+    console.error('[API] Discover error:', error)
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Discovery failed' },
+      { status: 500 }
+    )
   }
 }

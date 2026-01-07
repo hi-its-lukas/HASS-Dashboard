@@ -20,8 +20,8 @@ export interface UnifiAccessDevice {
 
 export interface UnifiConfig {
   controllerUrl?: string
-  username?: string
-  password?: string
+  protectApiKey?: string
+  accessApiKey?: string
   cameras?: string[]
   accessDevices?: UnifiAccessDevice[]
   aiSurveillanceEnabled?: boolean

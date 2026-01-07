@@ -17,13 +17,14 @@ import {
   Eye,
   EyeOff,
   RefreshCw,
-  Sparkles
+  Sparkles,
+  Key
 } from 'lucide-react'
 
 interface UnifiConfig {
   controllerUrl: string
-  username: string
-  password: string
+  protectApiKey: string
+  accessApiKey: string
   cameras: string[]
   accessDevices: UnifiAccessDevice[]
   aiSurveillanceEnabled: boolean
@@ -53,15 +54,18 @@ export default function UnifiSettingsPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [testing, setTesting] = useState(false)
-  const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null)
-  const [showPassword, setShowPassword] = useState(false)
+  const [testingProtect, setTestingProtect] = useState(false)
+  const [testingAccess, setTestingAccess] = useState(false)
+  const [protectResult, setProtectResult] = useState<{ success: boolean; message: string } | null>(null)
+  const [accessResult, setAccessResult] = useState<{ success: boolean; message: string } | null>(null)
+  const [showProtectKey, setShowProtectKey] = useState(false)
+  const [showAccessKey, setShowAccessKey] = useState(false)
   const [discovered, setDiscovered] = useState<DiscoveredUnifi | null>(null)
   const [discoveringEntities, setDiscoveringEntities] = useState(false)
   const [config, setConfig] = useState<UnifiConfig>({
     controllerUrl: '',
-    username: '',
-    password: '',
+    protectApiKey: '',
+    accessApiKey: '',
     cameras: [],
     accessDevices: [],
     aiSurveillanceEnabled: true
@@ -104,42 +108,70 @@ export default function UnifiSettingsPage() {
     }
   }
   
-  const testConnection = async () => {
-    if (!config.controllerUrl || !config.username || !config.password) {
-      setTestResult({ success: false, message: 'Bitte alle Felder ausfüllen' })
+  const testProtectConnection = async () => {
+    if (!config.controllerUrl || !config.protectApiKey) {
+      setProtectResult({ success: false, message: 'Controller-URL und Protect API Key erforderlich' })
       return
     }
     
-    setTesting(true)
-    setTestResult(null)
+    setTestingProtect(true)
+    setProtectResult(null)
     
     try {
-      const res = await fetch('/api/unifi/test', {
+      const res = await fetch('/api/unifi/protect/test', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           controllerUrl: config.controllerUrl,
-          username: config.username,
-          password: config.password
+          apiKey: config.protectApiKey
         })
       })
       
       const data = await res.json()
-      
-      if (res.ok && data.success) {
-        setTestResult({ success: true, message: `Verbunden! ${data.cameras || 0} Kameras, ${data.accessDevices || 0} Access-Geräte gefunden` })
-      } else {
-        setTestResult({ success: false, message: data.error || 'Verbindung fehlgeschlagen' })
-      }
+      setProtectResult({
+        success: res.ok,
+        message: res.ok ? `Verbunden! ${data.cameras || 0} Kameras gefunden` : (data.error || 'Verbindung fehlgeschlagen')
+      })
     } catch (error) {
-      setTestResult({ success: false, message: 'Netzwerkfehler' })
+      setProtectResult({ success: false, message: 'Netzwerkfehler' })
     } finally {
-      setTesting(false)
+      setTestingProtect(false)
+    }
+  }
+  
+  const testAccessConnection = async () => {
+    if (!config.controllerUrl || !config.accessApiKey) {
+      setAccessResult({ success: false, message: 'Controller-URL und Access API Key erforderlich' })
+      return
+    }
+    
+    setTestingAccess(true)
+    setAccessResult(null)
+    
+    try {
+      const res = await fetch('/api/unifi/access/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          controllerUrl: config.controllerUrl,
+          apiKey: config.accessApiKey
+        })
+      })
+      
+      const data = await res.json()
+      setAccessResult({
+        success: res.ok,
+        message: res.ok ? `Verbunden! ${data.doors || 0} Türen gefunden` : (data.error || 'Verbindung fehlgeschlagen')
+      })
+    } catch (error) {
+      setAccessResult({ success: false, message: 'Netzwerkfehler' })
+    } finally {
+      setTestingAccess(false)
     }
   }
   
   const discoverEntities = async () => {
-    if (!config.controllerUrl || !config.username || !config.password) {
+    if (!config.controllerUrl) {
       return
     }
     
@@ -151,8 +183,8 @@ export default function UnifiSettingsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           controllerUrl: config.controllerUrl,
-          username: config.username,
-          password: config.password
+          protectApiKey: config.protectApiKey,
+          accessApiKey: config.accessApiKey
         })
       })
       
@@ -161,14 +193,34 @@ export default function UnifiSettingsPage() {
         setDiscovered(data)
       }
     } catch (error) {
-      console.error('Failed to discover Unifi entities:', error)
+      console.error('Discovery failed:', error)
     } finally {
       setDiscoveringEntities(false)
     }
   }
   
+  const saveSettings = async () => {
+    setSaving(true)
+    try {
+      await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          layoutConfig: { unifi: config }
+        })
+      })
+    } catch (error) {
+      console.error('Failed to save settings:', error)
+    } finally {
+      setSaving(false)
+    }
+  }
+  
   const toggleSection = (section: string) => {
-    setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }))
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }))
   }
   
   const toggleCamera = (cameraId: string) => {
@@ -181,39 +233,14 @@ export default function UnifiSettingsPage() {
   }
   
   const toggleAccessDevice = (device: UnifiAccessDevice) => {
-    setConfig(prev => {
-      const exists = prev.accessDevices.some(d => d.id === device.id)
-      return {
-        ...prev,
-        accessDevices: exists
-          ? prev.accessDevices.filter(d => d.id !== device.id)
-          : [...prev.accessDevices, device]
-      }
-    })
+    setConfig(prev => ({
+      ...prev,
+      accessDevices: prev.accessDevices.some(d => d.id === device.id)
+        ? prev.accessDevices.filter(d => d.id !== device.id)
+        : [...prev.accessDevices, device]
+    }))
   }
   
-  const saveConfig = async () => {
-    setSaving(true)
-    try {
-      const res = await fetch('/api/settings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          layoutConfig: { 
-            unifi: config 
-          } 
-        })
-      })
-      if (res.ok) {
-        router.push('/settings')
-      }
-    } catch (error) {
-      console.error('Failed to save settings:', error)
-    } finally {
-      setSaving(false)
-    }
-  }
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#1a1f2e] to-[#0d1117] flex items-center justify-center">
@@ -226,223 +253,284 @@ export default function UnifiSettingsPage() {
     <div className="min-h-screen bg-gradient-to-br from-[#1a1f2e] to-[#0d1117] p-4 md:p-6">
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center gap-3 mb-6">
-          <button 
+          <button
             onClick={() => router.push('/settings')}
-            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+            className="p-2 rounded-xl hover:bg-white/10 transition-colors"
           >
-            <ArrowLeft className="w-5 h-5 text-white" />
+            <ArrowLeft className="w-6 h-6 text-white" />
           </button>
           <Shield className="w-8 h-8 text-purple-400" />
-          <h1 className="text-2xl font-bold text-white">Unifi Protect / Access</h1>
+          <h1 className="text-2xl font-bold text-white">UniFi Protect & Access</h1>
         </div>
         
-        <div className="bg-[#141b2d]/80 backdrop-blur-lg rounded-2xl p-6 border border-white/5 mb-6">
+        <div className="bg-[#141b2d]/80 backdrop-blur-lg rounded-2xl border border-white/5 mb-6 overflow-hidden">
           <button
             onClick={() => toggleSection('connection')}
-            className="w-full flex items-center justify-between mb-4"
+            className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors"
           >
-            <h2 className="text-lg font-semibold text-white">Controller-Verbindung</h2>
-            {expandedSections.connection ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
+            <div className="flex items-center gap-3">
+              <Key className="w-5 h-5 text-blue-400" />
+              <span className="text-white font-medium">API-Verbindung</span>
+            </div>
+            {expandedSections.connection ? (
+              <ChevronDown className="w-5 h-5 text-gray-400" />
+            ) : (
+              <ChevronRight className="w-5 h-5 text-gray-400" />
+            )}
           </button>
           
           {expandedSections.connection && (
-            <div className="space-y-4">
+            <div className="p-4 pt-0 space-y-4">
               <div>
                 <label className="block text-sm text-gray-400 mb-2">Controller URL</label>
                 <input
-                  type="url"
-                  placeholder="https://192.168.1.1"
+                  type="text"
                   value={config.controllerUrl}
                   onChange={(e) => setConfig(prev => ({ ...prev, controllerUrl: e.target.value }))}
+                  placeholder="https://192.168.1.1"
                   className="w-full px-4 py-3 bg-[#1a2235] border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
                 />
-                <p className="text-xs text-gray-500 mt-1">Die IP oder URL deines Unifi Controllers (UDM, UNVR, Cloud Key)</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  IP-Adresse oder Hostname deines UniFi-Controllers (z.B. https://192.168.1.1)
+                </p>
               </div>
               
-              <div>
-                <label className="block text-sm text-gray-400 mb-2">Benutzername</label>
-                <input
-                  type="text"
-                  placeholder="admin"
-                  value={config.username}
-                  onChange={(e) => setConfig(prev => ({ ...prev, username: e.target.value }))}
-                  className="w-full px-4 py-3 bg-[#1a2235] border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm text-gray-400 mb-2">Passwort</label>
+              <div className="border-t border-white/10 pt-4">
+                <label className="block text-sm text-gray-400 mb-2">
+                  <Video className="w-4 h-4 inline mr-2" />
+                  UniFi Protect API Key
+                </label>
                 <div className="relative">
                   <input
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="••••••••"
-                    value={config.password}
-                    onChange={(e) => setConfig(prev => ({ ...prev, password: e.target.value }))}
-                    className="w-full px-4 py-3 bg-[#1a2235] border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 pr-12"
+                    type={showProtectKey ? 'text' : 'password'}
+                    value={config.protectApiKey}
+                    onChange={(e) => setConfig(prev => ({ ...prev, protectApiKey: e.target.value }))}
+                    placeholder="Protect API Key eingeben"
+                    className="w-full px-4 py-3 pr-20 bg-[#1a2235] border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
                   />
                   <button
                     type="button"
-                    onClick={() => setShowPassword(!showPassword)}
+                    onClick={() => setShowProtectKey(!showProtectKey)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-white"
                   >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    {showProtectKey ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Erstelle den Key unter: Protect → Settings → Control Plane → Integrations → Generate API Key
+                </p>
+                
+                <div className="flex items-center gap-3 mt-3">
+                  <button
+                    onClick={testProtectConnection}
+                    disabled={testingProtect}
+                    className="flex items-center gap-2 px-4 py-2 bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    {testingProtect ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Zap className="w-4 h-4" />
+                    )}
+                    Protect testen
+                  </button>
+                  
+                  {protectResult && (
+                    <div className={`flex items-center gap-2 text-sm ${protectResult.success ? 'text-emerald-400' : 'text-red-400'}`}>
+                      {protectResult.success ? (
+                        <CheckCircle className="w-4 h-4" />
+                      ) : (
+                        <XCircle className="w-4 h-4" />
+                      )}
+                      {protectResult.message}
+                    </div>
+                  )}
+                </div>
               </div>
               
-              <div className="flex gap-3">
-                <button
-                  onClick={testConnection}
-                  disabled={testing || !config.controllerUrl || !config.username || !config.password}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 rounded-xl transition-colors disabled:opacity-50"
-                >
-                  {testing ? <Loader2 className="w-5 h-5 animate-spin" /> : <RefreshCw className="w-5 h-5" />}
-                  Verbindung testen
-                </button>
+              <div className="border-t border-white/10 pt-4">
+                <label className="block text-sm text-gray-400 mb-2">
+                  <DoorOpen className="w-4 h-4 inline mr-2" />
+                  UniFi Access API Key
+                </label>
+                <div className="relative">
+                  <input
+                    type={showAccessKey ? 'text' : 'password'}
+                    value={config.accessApiKey}
+                    onChange={(e) => setConfig(prev => ({ ...prev, accessApiKey: e.target.value }))}
+                    placeholder="Access API Key eingeben"
+                    className="w-full px-4 py-3 pr-20 bg-[#1a2235] border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowAccessKey(!showAccessKey)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-white"
+                  >
+                    {showAccessKey ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Erstelle den Key unter: Access → Settings → General → Advanced → API Token → Create New
+                </p>
+                
+                <div className="flex items-center gap-3 mt-3">
+                  <button
+                    onClick={testAccessConnection}
+                    disabled={testingAccess}
+                    className="flex items-center gap-2 px-4 py-2 bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    {testingAccess ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Zap className="w-4 h-4" />
+                    )}
+                    Access testen
+                  </button>
+                  
+                  {accessResult && (
+                    <div className={`flex items-center gap-2 text-sm ${accessResult.success ? 'text-emerald-400' : 'text-red-400'}`}>
+                      {accessResult.success ? (
+                        <CheckCircle className="w-4 h-4" />
+                      ) : (
+                        <XCircle className="w-4 h-4" />
+                      )}
+                      {accessResult.message}
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              <div className="border-t border-white/10 pt-4">
                 <button
                   onClick={discoverEntities}
-                  disabled={discoveringEntities || !config.controllerUrl || !config.username || !config.password}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 rounded-xl transition-colors disabled:opacity-50"
+                  disabled={discoveringEntities || (!config.protectApiKey && !config.accessApiKey)}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg transition-colors disabled:opacity-50"
                 >
-                  {discoveringEntities ? <Loader2 className="w-5 h-5 animate-spin" /> : <Zap className="w-5 h-5" />}
-                  Discover
+                  {discoveringEntities ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <RefreshCw className="w-4 h-4" />
+                  )}
+                  Geräte entdecken
                 </button>
               </div>
-              
-              {testResult && (
-                <div className={`flex items-center gap-3 p-4 rounded-xl ${testResult.success ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-red-500/10 border border-red-500/20'}`}>
-                  {testResult.success ? (
-                    <CheckCircle className="w-5 h-5 text-emerald-400" />
-                  ) : (
-                    <XCircle className="w-5 h-5 text-red-400" />
-                  )}
-                  <span className={testResult.success ? 'text-emerald-400' : 'text-red-400'}>
-                    {testResult.message}
-                  </span>
-                </div>
-              )}
             </div>
           )}
         </div>
         
-        <div className="bg-[#141b2d]/80 backdrop-blur-lg rounded-2xl p-6 border border-white/5 mb-6">
-          <button
-            onClick={() => toggleSection('cameras')}
-            className="w-full flex items-center justify-between mb-4"
-          >
-            <div className="flex items-center gap-3">
-              <Video className="w-5 h-5 text-red-400" />
-              <h2 className="text-lg font-semibold text-white">Protect Kameras {discovered ? `(${config.cameras.length}/${discovered.cameras.length})` : ''}</h2>
-            </div>
-            {expandedSections.cameras ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
-          </button>
-          
-          {expandedSections.cameras && (
-            <div className="space-y-2 max-h-64 overflow-y-auto">
-              {!discovered ? (
-                <p className="text-gray-500 text-sm">Klicke auf "Discover" um Kameras zu laden</p>
-              ) : discovered.cameras.length === 0 ? (
-                <p className="text-gray-500 text-sm">Keine Kameras gefunden</p>
+        {discovered && discovered.cameras.length > 0 && (
+          <div className="bg-[#141b2d]/80 backdrop-blur-lg rounded-2xl border border-white/5 mb-6 overflow-hidden">
+            <button
+              onClick={() => toggleSection('cameras')}
+              className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <Video className="w-5 h-5 text-cyan-400" />
+                <span className="text-white font-medium">Protect Kameras ({discovered.cameras.length})</span>
+              </div>
+              {expandedSections.cameras ? (
+                <ChevronDown className="w-5 h-5 text-gray-400" />
               ) : (
-                discovered.cameras.map(camera => (
-                  <label key={camera.id} className="flex items-center gap-3 p-3 hover:bg-white/5 rounded-lg cursor-pointer">
+                <ChevronRight className="w-5 h-5 text-gray-400" />
+              )}
+            </button>
+            
+            {expandedSections.cameras && (
+              <div className="p-4 pt-0 space-y-2">
+                {discovered.cameras.map(camera => (
+                  <label
+                    key={camera.id}
+                    className="flex items-center gap-3 p-3 bg-white/5 rounded-xl cursor-pointer hover:bg-white/10 transition-colors"
+                  >
                     <input
                       type="checkbox"
                       checked={config.cameras.includes(camera.id)}
                       onChange={() => toggleCamera(camera.id)}
-                      className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500"
+                      className="w-5 h-5 rounded bg-white/10 border-white/20 text-purple-500 focus:ring-purple-500/50"
                     />
                     <div className="flex-1">
-                      <span className="text-white">{camera.name}</span>
-                      <span className="text-xs text-gray-500 ml-2">{camera.type}</span>
+                      <div className="text-white">{camera.name}</div>
+                      <div className="text-xs text-gray-500">{camera.type} • {camera.state}</div>
                     </div>
-                    <span className={`text-xs px-2 py-0.5 rounded ${camera.state === 'CONNECTED' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`}>
-                      {camera.state === 'CONNECTED' ? 'Online' : 'Offline'}
-                    </span>
                   </label>
-                ))
-              )}
-            </div>
-          )}
-        </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
         
-        <div className="bg-[#141b2d]/80 backdrop-blur-lg rounded-2xl p-6 border border-white/5 mb-6">
-          <button
-            onClick={() => toggleSection('access')}
-            className="w-full flex items-center justify-between mb-4"
-          >
-            <div className="flex items-center gap-3">
-              <DoorOpen className="w-5 h-5 text-green-400" />
-              <h2 className="text-lg font-semibold text-white">Access Intercoms {discovered ? `(${config.accessDevices.length}/${discovered.accessDevices.length})` : ''}</h2>
-            </div>
-            {expandedSections.access ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
-          </button>
-          
-          {expandedSections.access && (
-            <div className="space-y-2 max-h-64 overflow-y-auto">
-              <p className="text-sm text-gray-400 mb-3">
-                Wähle Access Reader aus, die als Intercoms in der Sidebar erscheinen sollen.
-              </p>
-              {!discovered ? (
-                <p className="text-gray-500 text-sm">Klicke auf "Discover" um Access-Geräte zu laden</p>
-              ) : discovered.accessDevices.length === 0 ? (
-                <p className="text-gray-500 text-sm">Keine Access-Geräte gefunden</p>
+        {discovered && discovered.accessDevices.length > 0 && (
+          <div className="bg-[#141b2d]/80 backdrop-blur-lg rounded-2xl border border-white/5 mb-6 overflow-hidden">
+            <button
+              onClick={() => toggleSection('access')}
+              className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <DoorOpen className="w-5 h-5 text-orange-400" />
+                <span className="text-white font-medium">Access Türen ({discovered.accessDevices.length})</span>
+              </div>
+              {expandedSections.access ? (
+                <ChevronDown className="w-5 h-5 text-gray-400" />
               ) : (
-                discovered.accessDevices.map(device => (
-                  <label key={device.id} className="flex items-center gap-3 p-3 hover:bg-white/5 rounded-lg cursor-pointer">
+                <ChevronRight className="w-5 h-5 text-gray-400" />
+              )}
+            </button>
+            
+            {expandedSections.access && (
+              <div className="p-4 pt-0 space-y-2">
+                {discovered.accessDevices.map(device => (
+                  <label
+                    key={device.id}
+                    className="flex items-center gap-3 p-3 bg-white/5 rounded-xl cursor-pointer hover:bg-white/10 transition-colors"
+                  >
                     <input
                       type="checkbox"
                       checked={config.accessDevices.some(d => d.id === device.id)}
                       onChange={() => toggleAccessDevice(device)}
-                      className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500"
+                      className="w-5 h-5 rounded bg-white/10 border-white/20 text-purple-500 focus:ring-purple-500/50"
                     />
                     <div className="flex-1">
-                      <span className="text-white">{device.name}</span>
-                      <span className="text-xs text-gray-500 ml-2">{device.type}</span>
+                      <div className="text-white">{device.name}</div>
+                      <div className="text-xs text-gray-500">{device.type}</div>
                     </div>
                   </label>
-                ))
-              )}
-            </div>
-          )}
-        </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
         
-        <div className="bg-[#141b2d]/80 backdrop-blur-lg rounded-2xl p-6 border border-white/5 mb-6">
+        <div className="bg-[#141b2d]/80 backdrop-blur-lg rounded-2xl border border-white/5 mb-6 overflow-hidden">
           <button
             onClick={() => toggleSection('surveillance')}
-            className="w-full flex items-center justify-between mb-4"
+            className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors"
           >
             <div className="flex items-center gap-3">
               <Sparkles className="w-5 h-5 text-amber-400" />
-              <h2 className="text-lg font-semibold text-white">AI Surveillance</h2>
+              <span className="text-white font-medium">AI Surveillance</span>
             </div>
-            {expandedSections.surveillance ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
+            {expandedSections.surveillance ? (
+              <ChevronDown className="w-5 h-5 text-gray-400" />
+            ) : (
+              <ChevronRight className="w-5 h-5 text-gray-400" />
+            )}
           </button>
           
           {expandedSections.surveillance && (
-            <div className="space-y-4">
-              <label className="flex items-center gap-3 p-3 bg-white/5 rounded-lg cursor-pointer">
+            <div className="p-4 pt-0">
+              <label className="flex items-center gap-3 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={config.aiSurveillanceEnabled}
                   onChange={(e) => setConfig(prev => ({ ...prev, aiSurveillanceEnabled: e.target.checked }))}
-                  className="w-5 h-5 rounded border-gray-600 bg-gray-700 text-amber-500 focus:ring-amber-500"
+                  className="w-5 h-5 rounded bg-white/10 border-white/20 text-amber-500 focus:ring-amber-500/50"
                 />
                 <div>
-                  <span className="text-white font-medium">AI Surveillance aktivieren</span>
-                  <p className="text-xs text-gray-400 mt-1">
-                    Zeigt Personen-, Fahrzeug- und Paketerkennungen von Unifi Protect
-                  </p>
+                  <div className="text-white">AI Surveillance aktivieren</div>
+                  <div className="text-xs text-gray-500">
+                    Zeigt Smart Detection Events (Personen, Fahrzeuge, Pakete) in der Sidebar
+                  </div>
                 </div>
               </label>
-              
-              {config.aiSurveillanceEnabled && (
-                <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl">
-                  <p className="text-sm text-amber-400">
-                    Die AI Surveillance Seite wird in der Sidebar erscheinen und Echtzeit-Events von Unifi Protect anzeigen.
-                  </p>
-                </div>
-              )}
             </div>
           )}
         </div>
@@ -450,16 +538,20 @@ export default function UnifiSettingsPage() {
         <div className="flex gap-3">
           <button
             onClick={() => router.push('/settings')}
-            className="flex-1 px-6 py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl transition-colors"
+            className="flex-1 px-4 py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl transition-colors"
           >
             Abbrechen
           </button>
           <button
-            onClick={saveConfig}
+            onClick={saveSettings}
             disabled={saving}
-            className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl transition-colors disabled:opacity-50"
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-purple-500 hover:bg-purple-600 text-white rounded-xl transition-colors disabled:opacity-50"
           >
-            {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+            {saving ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <Save className="w-5 h-5" />
+            )}
             Speichern
           </button>
         </div>
