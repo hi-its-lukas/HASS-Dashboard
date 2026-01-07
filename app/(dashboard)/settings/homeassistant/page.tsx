@@ -874,7 +874,7 @@ export default function HomeAssistantSettingsPage() {
               >
                 <div className="flex items-center gap-3">
                   <PlugZap className="w-5 h-5 text-orange-400" />
-                  <span className="text-white font-medium">Geräte / Appliances {discovered ? `(${config.appliances?.length || 0}/${(discovered.sensors?.filter(s => s.attributes.device_class === 'power').length || 0) + (discovered.switches?.length || 0)})` : ''}</span>
+                  <span className="text-white font-medium">Geräte / Appliances {discovered ? `(${config.appliances?.length || 0}/${(discovered.sensors?.filter(s => s.attributes?.device_class === 'power' || s.attributes?.unit_of_measurement === 'W' || s.attributes?.unit_of_measurement === 'kW').length || 0) + (discovered.switches?.length || 0)})` : ''}</span>
                 </div>
                 {expandedSections.appliances ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
               </button>
@@ -895,7 +895,7 @@ export default function HomeAssistantSettingsPage() {
                         />
                       </div>
                       <div className="space-y-2 max-h-64 overflow-y-auto">
-                        {filterEntities(discovered.sensors?.filter(s => s.attributes.device_class === 'power') || [], searchFilters.appliances).map(entity => (
+                        {filterEntities(discovered.sensors?.filter(s => s.attributes?.device_class === 'power' || s.attributes?.unit_of_measurement === 'W' || s.attributes?.unit_of_measurement === 'kW') || [], searchFilters.appliances).map(entity => (
                           <label key={entity.entity_id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer">
                             <input
                               type="checkbox"
