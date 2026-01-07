@@ -94,3 +94,19 @@ export function useAlarmState(): AlarmState {
 export function usePowerTrend(): PowerTrendPoint[] {
   return useHAStore((s) => s.powerTrend)
 }
+
+export function useRoomLightsStatus(entityIds: string[]): string {
+  const states = useHAStore((s) => s.states)
+  
+  const lightIds = entityIds.filter((id) => id.startsWith('light.'))
+  if (lightIds.length === 0) return 'No lights'
+  
+  const onCount = lightIds.filter((id) => {
+    const state = states[id]
+    return state?.state === 'on'
+  }).length
+  
+  if (onCount === 0) return 'All off'
+  if (onCount === lightIds.length) return 'All on'
+  return `${onCount} on`
+}
