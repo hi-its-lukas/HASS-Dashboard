@@ -168,8 +168,8 @@ export class ProtectClient {
       headers: {
         'X-API-KEY': this.apiKey
       },
-      // @ts-expect-error - agent is valid for Node.js fetch
-      agent
+      // @ts-expect-error - dispatcher is undici's way to configure TLS
+      dispatcher
     })
     
     if (!response.ok) {
@@ -188,8 +188,8 @@ export class ProtectClient {
       headers: {
         'X-API-KEY': this.apiKey
       },
-      // @ts-expect-error - agent is valid for Node.js fetch
-      agent
+      // @ts-expect-error - dispatcher is undici's way to configure TLS
+      dispatcher
     })
     
     if (!response.ok) {
