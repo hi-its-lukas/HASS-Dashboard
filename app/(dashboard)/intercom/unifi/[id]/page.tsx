@@ -126,10 +126,25 @@ export default function UnifiIntercomPage() {
         className="space-y-4"
       >
         <Card className="overflow-hidden">
-          <div className="aspect-video bg-bg-secondary relative flex items-center justify-center">
-            <div className="text-center">
-              <Video className="w-12 h-12 text-gray-600 mx-auto mb-2" />
-              <p className="text-text-muted text-sm">Kamera-Feed wird später hinzugefügt</p>
+          <div className="aspect-video bg-bg-secondary relative">
+            {device.cameraId ? (
+              <img
+                key={refreshKey}
+                src={`/api/unifi/camera/${encodeURIComponent(device.cameraId)}/snapshot?t=${refreshKey}`}
+                alt={device.name}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement
+                  target.style.display = 'none'
+                  target.nextElementSibling?.classList.remove('hidden')
+                }}
+              />
+            ) : null}
+            <div className={`absolute inset-0 flex items-center justify-center ${device.cameraId ? 'hidden' : ''}`}>
+              <div className="text-center">
+                <Video className="w-12 h-12 text-gray-600 mx-auto mb-2" />
+                <p className="text-text-muted text-sm">Keine Kamera zugeordnet</p>
+              </div>
             </div>
           </div>
         </Card>

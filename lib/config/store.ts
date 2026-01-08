@@ -16,6 +16,7 @@ export interface UnifiAccessDevice {
   name: string
   type: string
   doorId?: string
+  cameraId?: string
 }
 
 export interface UnifiConfig {
