@@ -53,7 +53,16 @@ export function middleware(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
     
-    const loginUrl = new URL('/login', request.url)
+    // Use X-Forwarded headers if behind proxy
+    const forwardedHost = request.headers.get('x-forwarded-host')
+    const forwardedProto = request.headers.get('x-forwarded-proto') || 'https'
+    
+    let loginUrl: URL
+    if (forwardedHost) {
+      loginUrl = new URL(`${forwardedProto}://${forwardedHost}/login`)
+    } else {
+      loginUrl = new URL('/login', request.url)
+    }
     loginUrl.searchParams.set('redirect', pathname)
     return NextResponse.redirect(loginUrl)
   }
