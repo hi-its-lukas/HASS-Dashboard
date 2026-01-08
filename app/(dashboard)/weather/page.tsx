@@ -72,12 +72,6 @@ const CONDITION_TRANSLATIONS: Record<string, string> = {
   'exceptional': 'Außergewöhnlich',
 }
 
-const DEFAULT_LOCATION: WeatherLocation = {
-  id: 'home',
-  name: 'Zuhause',
-  entityPrefix: 'home',
-  isPrimary: true
-}
 
 function getPollenInfo(value: string | number | undefined) {
   const level = String(value || '0')
@@ -107,7 +101,26 @@ export default function WeatherPage() {
     fetchConfig()
   }, [fetchConfig])
   
-  const locations = weatherLocations.length > 0 ? weatherLocations : [DEFAULT_LOCATION]
+  if (weatherLocations.length === 0) {
+    return (
+      <div className="min-h-screen p-4 md:p-6 flex flex-col items-center justify-center">
+        <Cloud className="w-16 h-16 text-text-muted mb-4" />
+        <h2 className="text-xl font-semibold text-white mb-2">Keine Wetter-Orte konfiguriert</h2>
+        <p className="text-text-muted text-center mb-6">
+          Konfiguriere AccuWeather-Standorte in den Einstellungen
+        </p>
+        <Link
+          href="/settings/weather"
+          className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-white transition-colors"
+        >
+          <Settings className="w-4 h-4" />
+          Wetter-Orte einrichten
+        </Link>
+      </div>
+    )
+  }
+  
+  const locations = weatherLocations
   
   const selectedLocation = useMemo(() => {
     if (selectedLocationId) {
