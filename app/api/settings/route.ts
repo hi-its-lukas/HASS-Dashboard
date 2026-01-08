@@ -5,8 +5,15 @@ import prisma from '@/lib/db/client'
 import { encryptUnifiApiKeys, decryptUnifiApiKeys, UnifiConfig } from '@/lib/unifi/encryption'
 import { SettingsRequestSchema, validateRequestSize } from '@/lib/validation/settings'
 import { validateUnifiControllerUrl } from '@/lib/validation/unifi-url'
+import { getGlobalLayoutConfig, setGlobalLayoutConfig, GlobalLayoutConfig } from '@/lib/config/global-settings'
+import { hasPermission } from '@/lib/auth/permissions'
 
 export const dynamic = 'force-dynamic'
+
+interface UserPreferences {
+  backgroundUrl?: string
+  sidebarState?: string
+}
 
 export async function GET() {
   try {
@@ -16,24 +23,29 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
     
-    const config = await prisma.dashboardConfig.findUnique({
+    const globalConfig = await getGlobalLayoutConfig()
+    
+    const userConfig = await prisma.dashboardConfig.findUnique({
       where: { userId: session.userId }
     })
     
-    if (!config) {
-      return NextResponse.json({
-        layoutConfig: {
-          persons: [],
-          rooms: [],
-          lights: [],
-          covers: [],
-          customButtons: []
-        },
-        sidebarState: 'expanded'
-      })
+    let userPrefs: UserPreferences = {}
+    if (userConfig?.layoutConfig) {
+      try {
+        const parsed = JSON.parse(userConfig.layoutConfig)
+        userPrefs = {
+          backgroundUrl: parsed.backgroundUrl
+        }
+      } catch {
+        userPrefs = {}
+      }
     }
     
-    const layoutConfig = JSON.parse(config.layoutConfig)
+    let layoutConfig: GlobalLayoutConfig & { backgroundUrl?: string } = { ...globalConfig }
+    
+    if (userPrefs.backgroundUrl) {
+      layoutConfig.backgroundUrl = userPrefs.backgroundUrl
+    }
     
     if (layoutConfig.unifi) {
       const rawUnifi = layoutConfig.unifi as UnifiConfig
@@ -48,12 +60,15 @@ export async function GET() {
         accessApiKey: '',
         _hasProtectKey: !!decrypted.protectApiKey,
         _hasAccessKey: !!decrypted.accessApiKey
-      }
+      } as UnifiConfig & { _hasProtectKey: boolean; _hasAccessKey: boolean }
     }
+    
+    const canEditGlobalSettings = await hasPermission(session.userId, 'settings:general')
     
     return NextResponse.json({
       layoutConfig,
-      sidebarState: config.sidebarState
+      sidebarState: userConfig?.sidebarState || 'expanded',
+      canEditGlobalSettings
     })
   } catch (error) {
     console.error('[API] GET /settings error:', error)
@@ -96,62 +111,84 @@ export async function POST(request: NextRequest) {
     
     let { layoutConfig, sidebarState } = validationResult.data
     
-    if (layoutConfig?.unifi?.controllerUrl) {
-      const urlValidation = validateUnifiControllerUrl(layoutConfig.unifi.controllerUrl)
-      if (!urlValidation.valid) {
-        return NextResponse.json({ error: `Invalid UniFi URL: ${urlValidation.error}` }, { status: 400 })
-      }
-      if (urlValidation.sanitized) {
-        layoutConfig.unifi.controllerUrl = urlValidation.sanitized
-      }
-    }
-    
-    if (layoutConfig?.unifi) {
-      const existingConfig = await prisma.dashboardConfig.findUnique({
-        where: { userId: session.userId }
-      })
+    if (layoutConfig) {
+      const { backgroundUrl, ...globalSettings } = layoutConfig as GlobalLayoutConfig & { backgroundUrl?: string }
       
-      let existingUnifi: UnifiConfig | null = null
-      if (existingConfig?.layoutConfig) {
-        const parsed = JSON.parse(existingConfig.layoutConfig)
-        if (parsed.unifi) {
-          existingUnifi = decryptUnifiApiKeys(parsed.unifi as UnifiConfig)
+      const canEditSettings = await hasPermission(session.userId, 'settings:general')
+      
+      if (canEditSettings && Object.keys(globalSettings).length > 0) {
+        if (globalSettings.unifi?.controllerUrl) {
+          const urlValidation = validateUnifiControllerUrl(globalSettings.unifi.controllerUrl)
+          if (!urlValidation.valid) {
+            return NextResponse.json({ error: `Invalid UniFi URL: ${urlValidation.error}` }, { status: 400 })
+          }
+          if (urlValidation.sanitized) {
+            globalSettings.unifi.controllerUrl = urlValidation.sanitized
+          }
         }
+        
+        if (globalSettings.unifi) {
+          const existingGlobal = await getGlobalLayoutConfig()
+          let existingUnifi: UnifiConfig | null = null
+          if (existingGlobal.unifi) {
+            existingUnifi = decryptUnifiApiKeys(existingGlobal.unifi as UnifiConfig)
+          }
+          
+          const incomingUnifi = globalSettings.unifi as UnifiConfig
+          
+          const isMaskedOrEmpty = (val: string | undefined) => 
+            !val || val.includes('••••') || val.trim() === ''
+          
+          const unifiToSave: UnifiConfig = {
+            controllerUrl: incomingUnifi.controllerUrl || '',
+            protectApiKey: isMaskedOrEmpty(incomingUnifi.protectApiKey) && existingUnifi?.protectApiKey
+              ? existingUnifi.protectApiKey
+              : incomingUnifi.protectApiKey || '',
+            accessApiKey: isMaskedOrEmpty(incomingUnifi.accessApiKey) && existingUnifi?.accessApiKey
+              ? existingUnifi.accessApiKey
+              : incomingUnifi.accessApiKey || '',
+            cameras: incomingUnifi.cameras || [],
+            accessDevices: incomingUnifi.accessDevices || [],
+            aiSurveillanceEnabled: incomingUnifi.aiSurveillanceEnabled ?? true
+          }
+          
+          globalSettings.unifi = encryptUnifiApiKeys(unifiToSave)
+        }
+        
+        const existingGlobal = await getGlobalLayoutConfig()
+        const mergedGlobal = { ...existingGlobal, ...globalSettings }
+        await setGlobalLayoutConfig(mergedGlobal)
       }
       
-      const incomingUnifi = layoutConfig.unifi as UnifiConfig
-      
-      const isMaskedOrEmpty = (val: string | undefined) => 
-        !val || val.includes('••••') || val.trim() === ''
-      
-      const unifiToSave: UnifiConfig = {
-        controllerUrl: incomingUnifi.controllerUrl || '',
-        protectApiKey: isMaskedOrEmpty(incomingUnifi.protectApiKey) && existingUnifi?.protectApiKey
-          ? existingUnifi.protectApiKey
-          : incomingUnifi.protectApiKey || '',
-        accessApiKey: isMaskedOrEmpty(incomingUnifi.accessApiKey) && existingUnifi?.accessApiKey
-          ? existingUnifi.accessApiKey
-          : incomingUnifi.accessApiKey || '',
-        cameras: incomingUnifi.cameras || [],
-        accessDevices: incomingUnifi.accessDevices || [],
-        aiSurveillanceEnabled: incomingUnifi.aiSurveillanceEnabled ?? true
+      if (backgroundUrl !== undefined || sidebarState) {
+        const userPrefs = { backgroundUrl }
+        
+        await prisma.dashboardConfig.upsert({
+          where: { userId: session.userId },
+          create: {
+            userId: session.userId,
+            layoutConfig: JSON.stringify(userPrefs),
+            sidebarState: sidebarState || 'expanded'
+          },
+          update: {
+            layoutConfig: JSON.stringify(userPrefs),
+            sidebarState: sidebarState || undefined
+          }
+        })
       }
-      
-      layoutConfig.unifi = encryptUnifiApiKeys(unifiToSave)
+    } else if (sidebarState) {
+      await prisma.dashboardConfig.upsert({
+        where: { userId: session.userId },
+        create: {
+          userId: session.userId,
+          layoutConfig: JSON.stringify({}),
+          sidebarState
+        },
+        update: {
+          sidebarState
+        }
+      })
     }
-    
-    await prisma.dashboardConfig.upsert({
-      where: { userId: session.userId },
-      create: {
-        userId: session.userId,
-        layoutConfig: JSON.stringify(layoutConfig || {}),
-        sidebarState: sidebarState || 'expanded'
-      },
-      update: {
-        layoutConfig: layoutConfig ? JSON.stringify(layoutConfig) : undefined,
-        sidebarState: sidebarState || undefined
-      }
-    })
     
     return NextResponse.json({ success: true })
   } catch (error) {

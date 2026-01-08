@@ -161,6 +161,7 @@ export default function HomeAssistantSettingsPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [canEditGlobalSettings, setCanEditGlobalSettings] = useState(false)
   const [status, setStatus] = useState<ConnectionStatus | null>(null)
   const [checkingStatus, setCheckingStatus] = useState(false)
   const [haUrl, setHaUrl] = useState('')
@@ -293,6 +294,7 @@ export default function HomeAssistantSettingsPage() {
             intercoms: data.layoutConfig.intercoms || [],
           }))
         }
+        setCanEditGlobalSettings(data.canEditGlobalSettings ?? false)
       }
     } catch (error) {
       console.error('Failed to load settings:', error)
@@ -477,12 +479,17 @@ export default function HomeAssistantSettingsPage() {
             
             <button
               onClick={saveHaConfig}
-              disabled={savingHaConfig || !haUrl}
+              disabled={savingHaConfig || !haUrl || !canEditGlobalSettings}
               className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white rounded-lg transition-colors"
             >
               {savingHaConfig ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
               Speichern & Testen
             </button>
+            {!canEditGlobalSettings && (
+              <p className="text-amber-400/80 text-xs mt-2 text-center">
+                Nur Administratoren können diese Einstellung ändern
+              </p>
+            )}
           </div>
           
           {status && (
@@ -519,8 +526,8 @@ export default function HomeAssistantSettingsPage() {
             <h2 className="text-lg font-semibold text-white">Entity Discovery</h2>
             <button
               onClick={discoverEntities}
-              disabled={discoveringEntities}
-              className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 rounded-lg transition-colors text-sm"
+              disabled={discoveringEntities || !canEditGlobalSettings}
+              className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 rounded-lg transition-colors text-sm disabled:opacity-50"
             >
               {discoveringEntities ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
               Discover
@@ -1451,13 +1458,20 @@ export default function HomeAssistantSettingsPage() {
           </button>
           <button
             onClick={saveConfig}
-            disabled={saving}
+            disabled={saving || !canEditGlobalSettings}
             className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl transition-colors disabled:opacity-50"
           >
             {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
             Speichern
           </button>
         </div>
+        {!canEditGlobalSettings && (
+          <div className="mt-4 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
+            <p className="text-amber-400 text-sm text-center">
+              Diese Einstellungen sind global und können nur von Administratoren geändert werden.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   )

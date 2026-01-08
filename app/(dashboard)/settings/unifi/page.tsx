@@ -56,6 +56,7 @@ export default function UnifiSettingsPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [canEditGlobalSettings, setCanEditGlobalSettings] = useState(false)
   const [testingProtect, setTestingProtect] = useState(false)
   const [testingAccess, setTestingAccess] = useState(false)
   const [protectResult, setProtectResult] = useState<{ success: boolean; message: string } | null>(null)
@@ -102,6 +103,7 @@ export default function UnifiSettingsPage() {
             ...data.layoutConfig.unifi
           }))
         }
+        setCanEditGlobalSettings(data.canEditGlobalSettings ?? false)
       }
     } catch (error) {
       console.error('Failed to load settings:', error)
@@ -362,7 +364,7 @@ export default function UnifiSettingsPage() {
                 <div className="flex items-center gap-3 mt-3">
                   <button
                     onClick={testProtectConnection}
-                    disabled={testingProtect}
+                    disabled={testingProtect || !canEditGlobalSettings}
                     className="flex items-center gap-2 px-4 py-2 bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 rounded-lg transition-colors disabled:opacity-50"
                   >
                     {testingProtect ? (
@@ -417,7 +419,7 @@ export default function UnifiSettingsPage() {
                 <div className="flex items-center gap-3 mt-3">
                   <button
                     onClick={testAccessConnection}
-                    disabled={testingAccess}
+                    disabled={testingAccess || !canEditGlobalSettings}
                     className="flex items-center gap-2 px-4 py-2 bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 rounded-lg transition-colors disabled:opacity-50"
                   >
                     {testingAccess ? (
@@ -444,7 +446,7 @@ export default function UnifiSettingsPage() {
               <div className="border-t border-white/10 pt-4">
                 <button
                   onClick={discoverEntities}
-                  disabled={discoveringEntities || (!config.protectApiKey && !config.accessApiKey)}
+                  disabled={discoveringEntities || (!config.protectApiKey && !config.accessApiKey) || !canEditGlobalSettings}
                   className="flex items-center gap-2 px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg transition-colors disabled:opacity-50"
                 >
                   {discoveringEntities ? (
@@ -586,7 +588,7 @@ export default function UnifiSettingsPage() {
           </button>
           <button
             onClick={saveSettings}
-            disabled={saving}
+            disabled={saving || !canEditGlobalSettings}
             className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-purple-500 hover:bg-purple-600 text-white rounded-xl transition-colors disabled:opacity-50"
           >
             {saving ? (
@@ -597,6 +599,13 @@ export default function UnifiSettingsPage() {
             Speichern
           </button>
         </div>
+        {!canEditGlobalSettings && (
+          <div className="mt-4 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
+            <p className="text-amber-400 text-sm text-center">
+              Diese Einstellungen sind global und können nur von Administratoren geändert werden.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   )

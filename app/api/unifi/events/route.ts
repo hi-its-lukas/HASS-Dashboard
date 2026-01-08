@@ -1,54 +1,9 @@
 import { NextResponse } from 'next/server'
 import { getSessionFromCookie } from '@/lib/auth/session'
-import prisma from '@/lib/db/client'
+import { ProtectClient } from '@/lib/unifi/protect-client'
+import { getGlobalUnifiConfig, getGlobalLayoutConfig } from '@/lib/config/global-settings'
 
 export const dynamic = 'force-dynamic'
-
-interface UnifiEvent {
-  id: string
-  type: string
-  camera: {
-    id: string
-    name: string
-  }
-  start: number
-  end?: number
-  score: number
-  thumbnail?: string
-  smartDetectTypes?: string[]
-}
-
-async function getUnifiConfig(userId: string) {
-  const config = await prisma.dashboardConfig.findUnique({
-    where: { userId }
-  })
-  
-  if (!config?.layoutConfig) return null
-  
-  const layoutConfig = JSON.parse(config.layoutConfig) as Record<string, unknown>
-  return layoutConfig.unifi as {
-    controllerUrl?: string
-    username?: string
-    password?: string
-    aiSurveillanceEnabled?: boolean
-  } | undefined
-}
-
-async function authenticateUnifi(controllerUrl: string, username: string, password: string) {
-  const baseUrl = controllerUrl.replace(/\/$/, '')
-  const loginRes = await fetch(`${baseUrl}/api/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username, password }),
-    credentials: 'include'
-  })
-  
-  if (!loginRes.ok) {
-    throw new Error('UniFi authentication failed')
-  }
-  
-  return loginRes.headers.get('set-cookie') || ''
-}
 
 export async function GET() {
   try {
@@ -58,53 +13,25 @@ export async function GET() {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
     }
     
-    const unifiConfig = await getUnifiConfig(session.userId)
+    const layoutConfig = await getGlobalLayoutConfig()
+    const unifi = await getGlobalUnifiConfig()
     
-    if (!unifiConfig?.controllerUrl || !unifiConfig?.username || !unifiConfig?.password) {
+    if (!unifi?.controllerUrl || !unifi?.protectApiKey) {
       return NextResponse.json({ 
-        error: 'UniFi not configured',
+        error: 'UniFi Protect not configured',
         events: [] 
       }, { status: 200 })
     }
     
-    if (!unifiConfig.aiSurveillanceEnabled) {
+    if (!layoutConfig.unifi?.aiSurveillanceEnabled) {
       return NextResponse.json({ 
         error: 'AI Surveillance not enabled',
         events: [] 
       }, { status: 200 })
     }
     
-    const cookies = await authenticateUnifi(
-      unifiConfig.controllerUrl,
-      unifiConfig.username,
-      unifiConfig.password
-    )
-    
-    if (!cookies) {
-      return NextResponse.json({ error: 'UniFi auth failed' }, { status: 500 })
-    }
-    
-    const baseUrl = unifiConfig.controllerUrl.replace(/\/$/, '')
-    const now = Date.now()
-    const twentyFourHoursAgo = now - 24 * 60 * 60 * 1000
-    
-    const eventsRes = await fetch(
-      `${baseUrl}/proxy/protect/api/events?start=${twentyFourHoursAgo}&end=${now}&types=smartDetectZone,motion`, 
-      {
-        headers: {
-          'Cookie': cookies,
-          'Accept': 'application/json'
-        }
-      }
-    )
-    
-    if (!eventsRes.ok) {
-      const text = await eventsRes.text()
-      console.error('[UniFi Events] Failed:', text)
-      return NextResponse.json({ error: 'Failed to fetch events', events: [] }, { status: 200 })
-    }
-    
-    const rawEvents: UnifiEvent[] = await eventsRes.json()
+    const client = new ProtectClient(unifi.controllerUrl, unifi.protectApiKey)
+    const rawEvents = await client.getSmartDetections(24)
     
     const events = rawEvents.map((event) => {
       let type = 'motion'
@@ -116,12 +43,10 @@ export async function GET() {
       return {
         id: event.id,
         type,
-        cameraName: event.camera?.name || 'Unknown Camera',
-        cameraId: event.camera?.id || '',
+        cameraName: 'Camera',
+        cameraId: event.camera || '',
         timestamp: new Date(event.start).toISOString(),
-        thumbnailUrl: event.thumbnail 
-          ? `/api/unifi/thumbnail/${event.id}`
-          : undefined,
+        thumbnailUrl: `/api/unifi/protect/thumbnail/${event.id}`,
         confidence: event.score / 100,
         description: event.smartDetectTypes?.join(', ')
       }

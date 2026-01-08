@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSessionFromCookie } from '@/lib/auth/session'
 import { hasPermission } from '@/lib/auth/permissions'
-import prisma from '@/lib/db/client'
 import { AccessClient } from '@/lib/unifi/access-client'
-import { decryptUnifiApiKeys, UnifiConfig } from '@/lib/unifi/encryption'
+import { getGlobalUnifiConfig } from '@/lib/config/global-settings'
 import { csrfProtection } from '@/lib/auth/csrf'
 
 export const dynamic = 'force-dynamic'
@@ -28,16 +27,7 @@ export async function POST(
     
     const { doorId } = await params
     
-    const config = await prisma.dashboardConfig.findUnique({
-      where: { userId: session.userId }
-    })
-    
-    if (!config?.layoutConfig) {
-      return NextResponse.json({ error: 'No config found' }, { status: 404 })
-    }
-    
-    const layoutConfig = JSON.parse(config.layoutConfig as string)
-    const unifi = decryptUnifiApiKeys(layoutConfig.unifi as UnifiConfig)
+    const unifi = await getGlobalUnifiConfig()
     
     if (!unifi?.controllerUrl || !unifi?.accessApiKey) {
       return NextResponse.json({ error: 'UniFi Access not configured' }, { status: 400 })

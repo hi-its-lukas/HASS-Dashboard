@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSessionFromCookie } from '@/lib/auth/session'
-import prisma from '@/lib/db/client'
+import { getGlobalLayoutConfig } from '@/lib/config/global-settings'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,25 +12,20 @@ export async function GET() {
       return NextResponse.json({ connected: false }, { status: 401 })
     }
     
-    const dashboardConfig = await prisma.dashboardConfig.findUnique({
-      where: { userId: session.userId }
-    })
+    const layoutConfig = await getGlobalLayoutConfig()
+    const unifiConfig = layoutConfig.unifi
     
-    if (!dashboardConfig?.layoutConfig) {
+    if (!unifiConfig?.controllerUrl) {
       return NextResponse.json({ connected: false })
     }
     
-    const layoutConfig = JSON.parse(dashboardConfig.layoutConfig) as Record<string, unknown>
-    const unifiConfig = layoutConfig.unifi as Record<string, unknown> | undefined
-    
-    if (!unifiConfig?.controllerUrl || !unifiConfig?.username || !unifiConfig?.password) {
-      return NextResponse.json({ connected: false })
-    }
+    const hasProtectKey = !!(unifiConfig.protectApiKey && !unifiConfig.protectApiKey.includes('••••'))
+    const hasAccessKey = !!(unifiConfig.accessApiKey && !unifiConfig.accessApiKey.includes('••••'))
     
     return NextResponse.json({
-      connected: true,
-      cameras: (unifiConfig.cameras as string[] || []).length,
-      accessDevices: (unifiConfig.accessDevices as unknown[] || []).length
+      connected: hasProtectKey || hasAccessKey,
+      cameras: (unifiConfig.cameras || []).length,
+      accessDevices: (unifiConfig.accessDevices || []).length
     })
   } catch (error) {
     console.error('[Unifi Status] Error:', error)

@@ -1,39 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSessionFromCookie } from '@/lib/auth/session'
-import prisma from '@/lib/db/client'
+import { ProtectClient } from '@/lib/unifi/protect-client'
+import { getGlobalUnifiConfig } from '@/lib/config/global-settings'
 
 export const dynamic = 'force-dynamic'
-
-async function getUnifiConfig(userId: string) {
-  const config = await prisma.dashboardConfig.findUnique({
-    where: { userId }
-  })
-  
-  if (!config?.layoutConfig) return null
-  
-  const layoutConfig = JSON.parse(config.layoutConfig) as Record<string, unknown>
-  return layoutConfig.unifi as {
-    controllerUrl?: string
-    username?: string
-    password?: string
-  } | undefined
-}
-
-async function authenticateUnifi(controllerUrl: string, username: string, password: string) {
-  const baseUrl = controllerUrl.replace(/\/$/, '')
-  const loginRes = await fetch(`${baseUrl}/api/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username, password }),
-    credentials: 'include'
-  })
-  
-  if (!loginRes.ok) {
-    throw new Error('UniFi authentication failed')
-  }
-  
-  return loginRes.headers.get('set-cookie') || ''
-}
 
 export async function GET(
   request: NextRequest,
@@ -47,43 +17,18 @@ export async function GET(
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
     }
     
-    const unifiConfig = await getUnifiConfig(session.userId)
+    const unifi = await getGlobalUnifiConfig()
     
-    if (!unifiConfig?.controllerUrl || !unifiConfig?.username || !unifiConfig?.password) {
-      return NextResponse.json({ error: 'UniFi not configured' }, { status: 400 })
+    if (!unifi?.controllerUrl || !unifi?.protectApiKey) {
+      return NextResponse.json({ error: 'UniFi Protect not configured' }, { status: 400 })
     }
     
-    const cookies = await authenticateUnifi(
-      unifiConfig.controllerUrl,
-      unifiConfig.username,
-      unifiConfig.password
-    )
+    const client = new ProtectClient(unifi.controllerUrl, unifi.protectApiKey)
+    const thumbnail = await client.getThumbnail(eventId)
     
-    if (!cookies) {
-      return NextResponse.json({ error: 'UniFi auth failed' }, { status: 500 })
-    }
-    
-    const baseUrl = unifiConfig.controllerUrl.replace(/\/$/, '')
-    const thumbnailRes = await fetch(
-      `${baseUrl}/proxy/protect/api/events/${eventId}/thumbnail`, 
-      {
-        headers: {
-          'Cookie': cookies,
-          'Accept': 'image/*'
-        }
-      }
-    )
-    
-    if (!thumbnailRes.ok) {
-      return NextResponse.json({ error: 'Thumbnail not found' }, { status: 404 })
-    }
-    
-    const imageBuffer = await thumbnailRes.arrayBuffer()
-    const contentType = thumbnailRes.headers.get('content-type') || 'image/jpeg'
-    
-    return new NextResponse(imageBuffer, {
+    return new NextResponse(new Uint8Array(thumbnail), {
       headers: {
-        'Content-Type': contentType,
+        'Content-Type': 'image/jpeg',
         'Cache-Control': 'public, max-age=3600'
       }
     })

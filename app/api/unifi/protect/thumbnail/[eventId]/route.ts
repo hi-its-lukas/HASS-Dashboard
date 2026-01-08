@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSessionFromCookie } from '@/lib/auth/session'
-import prisma from '@/lib/db/client'
 import { ProtectClient } from '@/lib/unifi/protect-client'
-import { decryptUnifiApiKeys, UnifiConfig } from '@/lib/unifi/encryption'
+import { getGlobalUnifiConfig } from '@/lib/config/global-settings'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,16 +17,7 @@ export async function GET(
     
     const { eventId } = await params
     
-    const config = await prisma.dashboardConfig.findUnique({
-      where: { userId: session.userId }
-    })
-    
-    if (!config?.layoutConfig) {
-      return NextResponse.json({ error: 'No config found' }, { status: 404 })
-    }
-    
-    const layoutConfig = JSON.parse(config.layoutConfig as string)
-    const unifi = decryptUnifiApiKeys(layoutConfig.unifi as UnifiConfig)
+    const unifi = await getGlobalUnifiConfig()
     
     if (!unifi?.controllerUrl || !unifi?.protectApiKey) {
       return NextResponse.json({ error: 'UniFi Protect not configured' }, { status: 400 })
