@@ -2,7 +2,7 @@ import { createServer, IncomingMessage, ServerResponse, request as httpRequest }
 import { Socket, connect as netConnect } from 'net'
 import { spawn, ChildProcess } from 'child_process'
 
-const PUBLIC_PORT = parseInt(process.env.PORT || '80', 10)
+const PUBLIC_PORT = parseInt(process.env.PORT || '8080', 10)
 const NEXT_PORT = 3000
 const WS_PROXY_PORT = 6000
 const HOSTNAME = process.env.HOSTNAME || '0.0.0.0'

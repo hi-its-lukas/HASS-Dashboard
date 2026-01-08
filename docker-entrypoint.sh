@@ -96,7 +96,7 @@ init_database() {
 }
 
 run_app() {
-  log_info "Starting HASS Dashboard Gateway on port ${PORT:-80}"
+  log_info "Starting HASS Dashboard Gateway on port ${PORT:-8080}"
   
   # Ensure servers bind to all interfaces (required for Docker)
   export HOSTNAME="0.0.0.0"
