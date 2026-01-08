@@ -88,13 +88,31 @@ export class AccessClient {
     return data.data || data
   }
   
-  async testConnection(): Promise<{ success: boolean; doors: number }> {
+  async testConnection(): Promise<{ success: boolean; doors: number; error?: string }> {
     try {
       const doors = await this.getDoors()
       return { success: true, doors: doors.length }
     } catch (error) {
-      console.error('[Access] Connection test failed:', error)
-      return { success: false, doors: 0 }
+      const rawMessage = error instanceof Error ? error.message : String(error)
+      console.error('[Access] Connection test failed:', rawMessage)
+      
+      let userMessage = rawMessage
+      
+      if (rawMessage.includes('ECONNREFUSED')) {
+        userMessage = 'Verbindung abgelehnt - ist UniFi Access auf Port 12445 erreichbar?'
+      } else if (rawMessage.includes('ENOTFOUND') || rawMessage.includes('EAI_AGAIN')) {
+        userMessage = 'Hostname nicht gefunden - Bei Docker auf Mac: IP-Adresse verwenden'
+      } else if (rawMessage.includes('ETIMEDOUT') || rawMessage.includes('ENETUNREACH')) {
+        userMessage = 'Netzwerk nicht erreichbar - Firewall oder Routing prüfen'
+      } else if (rawMessage.includes('401') || rawMessage.includes('Unauthorized')) {
+        userMessage = 'API Key ungültig oder abgelaufen'
+      } else if (rawMessage.includes('403') || rawMessage.includes('Forbidden')) {
+        userMessage = 'Zugriff verweigert - API Key Berechtigungen prüfen'
+      } else if (rawMessage.includes('timeout') || rawMessage.includes('TimeoutError')) {
+        userMessage = 'Zeitüberschreitung - UniFi Access antwortet nicht'
+      }
+      
+      return { success: false, doors: 0, error: userMessage }
     }
   }
   

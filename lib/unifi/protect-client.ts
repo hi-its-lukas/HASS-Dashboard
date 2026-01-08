@@ -89,9 +89,28 @@ export class ProtectClient {
       const cameras = await this.getCameras()
       return { success: true, cameras: cameras.length }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-      console.error('[Protect] Connection test failed:', errorMessage)
-      return { success: false, cameras: 0, error: errorMessage }
+      const rawMessage = error instanceof Error ? error.message : String(error)
+      console.error('[Protect] Connection test failed:', rawMessage)
+      
+      let userMessage = rawMessage
+      
+      if (rawMessage.includes('ECONNREFUSED')) {
+        userMessage = 'Verbindung abgelehnt - ist der UniFi Controller erreichbar? URL und Netzwerk prüfen'
+      } else if (rawMessage.includes('ENOTFOUND') || rawMessage.includes('EAI_AGAIN')) {
+        userMessage = 'Hostname nicht gefunden - DNS-Auflösung fehlgeschlagen. Bei Docker auf Mac: IP-Adresse statt .local verwenden'
+      } else if (rawMessage.includes('ETIMEDOUT') || rawMessage.includes('ENETUNREACH')) {
+        userMessage = 'Netzwerk nicht erreichbar - Firewall oder Routing prüfen'
+      } else if (rawMessage.includes('CERT') || rawMessage.includes('SSL') || rawMessage.includes('certificate') || rawMessage.includes('self-signed')) {
+        userMessage = 'SSL/Zertifikatsfehler - Self-signed Zertifikate werden akzeptiert, anderes Problem?'
+      } else if (rawMessage.includes('401') || rawMessage.includes('Unauthorized')) {
+        userMessage = 'API Key ungültig oder abgelaufen - bitte neuen Key erstellen'
+      } else if (rawMessage.includes('403') || rawMessage.includes('Forbidden')) {
+        userMessage = 'Zugriff verweigert - API Key hat nicht die erforderlichen Berechtigungen'
+      } else if (rawMessage.includes('timeout') || rawMessage.includes('TimeoutError')) {
+        userMessage = 'Zeitüberschreitung - UniFi Controller antwortet nicht (30s)'
+      }
+      
+      return { success: false, cameras: 0, error: userMessage }
     }
   }
   
