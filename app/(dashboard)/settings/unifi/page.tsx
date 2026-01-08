@@ -252,6 +252,17 @@ export default function UnifiSettingsPage() {
       
       if (res.ok) {
         setSaveResult({ success: true, message: 'Einstellungen gespeichert!' })
+        
+        const hadProtectKey = config.protectApiKey && !config.protectApiKey.includes('••••')
+        const hadAccessKey = config.accessApiKey && !config.accessApiKey.includes('••••')
+        
+        setConfig(prev => ({
+          ...prev,
+          protectApiKey: hadProtectKey ? '••••••••••••••••••••••••' : prev.protectApiKey,
+          accessApiKey: hadAccessKey ? '••••••••••••••••••••••••' : prev.accessApiKey,
+          _hasProtectKey: hadProtectKey || prev._hasProtectKey,
+          _hasAccessKey: hadAccessKey || prev._hasAccessKey
+        }))
       } else {
         const data = await res.json().catch(() => ({}))
         setSaveResult({ 
@@ -459,7 +470,7 @@ export default function UnifiSettingsPage() {
               <div className="border-t border-white/10 pt-4">
                 <button
                   onClick={discoverEntities}
-                  disabled={discoveringEntities || (!config.protectApiKey && !config.accessApiKey) || !canEditGlobalSettings}
+                  disabled={discoveringEntities || (!config.protectApiKey && !config.accessApiKey && !config._hasProtectKey && !config._hasAccessKey) || !canEditGlobalSettings}
                   className="flex items-center gap-2 px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg transition-colors disabled:opacity-50"
                 >
                   {discoveringEntities ? (
