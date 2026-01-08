@@ -1,0 +1,51 @@
+[+] build 1/1
+ ✔ Image hass-dashboard-app Built                                                                                                      213.6s 
+WARN[0000] No services to build                         
+[+] up 1/1
+ ✔ Container hass-dashboard Created                                                                                                      1.1s 
+pi@raspberry-5:~/hass-dashboard$ docker compose run --rm app cat /app/server/gateway.js | head -20
+WARN[0000] No services to build                         
+WARN[0000] No services to build                         
+ Container hass-dashboard-app-run-c7da77d82697 Creating 
+ Container hass-dashboard-app-run-c7da77d82697 Created 
+[INIT] Fixing ownership of /data
+[INIT] Using ENCRYPTION_KEY from environment
+[INIT] Existing database found at /data/hass-dashboard.db
+[INIT] Syncing database schema...
+Environment variables loaded from .env
+Prisma schema loaded from prisma/schema.prisma
+Datasource "db": SQLite database "hass-dashboard.db" at "file:/data/hass-dashboard.db"
+
+The database is already in sync with the Prisma schema.
+
+✔ Generated Prisma Client (v5.22.0) to ./node_modules/@prisma/client in 296ms
+
+[INIT] Database ready
+[INIT] Starting HASS Dashboard Gateway on port 80
+[INIT] Dropping privileges to nextjs
+[Gateway] Starting WS Proxy on internal port 6000
+[Gateway] Starting Next.js on internal port 3000
+[WS-Proxy] Encryption key loaded successfully
+write /dev/stdout: broken pipe
+pi@raspberry-5:~/hass-dashboard$ docker compose logs --tail=20
+hass-dashboard  | node:events:502
+hass-dashboard  |       throw er; // Unhandled 'error' event
+hass-dashboard  |       ^
+hass-dashboard  | 
+hass-dashboard  | Error: listen EACCES: permission denied 0.0.0.0:80
+hass-dashboard  |     at Server.setupListenHandle [as _listen2] (node:net:1886:21)
+hass-dashboard  |     at listenInCluster (node:net:1965:12)
+hass-dashboard  |     at doListen (node:net:2139:7)
+hass-dashboard  |     at process.processTicksAndRejections (node:internal/process/task_queues:83:21)
+hass-dashboard  | Emitted 'error' event on Server instance at:
+hass-dashboard  |     at emitErrorNT (node:net:1944:8)
+hass-dashboard  |     at process.processTicksAndRejections (node:internal/process/task_queues:82:21) {
+hass-dashboard  |   code: 'EACCES',
+hass-dashboard  |   errno: -13,
+hass-dashboard  |   syscall: 'listen',
+hass-dashboard  |   address: '0.0.0.0',
+hass-dashboard  |   port: 80
+hass-dashboard  | }
+hass-dashboard  | 
+hass-dashboard  | Node.js v20.19.6
+pi@raspberry-5:~/hass-dashboard$ 
