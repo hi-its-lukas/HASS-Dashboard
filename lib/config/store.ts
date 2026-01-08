@@ -23,6 +23,9 @@ export interface UnifiConfig {
   controllerUrl?: string
   protectApiKey?: string
   accessApiKey?: string
+  rtspUsername?: string
+  rtspPassword?: string
+  liveStreamEnabled?: boolean
   cameras?: string[]
   accessDevices?: UnifiAccessDevice[]
   aiSurveillanceEnabled?: boolean

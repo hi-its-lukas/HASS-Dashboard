@@ -18,18 +18,24 @@ import {
   EyeOff,
   RefreshCw,
   Sparkles,
-  Key
+  Key,
+  Play,
+  User
 } from 'lucide-react'
 
 interface UnifiConfig {
   controllerUrl: string
   protectApiKey: string
   accessApiKey: string
+  rtspUsername: string
+  rtspPassword: string
+  liveStreamEnabled: boolean
   cameras: string[]
   accessDevices: UnifiAccessDevice[]
   aiSurveillanceEnabled: boolean
   _hasProtectKey?: boolean
   _hasAccessKey?: boolean
+  _hasRtspPassword?: boolean
 }
 
 interface UnifiCamera {
@@ -71,12 +77,17 @@ export default function UnifiSettingsPage() {
     controllerUrl: '',
     protectApiKey: '',
     accessApiKey: '',
+    rtspUsername: '',
+    rtspPassword: '',
+    liveStreamEnabled: false,
     cameras: [],
     accessDevices: [],
     aiSurveillanceEnabled: true
   })
+  const [showRtspPassword, setShowRtspPassword] = useState(false)
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     connection: true,
+    streaming: true,
     cameras: true,
     access: true,
     surveillance: true
@@ -614,6 +625,91 @@ export default function UnifiSettingsPage() {
             )}
           </div>
         )}
+        
+        <div className="bg-[#141b2d]/80 backdrop-blur-lg rounded-2xl border border-white/5 mb-6 overflow-hidden">
+          <button
+            onClick={() => toggleSection('streaming')}
+            className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <Play className="w-5 h-5 text-green-400" />
+              <span className="text-white font-medium">Live Streaming</span>
+            </div>
+            {expandedSections.streaming ? (
+              <ChevronDown className="w-5 h-5 text-gray-400" />
+            ) : (
+              <ChevronRight className="w-5 h-5 text-gray-400" />
+            )}
+          </button>
+          
+          {expandedSections.streaming && (
+            <div className="p-4 pt-0 space-y-4">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={config.liveStreamEnabled}
+                  onChange={(e) => setConfig(prev => ({ ...prev, liveStreamEnabled: e.target.checked }))}
+                  className="w-5 h-5 rounded bg-white/10 border-white/20 text-green-500 focus:ring-green-500/50"
+                />
+                <div>
+                  <div className="text-white">Live-Streams aktivieren</div>
+                  <div className="text-xs text-gray-500">
+                    Zeigt Live-Video statt Snapshots (erfordert RTSP-Zugangsdaten)
+                  </div>
+                </div>
+              </label>
+              
+              {config.liveStreamEnabled && (
+                <div className="space-y-4 pt-2 border-t border-white/10">
+                  <p className="text-xs text-amber-400">
+                    Für Live-Streaming müssen RTSP-Streams in den UniFi Protect Kamera-Einstellungen aktiviert sein.
+                    Die Zugangsdaten sind die eines lokalen UniFi OS Benutzers (kein SSO/Cloud Account).
+                  </p>
+                  
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-2">
+                      <User className="w-4 h-4 inline mr-2" />
+                      RTSP Benutzername
+                    </label>
+                    <input
+                      type="text"
+                      value={config.rtspUsername}
+                      onChange={(e) => setConfig(prev => ({ ...prev, rtspUsername: e.target.value }))}
+                      placeholder="admin"
+                      className="w-full px-4 py-3 bg-[#1a2235] border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500/50"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-2">
+                      <Key className="w-4 h-4 inline mr-2" />
+                      RTSP Passwort
+                      {config._hasRtspPassword && (
+                        <span className="ml-2 text-emerald-400 text-xs">(gespeichert)</span>
+                      )}
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showRtspPassword ? 'text' : 'password'}
+                        value={config.rtspPassword}
+                        onChange={(e) => setConfig(prev => ({ ...prev, rtspPassword: e.target.value, _hasRtspPassword: false }))}
+                        placeholder={config._hasRtspPassword ? "Neues Passwort eingeben oder leer lassen" : "Passwort eingeben"}
+                        className="w-full px-4 py-3 pr-12 bg-[#1a2235] border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500/50"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowRtspPassword(!showRtspPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-white"
+                      >
+                        {showRtspPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
         
         <div className="bg-[#141b2d]/80 backdrop-blur-lg rounded-2xl border border-white/5 mb-6 overflow-hidden">
           <button
