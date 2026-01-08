@@ -154,6 +154,7 @@ interface LayoutConfig {
   temperatureSensorId?: string
   alarmEntityId?: string
   powerEntityId?: string
+  trashCalendarId?: string
 }
 
 export default function HomeAssistantSettingsPage() {
@@ -1279,6 +1280,28 @@ export default function HomeAssistantSettingsPage() {
                         ))}
                       </optgroup>
                     </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-1">Müllkalender (für Dashboard-Widget)</label>
+                    <select
+                      value={config.trashCalendarId || ''}
+                      onChange={(e) => setConfig(prev => ({
+                        ...prev,
+                        trashCalendarId: e.target.value || undefined
+                      }))}
+                      className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                    >
+                      <option value="">-- Nicht konfiguriert --</option>
+                      {discovered?.calendars?.map(entity => (
+                        <option key={entity.entity_id} value={entity.entity_id}>
+                          {getFriendlyName(entity)}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Zeigt Müllabfuhr-Termine auf dem Dashboard an
+                    </p>
                   </div>
                 </div>
               )}
