@@ -21,6 +21,9 @@ RUN npx prisma generate
 
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# Bundle WebSocket proxy with esbuild (includes all dependencies except native modules)
+RUN npx esbuild server/ws-proxy.ts --bundle --platform=node --target=node20 --outfile=server/ws-proxy.js --external:@prisma/client --external:ws --external:cookie
+
 RUN npm run build
 
 # Stage 3: Runner
@@ -51,8 +54,11 @@ COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
 COPY --from=builder /app/node_modules/.bin ./node_modules/.bin
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/node_modules/bcryptjs ./node_modules/bcryptjs
+COPY --from=builder /app/node_modules/ws ./node_modules/ws
+COPY --from=builder /app/node_modules/cookie ./node_modules/cookie
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/scripts ./scripts
+COPY --from=builder /app/server/ws-proxy.js ./server/ws-proxy.js
 COPY --from=builder /app/docker-entrypoint.sh ./docker-entrypoint.sh
 
 RUN chmod +x ./docker-entrypoint.sh && \
@@ -62,8 +68,10 @@ RUN chmod +x ./docker-entrypoint.sh && \
 USER root
 
 EXPOSE 80
+EXPOSE 6000
 
 ENV PORT=80
+ENV WS_PROXY_PORT=6000
 ENV SQLITE_URL="file:/data/hass-dashboard.db"
 
 ENTRYPOINT ["./docker-entrypoint.sh"]

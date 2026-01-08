@@ -101,6 +101,19 @@ run_app() {
   # Ensure Next.js binds to all interfaces (required for Docker)
   export HOSTNAME="0.0.0.0"
   
+  # Start WebSocket proxy in background
+  log_info "Starting WebSocket proxy on port ${WS_PROXY_PORT:-6000}"
+  if [ "$(id -u)" = "0" ]; then
+    gosu "$APP_USER" node server/ws-proxy.js &
+  else
+    node server/ws-proxy.js &
+  fi
+  WS_PROXY_PID=$!
+  log_info "WebSocket proxy started (PID: $WS_PROXY_PID)"
+  
+  # Handle shutdown gracefully
+  trap "kill $WS_PROXY_PID 2>/dev/null; exit 0" SIGTERM SIGINT
+  
   if [ "$(id -u)" = "0" ]; then
     log_info "Dropping privileges to $APP_USER"
     exec gosu "$APP_USER" node server.js
