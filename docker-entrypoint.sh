@@ -7,6 +7,7 @@ DATA_DIR="/data"
 KEY_FILE="$DATA_DIR/.encryption_key"
 DB_FILE="$DATA_DIR/hass-dashboard.db"
 APP_GROUP="nodejs"
+WS_PROXY_PID=""
 
 log_info() {
   echo "[INIT] $1"
@@ -95,24 +96,42 @@ init_database() {
   log_info "Database ready"
 }
 
+cleanup() {
+  log_info "Shutting down..."
+  if [ -n "$WS_PROXY_PID" ]; then
+    kill "$WS_PROXY_PID" 2>/dev/null || true
+  fi
+  exit 0
+}
+
 run_app() {
   log_info "Starting HASS Dashboard on port ${PORT:-80}"
   
   # Ensure Next.js binds to all interfaces (required for Docker)
   export HOSTNAME="0.0.0.0"
   
-  # Start WebSocket proxy in background
-  log_info "Starting WebSocket proxy on port ${WS_PROXY_PORT:-6000}"
-  if [ "$(id -u)" = "0" ]; then
-    gosu "$APP_USER" node server/ws-proxy.js &
-  else
-    node server/ws-proxy.js &
-  fi
-  WS_PROXY_PID=$!
-  log_info "WebSocket proxy started (PID: $WS_PROXY_PID)"
+  # Handle shutdown gracefully (sh-compatible syntax)
+  trap cleanup TERM INT
   
-  # Handle shutdown gracefully
-  trap "kill $WS_PROXY_PID 2>/dev/null; exit 0" SIGTERM SIGINT
+  # Start WebSocket proxy in background (optional - continues if it fails)
+  log_info "Starting WebSocket proxy on port ${WS_PROXY_PORT:-6000}"
+  if [ -f "server/ws-proxy.js" ]; then
+    if [ "$(id -u)" = "0" ]; then
+      gosu "$APP_USER" node server/ws-proxy.js &
+    else
+      node server/ws-proxy.js &
+    fi
+    WS_PROXY_PID=$!
+    sleep 1
+    if kill -0 "$WS_PROXY_PID" 2>/dev/null; then
+      log_info "WebSocket proxy started (PID: $WS_PROXY_PID)"
+    else
+      log_warn "WebSocket proxy failed to start - polling fallback will be used"
+      WS_PROXY_PID=""
+    fi
+  else
+    log_warn "WebSocket proxy not found at server/ws-proxy.js - polling fallback will be used"
+  fi
   
   if [ "$(id -u)" = "0" ]; then
     log_info "Dropping privileges to $APP_USER"
