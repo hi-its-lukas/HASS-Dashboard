@@ -116,6 +116,8 @@ export async function POST(request: NextRequest) {
       
       const canEditSettings = await hasPermission(session.userId, 'settings:edit')
       
+      console.log('[API] POST /settings - canEditSettings:', canEditSettings, 'userId:', session.userId, 'globalSettings keys:', Object.keys(globalSettings))
+      
       if (canEditSettings && Object.keys(globalSettings).length > 0) {
         if (globalSettings.unifi?.controllerUrl) {
           const urlValidation = validateUnifiControllerUrl(globalSettings.unifi.controllerUrl)

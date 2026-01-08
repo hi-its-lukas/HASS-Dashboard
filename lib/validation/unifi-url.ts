@@ -34,12 +34,13 @@ export function validateUnifiControllerUrl(url: string): { valid: boolean; error
   try {
     const parsed = new URL(trimmedUrl)
 
-    if (parsed.protocol !== 'https:') {
-      if (process.env.NODE_ENV === 'production') {
-        return { valid: false, error: 'Only HTTPS URLs are allowed in production' }
-      }
-      if (parsed.protocol !== 'http:') {
-        return { valid: false, error: 'Only HTTP or HTTPS URLs are allowed' }
+    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+      return { valid: false, error: 'Only HTTP or HTTPS URLs are allowed' }
+    }
+    
+    if (parsed.protocol === 'http:' && process.env.NODE_ENV === 'production') {
+      if (!isPrivateHost(parsed.hostname)) {
+        return { valid: false, error: 'HTTP is only allowed for private network hosts' }
       }
     }
 
