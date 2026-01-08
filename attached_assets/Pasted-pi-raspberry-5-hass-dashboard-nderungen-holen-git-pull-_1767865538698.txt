@@ -1,0 +1,433 @@
+pi@raspberry-5:~/hass-dashboard$ # Änderungen holen
+git pull
+
+# Neu bauen
+docker compose build --no-cache --progress=plain
+
+# Starten
+docker compose up -d
+docker compose logs -f
+Already up to date.
+--progress is a global compose flag, better use `docker compose --progress xx build ...
+ Image hass-dashboard-app Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 524B done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 2.90kB done
+#2 DONE 0.1s
+
+#3 [internal] load metadata for docker.io/library/node:20-bookworm-slim
+#3 DONE 0.5s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 295B done
+#4 DONE 0.1s
+
+#5 [internal] load build context
+#5 DONE 0.0s
+
+#6 [deps 1/4] FROM docker.io/library/node:20-bookworm-slim@sha256:a270640213033657548b7ed57852709a0d2ee3b277f902f912367216aa8e9520
+#6 resolve docker.io/library/node:20-bookworm-slim@sha256:a270640213033657548b7ed57852709a0d2ee3b277f902f912367216aa8e9520 0.0s done
+#6 DONE 0.0s
+
+#7 [deps 2/4] WORKDIR /app
+#7 CACHED
+
+#5 [internal] load build context
+#5 transferring context: 11.88kB 0.0s done
+#5 DONE 0.1s
+
+#8 [builder 3/9] RUN apt-get update && apt-get install -y --no-install-recommends     openssl     && rm -rf /var/lib/apt/lists/*
+#8 ...
+
+#9 [deps 3/4] COPY package.json package-lock.json* ./
+#9 DONE 0.1s
+
+#8 [builder 3/9] RUN apt-get update && apt-get install -y --no-install-recommends     openssl     && rm -rf /var/lib/apt/lists/*
+#8 0.419 Get:1 http://deb.debian.org/debian bookworm InRelease [151 kB]
+#8 0.512 Get:2 http://deb.debian.org/debian bookworm-updates InRelease [55.4 kB]
+#8 0.590 Get:3 http://deb.debian.org/debian-security bookworm-security InRelease [48.0 kB]
+#8 0.646 Get:4 http://deb.debian.org/debian bookworm/main arm64 Packages [8693 kB]
+#8 4.091 Get:5 http://deb.debian.org/debian bookworm-updates/main arm64 Packages [6936 B]
+#8 4.091 Get:6 http://deb.debian.org/debian-security bookworm-security/main arm64 Packages [286 kB]
+#8 5.280 Fetched 9240 kB in 5s (1868 kB/s)
+#8 5.280 Reading package lists...
+#8 6.319 Reading package lists...
+#8 7.395 Building dependency tree...
+#8 7.710 Reading state information...
+#8 8.225 The following additional packages will be installed:
+#8 8.227   libssl3
+#8 8.233 Suggested packages:
+#8 8.233   ca-certificates
+#8 8.299 The following NEW packages will be installed:
+#8 8.300   libssl3 openssl
+#8 8.847 0 upgraded, 2 newly installed, 0 to remove and 0 not upgraded.
+#8 8.847 Need to get 3217 kB of archives.
+#8 8.847 After this operation, 8523 kB of additional disk space will be used.
+#8 8.847 Get:1 http://deb.debian.org/debian-security bookworm-security/main arm64 libssl3 arm64 3.0.17-1~deb12u3 [1817 kB]
+#8 ...
+
+#10 [runner  3/21] RUN apt-get update && apt-get install -y --no-install-recommends     gosu     openssl     && rm -rf /var/lib/apt/lists/*
+#10 0.433 Get:1 http://deb.debian.org/debian bookworm InRelease [151 kB]
+#10 0.569 Get:2 http://deb.debian.org/debian bookworm-updates InRelease [55.4 kB]
+#10 0.626 Get:3 http://deb.debian.org/debian-security bookworm-security InRelease [48.0 kB]
+#10 0.692 Get:4 http://deb.debian.org/debian bookworm/main arm64 Packages [8693 kB]
+#10 3.232 Get:5 http://deb.debian.org/debian bookworm-updates/main arm64 Packages [6936 B]
+#10 3.235 Get:6 http://deb.debian.org/debian-security bookworm-security/main arm64 Packages [286 kB]
+#10 4.337 Fetched 9240 kB in 4s (2323 kB/s)
+#10 4.337 Reading package lists...
+#10 5.394 Reading package lists...
+#10 6.545 Building dependency tree...
+#10 6.850 Reading state information...
+#10 7.541 The following additional packages will be installed:
+#10 7.542   libssl3
+#10 7.548 Suggested packages:
+#10 7.548   ca-certificates
+#10 7.643 The following NEW packages will be installed:
+#10 7.648   gosu libssl3 openssl
+#10 8.506 0 upgraded, 3 newly installed, 0 to remove and 0 not upgraded.
+#10 8.506 Need to get 3879 kB of archives.
+#10 8.506 After this operation, 10.8 MB of additional disk space will be used.
+#10 8.506 Get:1 http://deb.debian.org/debian bookworm/main arm64 gosu arm64 1.14-1+b10 [663 kB]
+#10 9.357 Get:2 http://deb.debian.org/debian-security bookworm-security/main arm64 libssl3 arm64 3.0.17-1~deb12u3 [1817 kB]
+#10 9.714 Get:3 http://deb.debian.org/debian-security bookworm-security/main arm64 openssl arm64 3.0.17-1~deb12u3 [1400 kB]
+#10 ...
+
+#8 [builder 3/9] RUN apt-get update && apt-get install -y --no-install-recommends     openssl     && rm -rf /var/lib/apt/lists/*
+#8 10.18 Get:2 http://deb.debian.org/debian-security bookworm-security/main arm64 openssl arm64 3.0.17-1~deb12u3 [1400 kB]
+#8 ...
+
+#11 [deps 4/4] RUN npm ci
+#11 5.634 npm warn deprecated sourcemap-codec@1.4.8: Please use @jridgewell/sourcemap-codec instead
+#11 5.740 npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+#11 5.752 npm warn deprecated rollup-plugin-terser@7.0.2: This package has been deprecated and is no longer maintained. Please use @rollup/plugin-terser
+#11 5.840 npm warn deprecated workbox-cacheable-response@6.6.0: workbox-background-sync@6.6.0
+#11 5.942 npm warn deprecated workbox-google-analytics@6.6.0: It is not compatible with newer versions of GA starting with v4, as long as you are using GAv3 it should be ok, but the package is not longer being maintained
+#11 9.089 npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+#11 ...
+
+#10 [runner  3/21] RUN apt-get update && apt-get install -y --no-install-recommends     gosu     openssl     && rm -rf /var/lib/apt/lists/*
+#10 10.36 debconf: delaying package configuration, since apt-utils is not installed
+#10 10.43 Fetched 3879 kB in 2s (1598 kB/s)
+#10 10.47 Selecting previously unselected package gosu.
+(Reading database ... 6089 files and directories currently installed.)
+#10 10.49 Preparing to unpack .../gosu_1.14-1+b10_arm64.deb ...
+#10 10.50 Unpacking gosu (1.14-1+b10) ...
+#10 10.61 Selecting previously unselected package libssl3:arm64.
+#10 10.61 Preparing to unpack .../libssl3_3.0.17-1~deb12u3_arm64.deb ...
+#10 10.62 Unpacking libssl3:arm64 (3.0.17-1~deb12u3) ...
+#10 10.84 Selecting previously unselected package openssl.
+#10 10.84 Preparing to unpack .../openssl_3.0.17-1~deb12u3_arm64.deb ...
+#10 10.85 Unpacking openssl (3.0.17-1~deb12u3) ...
+#10 11.05 Setting up libssl3:arm64 (3.0.17-1~deb12u3) ...
+#10 11.06 Setting up gosu (1.14-1+b10) ...
+#10 11.08 Setting up openssl (3.0.17-1~deb12u3) ...
+#10 11.10 Processing triggers for libc-bin (2.36-9+deb12u13) ...
+#10 DONE 11.7s
+
+#8 [builder 3/9] RUN apt-get update && apt-get install -y --no-install-recommends     openssl     && rm -rf /var/lib/apt/lists/*
+#8 10.72 debconf: delaying package configuration, since apt-utils is not installed
+#8 10.78 Fetched 3217 kB in 2s (1484 kB/s)
+#8 10.83 Selecting previously unselected package libssl3:arm64.
+(Reading database ... 6089 files and directories currently installed.)
+#8 10.84 Preparing to unpack .../libssl3_3.0.17-1~deb12u3_arm64.deb ...
+#8 10.85 Unpacking libssl3:arm64 (3.0.17-1~deb12u3) ...
+#8 11.07 Selecting previously unselected package openssl.
+#8 11.07 Preparing to unpack .../openssl_3.0.17-1~deb12u3_arm64.deb ...
+#8 11.07 Unpacking openssl (3.0.17-1~deb12u3) ...
+#8 11.42 Setting up libssl3:arm64 (3.0.17-1~deb12u3) ...
+#8 11.56 Setting up openssl (3.0.17-1~deb12u3) ...
+#8 11.64 Processing triggers for libc-bin (2.36-9+deb12u13) ...
+#8 DONE 11.8s
+
+#12 [runner  4/21] RUN groupadd --system --gid 1001 nodejs &&     useradd --system --uid 1001 --gid nodejs nextjs
+#12 0.379 useradd warning: nextjs's uid 1001 is greater than SYS_UID_MAX 999
+#12 DONE 0.5s
+
+#13 [runner  5/21] RUN mkdir -p /data && chown nextjs:nodejs /data
+#13 DONE 0.3s
+
+#11 [deps 4/4] RUN npm ci
+#11 13.82 npm warn deprecated eslint@8.57.1: This version is no longer supported. Please see https://eslint.org/version-support for other options.
+#11 14.43 npm warn deprecated @humanwhocodes/object-schema@2.0.3: Use @eslint/object-schema instead
+#11 14.47 npm warn deprecated @humanwhocodes/config-array@0.13.0: Use @eslint/config-array instead
+#11 16.75 npm warn deprecated source-map@0.8.0-beta.0: The work that was done in this beta branch won't be included in future versions
+#11 16.75 npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+#11 17.11 npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+#11 17.54 npm warn deprecated rimraf@2.7.1: Rimraf versions prior to v4 are no longer supported
+#11 17.58 npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+vvs#11 33.96 npm warn deprecated next@14.2.3: This version has a security vulnerability. Please upgrade to a patched version. See https://nextjs.org/blog/security-update-2025-12-11 for more details.
+#11 49.19 
+#11 49.19 added 748 packages, and audited 749 packages in 49s
+#11 49.19 
+#11 49.19 170 packages are looking for funding
+#11 49.19   run `npm fund` for details
+#11 49.40 
+#11 49.40 4 vulnerabilities (3 high, 1 critical)
+#11 49.40 
+#11 49.40 To address all issues (including breaking changes), run:
+#11 49.40   npm audit fix --force
+#11 49.40 
+#11 49.40 Run `npm audit` for details.
+#11 49.40 npm notice
+#11 49.40 npm notice New major version of npm available! 10.8.2 -> 11.7.0
+#11 49.40 npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.7.0
+#11 49.40 npm notice To update run: npm install -g npm@11.7.0
+#11 49.40 npm notice
+#11 DONE 50.3s
+
+#14 [builder 4/9] COPY --from=deps /app/node_modules ./node_modules
+#14 DONE 6.9s
+
+#15 [builder 5/9] COPY . .
+#15 DONE 0.4s
+
+#16 [builder 6/9] RUN npx prisma generate
+#16 4.879 Environment variables loaded from .env
+#16 4.882 Prisma schema loaded from prisma/schema.prisma
+#16 5.642 
+#16 5.642 ✔ Generated Prisma Client (v5.22.0) to ./node_modules/@prisma/client in 194ms
+#16 5.642 
+#16 5.642 Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+#16 5.642 
+#16 5.642 Tip: Need your database queries to be 1000x faster? Accelerate offers you that and more: https://pris.ly/tip-2-accelerate
+#16 5.642 
+#16 5.849 npm notice
+#16 5.849 npm notice New major version of npm available! 10.8.2 -> 11.7.0
+#16 5.849 npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.7.0
+#16 5.849 npm notice To update run: npm install -g npm@11.7.0
+#16 5.849 npm notice
+#16 DONE 5.9s
+
+#17 [builder 7/9] RUN npx esbuild server/gateway.ts --bundle --platform=node --target=node20 --outfile=server/gateway.js --external:child_process --external:http --external:net
+#17 0.839 
+#17 0.839   server/gateway.js  5.7kb
+#17 0.839 
+#17 0.839 ⚡ Done in 6ms
+#17 DONE 0.9s
+
+#18 [builder 8/9] RUN npx esbuild server/ws-proxy.ts --bundle --platform=node --target=node20 --outfile=server/ws-proxy.js --external:@prisma/client --external:ws --external:cookie --external:crypto --external:fs --external:path
+#18 0.716 
+#18 0.716   server/ws-proxy.js  8.2kb
+#18 0.716 
+#18 0.716 ⚡ Done in 7ms
+#18 DONE 0.8s
+
+#19 [builder 9/9] RUN npm run build
+#19 0.403 
+#19 0.403 > hass-dashboard@1.0.0 build
+#19 0.403 > next build
+#19 0.403 
+#19 1.924   ▲ Next.js 14.2.3
+#19 1.924   - Environments: .env
+#19 1.925 
+#19 1.951    Creating an optimized production build ...
+#19 2.522 > [PWA] Compile server
+#19 2.524 > [PWA] Compile server
+#19 2.526 > [PWA] Compile client (static)
+#19 2.526 > [PWA] Custom worker found: /app/worker/index.js
+#19 2.526 > [PWA] Build custom worker: /app/public/worker-bvnCWa5zojj3t--8WDgnz.js
+#19 2.796 > [PWA] Auto register service worker with: /app/node_modules/next-pwa/register.js
+#19 2.796 > [PWA] Service worker: /app/public/sw.js
+#19 2.796 > [PWA]   url: /sw.js
+#19 2.796 > [PWA]   scope: /
+#19 35.80  ✓ Compiled successfully
+#19 35.80    Linting and checking validity of types ...
+#19 48.70    Collecting page data ...
+#19 50.74    Generating static pages (0/33) ...
+#19 50.83 [Auth] Error getting user: n [Error]: Dynamic server usage: Route /api/auth/me couldn't be rendered statically because it used cookies. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+#19 50.83     at l (/app/.next/server/chunks/8948.js:1:37249)
+#19 50.83     at d (/app/.next/server/chunks/8899.js:1:1692)
+#19 50.83     at l (/app/.next/server/app/api/auth/login/route.js:1:3872)
+#19 50.83     at u (/app/.next/server/app/api/auth/me/route.js:1:927)
+#19 50.83     at /app/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:34672
+#19 50.83     at /app/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+#19 50.83     at NoopContextManager.with (/app/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:7062)
+#19 50.83     at ContextAPI.with (/app/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:518)
+#19 50.83     at NoopTracer.startActiveSpan (/app/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:18093)
+#19 50.83     at ProxyTracer.startActiveSpan (/app/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:18854) {
+#19 50.83   description: "Route /api/auth/me couldn't be rendered statically because it used cookies. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+#19 50.83   digest: 'DYNAMIC_SERVER_USAGE'
+#19 50.83 }
+#19 52.16    Generating static pages (8/33) 
+#19 52.82    Generating static pages (16/33) 
+#19 53.21    Generating static pages (24/33) 
+#19 53.45  ✓ Generating static pages (33/33)
+#19 54.29    Finalizing page optimization ...
+#19 54.29    Collecting build traces ...
+#19 86.48 
+#19 86.49 Route (app)                                 Size     First Load JS
+#19 86.49 ┌ ○ /                                       6.46 kB         148 kB
+#19 86.49 ├ ○ /_not-found                             875 B          88.1 kB
+#19 86.49 ├ ƒ /api/admin/users                        0 B                0 B
+#19 86.49 ├ ƒ /api/admin/users/[id]                   0 B                0 B
+#19 86.49 ├ ƒ /api/auth/login                         0 B                0 B
+#19 86.49 ├ ƒ /api/auth/logout                        0 B                0 B
+#19 86.49 ├ ƒ /api/auth/me                            0 B                0 B
+#19 86.49 ├ ƒ /api/ha/calendar                        0 B                0 B
+#19 86.49 ├ ƒ /api/ha/call-service                    0 B                0 B
+#19 86.49 ├ ƒ /api/ha/camera/[entityId]               0 B                0 B
+#19 86.49 ├ ƒ /api/ha/camera/[entityId]/stream        0 B                0 B
+#19 86.49 ├ ƒ /api/ha/config                          0 B                0 B
+#19 86.49 ├ ƒ /api/ha/frigate/events                  0 B                0 B
+#19 86.49 ├ ƒ /api/ha/frigate/thumbnail/[eventId]     0 B                0 B
+#19 86.49 ├ ƒ /api/ha/poll                            0 B                0 B
+#19 86.49 ├ ƒ /api/ha/registries                      0 B                0 B
+#19 86.49 ├ ƒ /api/ha/states                          0 B                0 B
+#19 86.49 ├ ƒ /api/ha/status                          0 B                0 B
+#19 86.49 ├ ƒ /api/ha/stream/[entityId]               0 B                0 B
+#19 86.49 ├ ƒ /api/ha/weather                         0 B                0 B
+#19 86.49 ├ ƒ /api/me                                 0 B                0 B
+#19 86.49 ├ ○ /api/push/debug                         0 B                0 B
+#19 86.49 ├ ƒ /api/push/send                          0 B                0 B
+#19 86.49 ├ ƒ /api/push/subscribe                     0 B                0 B
+#19 86.49 ├ ƒ /api/push/test                          0 B                0 B
+#19 86.49 ├ ƒ /api/push/unsubscribe                   0 B                0 B
+#19 86.49 ├ ○ /api/push/vapid                         0 B                0 B
+#19 86.49 ├ ƒ /api/settings                           0 B                0 B
+#19 86.49 ├ ƒ /api/status                             0 B                0 B
+#19 86.49 ├ ƒ /api/unifi/access/doors                 0 B                0 B
+#19 86.49 ├ ƒ /api/unifi/access/test                  0 B                0 B
+#19 86.49 ├ ƒ /api/unifi/access/test-saved            0 B                0 B
+#19 86.49 ├ ƒ /api/unifi/access/unlock/[doorId]       0 B                0 B
+#19 86.49 ├ ƒ /api/unifi/discover                     0 B                0 B
+#19 86.49 ├ ƒ /api/unifi/discover-saved               0 B                0 B
+#19 86.49 ├ ƒ /api/unifi/events                       0 B                0 B
+#19 86.49 ├ ƒ /api/unifi/protect/events               0 B                0 B
+#19 86.49 ├ ƒ /api/unifi/protect/test                 0 B                0 B
+#19 86.49 ├ ƒ /api/unifi/protect/test-saved           0 B                0 B
+#19 86.49 ├ ƒ /api/unifi/protect/thumbnail/[eventId]  0 B                0 B
+#19 86.49 ├ ƒ /api/unifi/status                       0 B                0 B
+#19 86.49 ├ ƒ /api/unifi/test                         0 B                0 B
+#19 86.49 ├ ƒ /api/unifi/thumbnail/[eventId]          0 B                0 B
+#19 86.49 ├ ƒ /api/upload/background                  0 B                0 B
+#19 86.49 ├ ƒ /api/upload/background/[userId]         0 B                0 B
+#19 86.49 ├ ○ /awnings                                3.46 kB         138 kB
+#19 86.49 ├ ○ /calendar                               3.86 kB         145 kB
+#19 86.49 ├ ○ /cameras                                4.05 kB         138 kB
+#19 86.49 ├ ○ /climate                                4.25 kB         146 kB
+#19 86.49 ├ ○ /covers                                 3.48 kB         138 kB
+#19 86.49 ├ ○ /curtains                               3.48 kB         138 kB
+#19 86.49 ├ ○ /energy                                 105 kB          239 kB
+#19 86.49 ├ ○ /family                                 2.39 kB         136 kB
+#19 86.49 ├ ƒ /intercom/[slug]                        3.63 kB         138 kB
+#19 86.49 ├ ○ /lights                                 4.51 kB         139 kB
+#19 86.49 ├ ○ /login                                  2.78 kB          90 kB
+#19 86.49 ├ ○ /more                                   2.55 kB         137 kB
+#19 86.49 ├ ○ /secure                                 3.66 kB         138 kB
+#19 86.49 ├ ○ /settings                               6.2 kB          137 kB
+#19 86.49 ├ ○ /settings/homeassistant                 9.02 kB        96.3 kB
+#19 86.49 ├ ○ /settings/unifi                         5.33 kB        92.6 kB
+#19 86.49 ├ ○ /settings/users                         3.85 kB        91.1 kB
+#19 86.49 ├ ○ /surveillance                           5.92 kB         129 kB
+#19 86.49 └ ○ /vacuum                                 4.68 kB         146 kB
+#19 86.49 + First Load JS shared by all               87.3 kB
+#19 86.49   ├ chunks/23-021a8dcfdf30800e.js           31.6 kB
+#19 86.49   ├ chunks/fd9d1056-669bb09d171934b5.js     53.6 kB
+#19 86.49   └ other shared chunks (total)             2.01 kB
+#19 86.49 
+#19 86.49 
+#19 86.49 ƒ Middleware                                27.4 kB
+#19 86.49 
+#19 86.49 ○  (Static)   prerendered as static content
+#19 86.49 ƒ  (Dynamic)  server-rendered on demand
+#19 86.49 
+#19 DONE 86.8s
+
+#20 [runner  6/21] COPY --from=builder /app/public ./public
+#20 DONE 0.1s
+
+#21 [runner  7/21] COPY --from=builder /app/.next/standalone ./
+#21 DONE 0.9s
+
+#22 [runner  8/21] COPY --from=builder /app/.next/static ./.next/static
+#22 DONE 0.2s
+
+#23 [runner  9/21] COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+#23 DONE 0.2s
+
+#24 [runner 10/21] COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
+#24 DONE 0.2s
+
+#25 [runner 11/21] COPY --from=builder /app/node_modules/.bin ./node_modules/.bin
+#25 DONE 0.1s
+
+#26 [runner 12/21] COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+#26 DONE 0.4s
+
+#27 [runner 13/21] COPY --from=builder /app/node_modules/bcryptjs ./node_modules/bcryptjs
+#27 DONE 0.1s
+
+#28 [runner 14/21] COPY --from=builder /app/node_modules/ws ./node_modules/ws
+#28 DONE 0.1s
+
+#29 [runner 15/21] COPY --from=builder /app/node_modules/cookie ./node_modules/cookie
+#29 DONE 0.1s
+
+#30 [runner 16/21] COPY --from=builder /app/prisma ./prisma
+#30 DONE 0.1s
+
+#31 [runner 17/21] COPY --from=builder /app/scripts ./scripts
+#31 DONE 0.1s
+
+#32 [runner 18/21] COPY --from=builder /app/server/gateway.js ./server/gateway.js
+#32 DONE 0.1s
+
+#33 [runner 19/21] COPY --from=builder /app/server/ws-proxy.js ./server/ws-proxy.js
+#33 DONE 0.1s
+
+#34 [runner 20/21] COPY --from=builder /app/docker-entrypoint.sh ./docker-entrypoint.sh
+#34 DONE 0.1s
+
+#35 [runner 21/21] RUN chmod +x ./docker-entrypoint.sh &&     chown -R nextjs:nodejs /app
+#35 DONE 6.8s
+
+#36 exporting to image
+#36 exporting layers
+#36 exporting layers 11.1s done
+#36 exporting manifest sha256:fd05cbdfcf0851910ee2d90dae44ef6c1eb40bf46dd70ca3154faf974b0cfc4a done
+#36 exporting config sha256:f8310becba7b3ca83f2c798f46547e8d6246eb5cb9cc589f1dd434b95e8a78f4 done
+#36 exporting attestation manifest sha256:a157c1f691c35f03f63340ebf795ec4d51e04b1a1a03fc9c4925b6b5617e1983 0.0s done
+#36 exporting manifest list sha256:65f57ec3e8e5ea8047df236a8f6429734609a2d71bab205240ba26e83862a525 done
+#36 naming to docker.io/library/hass-dashboard-app:latest done
+#36 unpacking to docker.io/library/hass-dashboard-app:latest
+#36 unpacking to docker.io/library/hass-dashboard-app:latest 2.9s done
+#36 DONE 14.1s
+
+#37 resolving provenance for metadata file
+#37 DONE 0.0s
+ Image hass-dashboard-app Built 
+WARN[0000] No services to build                         
+[+] up 1/1
+ ✔ Container hass-dashboard Recreated                                                                                                    3.8s 
+hass-dashboard  | [INIT] Fixing ownership of /data
+hass-dashboard  | [INIT] Using ENCRYPTION_KEY from environment
+hass-dashboard  | [INIT] Existing database found at /data/hass-dashboard.db
+hass-dashboard  | [INIT] Syncing database schema...
+hass-dashboard  | Environment variables loaded from .env
+hass-dashboard  | Prisma schema loaded from prisma/schema.prisma
+hass-dashboard  | Datasource "db": SQLite database "hass-dashboard.db" at "file:/data/hass-dashboard.db"
+hass-dashboard  | 
+hass-dashboard  | The database is already in sync with the Prisma schema.
+hass-dashboard  | 
+✔ Generated Prisma Client (v5.22.0) to ./node_modules/@prisma/client in 300ms
+hass-dashboard  | 
+hass-dashboard  | [INIT] Database ready
+hass-dashboard  | [INIT] Starting HASS Dashboard Gateway on port 80
+hass-dashboard  | [INIT] Dropping privileges to nextjs
+hass-dashboard  | [Gateway] Starting WS Proxy on internal port 6000
+hass-dashboard  | [Gateway] Starting Next.js on internal port 3000
+hass-dashboard  | [WS-Proxy] Encryption key loaded successfully
+hass-dashboard  | [WS-Proxy] WebSocket proxy running on port 6000
+hass-dashboard  | [Next]   ▲ Next.js 14.2.3
+hass-dashboard  | [Next]   - Local:        http://127.0.0.1:3000
+hass-dashboard  | [Next]   - Network:      http://127.0.0.1:3000
+hass-dashboard  | [Next] 
+hass-dashboard  | [Next]  ✓ Starting...
+hass-dashboard  | [Next]  ✓ Ready in 81ms
+hass-dashboard  | [Gateway] Child processes ready
+hass-dashboard  | [Gateway] Gateway ready on http://0.0.0.0:80
+hass-dashboard  | [Gateway] HTTP requests → Next.js (port 3000)
+hass-dashboard  | [Gateway] WebSocket /ws/ha → WS Proxy (port 6000)
