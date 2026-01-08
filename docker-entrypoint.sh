@@ -96,17 +96,17 @@ init_database() {
 }
 
 run_app() {
-  log_info "Starting HASS Dashboard on port ${PORT:-80}"
+  log_info "Starting HASS Dashboard Gateway on port ${PORT:-80}"
   
-  # Ensure Next.js binds to all interfaces (required for Docker)
+  # Ensure servers bind to all interfaces (required for Docker)
   export HOSTNAME="0.0.0.0"
   
-  # Run combined server (Next.js + WebSocket proxy on same port)
+  # Run gateway server (spawns Next.js + WS Proxy as child processes)
   if [ "$(id -u)" = "0" ]; then
     log_info "Dropping privileges to $APP_USER"
-    exec gosu "$APP_USER" node server/combined-server.js
+    exec gosu "$APP_USER" node server/gateway.js
   else
-    exec node server/combined-server.js
+    exec node server/gateway.js
   fi
 }
 
