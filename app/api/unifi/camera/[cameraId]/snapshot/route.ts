@@ -26,7 +26,7 @@ export async function GET(
     const protectClient = new ProtectClient(unifi.controllerUrl, unifi.protectApiKey)
     const imageBuffer = await protectClient.getSnapshot(decodedCameraId)
     
-    return new NextResponse(imageBuffer, {
+    return new NextResponse(new Uint8Array(imageBuffer), {
       headers: {
         'Content-Type': 'image/jpeg',
         'Cache-Control': 'no-store, no-cache, must-revalidate',

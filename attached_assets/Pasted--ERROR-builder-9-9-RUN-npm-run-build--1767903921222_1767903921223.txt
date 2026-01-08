@@ -1,0 +1,61 @@
+ => ERROR [builder 9/9] RUN npm run build                                                                                               13.3s 
+------                                                                                                                                        
+ > [builder 9/9] RUN npm run build:                                                                                                           
+0.151                                                                                                                                         
+0.151 > hass-dashboard@1.0.0 build                                                                                                            
+0.151 > next build                                                                                                                            
+0.151                                                                                                                                         
+0.508   ▲ Next.js 14.2.3                                                                                                                      
+0.508   - Environments: .env                                                                                                                  
+0.508                                                                                                                                         
+0.517    Creating an optimized production build ...                                                                                           
+0.687 > [PWA] Compile server
+0.688 > [PWA] Compile server
+0.688 > [PWA] Compile client (static)
+0.688 > [PWA] Custom worker found: /app/worker/index.js
+0.688 > [PWA] Build custom worker: /app/public/worker-i7SnmaYdCWC2q2j1hV7rn.js
+0.752 > [PWA] Auto register service worker with: /app/node_modules/next-pwa/register.js
+0.752 > [PWA] Service worker: /app/public/sw.js
+0.752 > [PWA]   url: /sw.js
+0.752 > [PWA]   scope: /
+10.14  ✓ Compiled successfully
+10.14    Linting and checking validity of types ...
+13.14 Failed to compile.
+13.14 
+13.14 ./app/api/unifi/camera/[cameraId]/snapshot/route.ts:29:29
+13.14 Type error: Argument of type 'Buffer<ArrayBufferLike>' is not assignable to parameter of type 'BodyInit | null | undefined'.
+13.14   Type 'Buffer<ArrayBufferLike>' is missing the following properties from type 'URLSearchParams': size, append, delete, get, and 2 more.
+13.14 
+13.14   27 |     const imageBuffer = await protectClient.getSnapshot(decodedCameraId)
+13.14   28 |     
+13.14 > 29 |     return new NextResponse(imageBuffer, {
+13.14      |                             ^
+13.14   30 |       headers: {
+13.14   31 |         'Content-Type': 'image/jpeg',
+13.14   32 |         'Cache-Control': 'no-store, no-cache, must-revalidate',
+------
+Dockerfile:33
+
+--------------------
+
+  31 |     RUN npx esbuild server/ws-proxy.ts --bundle --platform=node --target=node20 --outfile=server/ws-proxy.js --external:@prisma/client --external:ws --external:cookie --external:crypto --external:fs --external:path
+
+  32 |     
+
+  33 | >>> RUN npm run build
+
+  34 |     
+
+  35 |     # Stage 3: Runner
+
+--------------------
+
+failed to solve: process "/bin/sh -c npm run build" did not complete successfully: exit code: 1
+
+
+
+View build details: docker-desktop://dashboard/build/default/default/awzfnsbuw8nysv7p37jwmqfgs
+
+[+] Running 1/1
+ ✔ Container hass-dashboard  Started                                                                                                     0.1s 
+lukashengl@mac-mini HASS-Dashboard % 
