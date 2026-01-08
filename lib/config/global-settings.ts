@@ -5,10 +5,18 @@ import { decryptUnifiApiKeys } from '@/lib/unifi/encryption'
 
 const GLOBAL_LAYOUT_KEY = 'global_layout_config'
 
+export interface WeatherLocation {
+  id: string
+  name: string
+  entityPrefix: string
+  isPrimary?: boolean
+}
+
 export interface GlobalLayoutConfig {
   dashboardTitle?: string
   weatherEntityId?: string
   temperatureSensorId?: string
+  weatherLocations?: WeatherLocation[]
   trashCalendarId?: string
   lightsGroupEntityId?: string
   powerEntityId?: string

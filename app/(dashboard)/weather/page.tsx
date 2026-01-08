@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, type ComponentType } from 'react'
+import { useState, useMemo, useEffect, type ComponentType } from 'react'
 import { motion } from 'framer-motion'
 import { 
   Cloud, 
@@ -15,10 +15,14 @@ import {
   Flower2,
   AlertTriangle,
   ChevronRight,
-  Moon
+  Moon,
+  MapPin,
+  ChevronDown,
+  Settings
 } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { useHAStore } from '@/lib/ha'
+import { useConfigStore, type WeatherLocation } from '@/lib/config/store'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
 
@@ -68,6 +72,13 @@ const CONDITION_TRANSLATIONS: Record<string, string> = {
   'exceptional': 'Außergewöhnlich',
 }
 
+const DEFAULT_LOCATION: WeatherLocation = {
+  id: 'home',
+  name: 'Zuhause',
+  entityPrefix: 'home',
+  isPrimary: true
+}
+
 function getPollenInfo(value: string | number | undefined) {
   const level = String(value || '0')
   return POLLEN_LEVELS[level] || POLLEN_LEVELS['0']
@@ -86,13 +97,32 @@ function getWeatherIcon(condition: string | undefined) {
 
 export default function WeatherPage() {
   const states = useHAStore((s) => s.states)
+  const weatherLocations = useConfigStore((s) => s.weatherLocations)
+  const fetchConfig = useConfigStore((s) => s.fetchConfig)
   const [activeTab, setActiveTab] = useState<'forecast' | 'pollen'>('forecast')
+  const [showLocationPicker, setShowLocationPicker] = useState(false)
+  const [selectedLocationId, setSelectedLocationId] = useState<string | null>(null)
+  
+  useEffect(() => {
+    fetchConfig()
+  }, [fetchConfig])
+  
+  const locations = weatherLocations.length > 0 ? weatherLocations : [DEFAULT_LOCATION]
+  
+  const selectedLocation = useMemo(() => {
+    if (selectedLocationId) {
+      return locations.find(l => l.id === selectedLocationId) || locations.find(l => l.isPrimary) || locations[0]
+    }
+    return locations.find(l => l.isPrimary) || locations[0]
+  }, [locations, selectedLocationId])
+  
+  const prefix = selectedLocation?.entityPrefix || 'home'
   
   const currentWeather = useMemo(() => {
-    const condition = states['sensor.home_bedingung_tag_0']?.state
-    const temperature = states['sensor.home_gefuhlte_temperatur']?.state
-    const cloudCover = states['sensor.home_bewolkung']?.state
-    const pressure = states['sensor.home_druck']?.state
+    const condition = states[`sensor.${prefix}_bedingung_tag_0`]?.state
+    const temperature = states[`sensor.${prefix}_gefuhlte_temperatur`]?.state
+    const cloudCover = states[`sensor.${prefix}_bewolkung`]?.state
+    const pressure = states[`sensor.${prefix}_druck`]?.state
     
     return {
       condition: condition || 'unknown',
@@ -101,19 +131,19 @@ export default function WeatherPage() {
       cloudCover: cloudCover ? parseInt(cloudCover) : null,
       pressure: pressure ? parseFloat(pressure) : null,
     }
-  }, [states])
+  }, [states, prefix])
   
   const forecast = useMemo(() => {
     const days = []
     const dayNames = ['Heute', 'Morgen', 'Übermorgen', 'In 3 Tagen', 'In 4 Tagen']
     
     for (let i = 0; i <= 4; i++) {
-      const dayCondition = states[`sensor.home_bedingung_tag_${i}`]?.state
-      const nightCondition = states[`sensor.home_bedingung_nacht_${i}`]?.state
-      const dayCloud = states[`sensor.home_bewolkung_tag_${i}`]?.state
-      const nightCloud = states[`sensor.home_bewolkung_nacht_${i}`]?.state
-      const dayThunder = states[`sensor.home_gewitterwahrscheinlichkeit_tag_${i}`]?.state
-      const nightThunder = states[`sensor.home_gewitterwahrscheinlichkeit_nacht_${i}`]?.state
+      const dayCondition = states[`sensor.${prefix}_bedingung_tag_${i}`]?.state
+      const nightCondition = states[`sensor.${prefix}_bedingung_nacht_${i}`]?.state
+      const dayCloud = states[`sensor.${prefix}_bewolkung_tag_${i}`]?.state
+      const nightCloud = states[`sensor.${prefix}_bewolkung_nacht_${i}`]?.state
+      const dayThunder = states[`sensor.${prefix}_gewitterwahrscheinlichkeit_tag_${i}`]?.state
+      const nightThunder = states[`sensor.${prefix}_gewitterwahrscheinlichkeit_nacht_${i}`]?.state
       
       days.push({
         day: i,
@@ -130,7 +160,7 @@ export default function WeatherPage() {
     }
     
     return days
-  }, [states])
+  }, [states, prefix])
   
   const pollenForecast = useMemo(() => {
     const types = [
@@ -142,7 +172,7 @@ export default function WeatherPage() {
     return types.map(type => {
       const days = []
       for (let i = 0; i <= 4; i++) {
-        const value = states[`sensor.home_${type.id}_tag_${i}`]?.state
+        const value = states[`sensor.${prefix}_${type.id}_tag_${i}`]?.state
         days.push({
           day: i,
           value: value || '0',
@@ -151,21 +181,81 @@ export default function WeatherPage() {
       }
       return { ...type, days }
     })
-  }, [states])
+  }, [states, prefix])
   
   const CurrentWeatherIcon = getWeatherIcon(currentWeather.condition)
   
   return (
     <div className="min-h-screen p-4 md:p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-white">Wetter</h1>
-          <p className="text-text-muted text-sm">AccuWeather Vorhersage</p>
+        <div className="flex items-center gap-3">
+          <Link href="/" className="text-text-muted hover:text-white transition-colors">
+            <ChevronRight className="w-6 h-6 rotate-180" />
+          </Link>
+          <div>
+            <h1 className="text-2xl font-bold text-white">Wetter</h1>
+            <p className="text-text-muted text-sm">AccuWeather Vorhersage</p>
+          </div>
         </div>
-        <Link href="/" className="text-text-muted hover:text-white transition-colors">
-          <ChevronRight className="w-6 h-6 rotate-180" />
+        <Link 
+          href="/settings/weather" 
+          className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors"
+          title="Orte bearbeiten"
+        >
+          <Settings className="w-5 h-5 text-text-muted" />
         </Link>
       </div>
+      
+      {locations.length > 1 && (
+        <div className="relative">
+          <button
+            onClick={() => setShowLocationPicker(!showLocationPicker)}
+            className="w-full flex items-center justify-between px-4 py-3 bg-white/10 rounded-xl text-white hover:bg-white/15 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <MapPin className="w-5 h-5 text-cyan-400" />
+              <span className="font-medium">{selectedLocation?.name || 'Ort wählen'}</span>
+            </div>
+            <ChevronDown className={cn(
+              "w-5 h-5 text-text-muted transition-transform",
+              showLocationPicker && "rotate-180"
+            )} />
+          </button>
+          
+          {showLocationPicker && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="absolute top-full left-0 right-0 mt-2 z-10 bg-[#1a1f2e] rounded-xl border border-white/10 overflow-hidden"
+            >
+              {locations.map((location) => (
+                <button
+                  key={location.id}
+                  onClick={() => {
+                    setSelectedLocationId(location.id)
+                    setShowLocationPicker(false)
+                  }}
+                  className={cn(
+                    "w-full flex items-center justify-between px-4 py-3 hover:bg-white/10 transition-colors",
+                    selectedLocation?.id === location.id && "bg-white/5"
+                  )}
+                >
+                  <div className="flex items-center gap-2">
+                    <MapPin className={cn(
+                      "w-4 h-4",
+                      selectedLocation?.id === location.id ? "text-cyan-400" : "text-text-muted"
+                    )} />
+                    <span className="text-white">{location.name}</span>
+                  </div>
+                  {location.isPrimary && (
+                    <span className="text-xs text-yellow-400">Primär</span>
+                  )}
+                </button>
+              ))}
+            </motion.div>
+          )}
+        </div>
+      )}
       
       <Card className="glass-card p-6">
         <div className="flex items-center gap-6">

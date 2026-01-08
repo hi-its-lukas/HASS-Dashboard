@@ -16,7 +16,8 @@ import {
   ChevronRight,
   CheckCircle,
   XCircle,
-  Users
+  Users,
+  Cloud
 } from 'lucide-react'
 import { PushSettings } from '@/components/settings/push-settings'
 
@@ -246,6 +247,24 @@ export default function SettingsPage() {
                 <div>
                   <h3 className="text-white font-medium">Benutzerverwaltung</h3>
                   <p className="text-sm text-gray-400">Benutzer, Rollen, Berechtigungen</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />
+              </div>
+            </Link>
+            
+            <Link 
+              href="/settings/weather"
+              className="flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 rounded-xl transition-colors group"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-cyan-500/20 flex items-center justify-center">
+                  <Cloud className="w-6 h-6 text-cyan-400" />
+                </div>
+                <div>
+                  <h3 className="text-white font-medium">Wetter-Orte</h3>
+                  <p className="text-sm text-gray-400">AccuWeather Standorte konfigurieren</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">

@@ -27,10 +27,18 @@ export interface UnifiConfig {
   aiSurveillanceEnabled?: boolean
 }
 
+export interface WeatherLocation {
+  id: string
+  name: string
+  entityPrefix: string
+  isPrimary?: boolean
+}
+
 interface UserLayoutConfig {
   dashboardTitle?: string
   weatherEntityId?: string
   temperatureSensorId?: string
+  weatherLocations?: WeatherLocation[]
   trashCalendarId?: string
   lightsGroupEntityId?: string
   powerEntityId?: string
@@ -138,6 +146,7 @@ interface ConfigStore {
   calendars: string[]
   cameras: string[]
   unifi: UnifiConfig | null
+  weatherLocations: WeatherLocation[]
   
   loadConfig: () => Promise<void>
   fetchConfig: () => Promise<void>
@@ -215,6 +224,7 @@ export const useConfigStore = create<ConfigStore>((set, get) => ({
   calendars: [],
   cameras: [],
   unifi: null,
+  weatherLocations: [],
 
   loadConfig: async () => {
     try {
@@ -242,7 +252,8 @@ export const useConfigStore = create<ConfigStore>((set, get) => ({
         climates: data.layoutConfig?.climates || [],
         calendars: data.layoutConfig?.calendars || [],
         cameras: data.layoutConfig?.cameras || [],
-        unifi: data.layoutConfig?.unifi || null
+        unifi: data.layoutConfig?.unifi || null,
+        weatherLocations: data.layoutConfig?.weatherLocations || []
       })
     } catch (error) {
       console.error('[ConfigStore] Error loading config:', error)
