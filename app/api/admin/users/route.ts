@@ -63,7 +63,9 @@ export async function POST(request: NextRequest) {
     }
     
     const canManage = await hasPermission(session.userId, 'users:manage')
-    if (!canManage) {
+    const canManageAdmins = await hasPermission(session.userId, 'admins:manage')
+    
+    if (!canManage && !canManageAdmins) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
     
@@ -71,6 +73,15 @@ export async function POST(request: NextRequest) {
     
     if (!username || !password) {
       return NextResponse.json({ error: 'Username and password required' }, { status: 400 })
+    }
+    
+    if (roleId) {
+      const targetRole = await prisma.role.findUnique({ where: { id: roleId } })
+      if (targetRole && (targetRole.name === 'owner' || targetRole.name === 'admin')) {
+        if (!canManageAdmins) {
+          return NextResponse.json({ error: 'Nur Owner dürfen Admins anlegen' }, { status: 403 })
+        }
+      }
     }
     
     const existing = await prisma.user.findUnique({ where: { username } })

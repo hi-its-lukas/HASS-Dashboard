@@ -21,13 +21,35 @@ export async function PATCH(
     }
     
     const canManage = await hasPermission(session.userId, 'users:manage')
-    if (!canManage) {
+    const canManageAdmins = await hasPermission(session.userId, 'admins:manage')
+    
+    if (!canManage && !canManageAdmins) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
     
     const { id } = await params
     const body = await request.json()
     const { displayName, roleId, status, personEntityId, password } = body
+    
+    const existingUser = await prisma.user.findUnique({
+      where: { id },
+      include: { role: true }
+    })
+    
+    if (existingUser?.role?.name === 'owner' || existingUser?.role?.name === 'admin') {
+      if (!canManageAdmins) {
+        return NextResponse.json({ error: 'Nur Owner dürfen Admins bearbeiten' }, { status: 403 })
+      }
+    }
+    
+    if (roleId) {
+      const targetRole = await prisma.role.findUnique({ where: { id: roleId } })
+      if (targetRole && (targetRole.name === 'owner' || targetRole.name === 'admin')) {
+        if (!canManageAdmins) {
+          return NextResponse.json({ error: 'Nur Owner dürfen Benutzer zu Admins befördern' }, { status: 403 })
+        }
+      }
+    }
     
     const updateData: Record<string, unknown> = {}
     
@@ -77,7 +99,9 @@ export async function DELETE(
     }
     
     const canManage = await hasPermission(session.userId, 'users:manage')
-    if (!canManage) {
+    const canManageAdmins = await hasPermission(session.userId, 'admins:manage')
+    
+    if (!canManage && !canManageAdmins) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
     
@@ -87,16 +111,22 @@ export async function DELETE(
       return NextResponse.json({ error: 'Cannot delete yourself' }, { status: 400 })
     }
     
+    const userToDelete = await prisma.user.findUnique({
+      where: { id },
+      include: { role: true }
+    })
+    
+    if (userToDelete?.role?.name === 'owner' || userToDelete?.role?.name === 'admin') {
+      if (!canManageAdmins) {
+        return NextResponse.json({ error: 'Nur Owner dürfen Admins löschen' }, { status: 403 })
+      }
+    }
+    
     const ownerCount = await prisma.user.count({
       where: {
         role: { name: 'owner' },
         status: 'active'
       }
-    })
-    
-    const userToDelete = await prisma.user.findUnique({
-      where: { id },
-      include: { role: true }
     })
     
     if (userToDelete?.role?.name === 'owner' && ownerCount <= 1) {

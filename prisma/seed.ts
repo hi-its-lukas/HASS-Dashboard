@@ -6,8 +6,9 @@ const prisma = new PrismaClient()
 const PERMISSIONS = [
   { key: 'settings:view', category: 'settings', displayName: 'Einstellungen ansehen', description: 'Kann Einstellungen-Seite öffnen' },
   { key: 'settings:edit', category: 'settings', displayName: 'Einstellungen bearbeiten', description: 'Kann Einstellungen ändern' },
-  { key: 'users:manage', category: 'admin', displayName: 'Benutzer verwalten', description: 'Kann Benutzer anlegen, bearbeiten, löschen' },
+  { key: 'users:manage', category: 'admin', displayName: 'Benutzer verwalten', description: 'Kann normale Benutzer anlegen, bearbeiten, löschen' },
   { key: 'users:view', category: 'admin', displayName: 'Benutzer ansehen', description: 'Kann Benutzerliste sehen' },
+  { key: 'admins:manage', category: 'admin', displayName: 'Admins verwalten', description: 'Kann Admins und Owner anlegen/bearbeiten (nur Owner)' },
   
   { key: 'module:dashboard', category: 'module', displayName: 'Dashboard', description: 'Zugriff auf Hauptseite' },
   { key: 'module:energy', category: 'module', displayName: 'Energie', description: 'Zugriff auf Energie-Dashboard' },
@@ -35,21 +36,21 @@ const ROLES = [
   {
     name: 'owner',
     displayName: 'Owner',
-    description: 'Voller Zugriff, kann andere Admins ernennen',
+    description: 'Voller Zugriff, kann Admins ernennen',
     isSystem: true,
     permissions: PERMISSIONS.map(p => p.key)
   },
   {
     name: 'admin',
     displayName: 'Administrator',
-    description: 'Benutzer verwalten, alle Module',
+    description: 'Benutzer verwalten, alle Module (keine Admin-Ernennung)',
     isSystem: true,
-    permissions: PERMISSIONS.map(p => p.key)
+    permissions: PERMISSIONS.filter(p => p.key !== 'admins:manage').map(p => p.key)
   },
   {
-    name: 'power_user',
-    displayName: 'Power User',
-    description: 'Alle Module, keine Benutzerverwaltung',
+    name: 'user',
+    displayName: 'Benutzer',
+    description: 'Eigene Einstellungen, alle Module und Aktionen',
     isSystem: true,
     permissions: PERMISSIONS.filter(p => p.category !== 'admin').map(p => p.key)
   },
