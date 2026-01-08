@@ -83,7 +83,9 @@ export const UnifiConfigSchema = z.object({
     type: z.string().max(50),
     doorId: z.string().max(100).optional()
   })).max(50).optional(),
-  aiSurveillanceEnabled: z.boolean().optional()
+  aiSurveillanceEnabled: z.boolean().optional(),
+  _hasProtectKey: z.boolean().optional(),
+  _hasAccessKey: z.boolean().optional()
 })
 
 export type ValidatedUnifiConfig = z.infer<typeof UnifiConfigSchema>
