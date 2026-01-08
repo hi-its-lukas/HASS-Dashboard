@@ -6,8 +6,11 @@ export interface UnifiConfig {
   controllerUrl: string
   protectApiKey: string
   accessApiKey: string
+  rtspUsername?: string
+  rtspPassword?: string
+  liveStreamEnabled?: boolean
   cameras: string[]
-  accessDevices: { id: string; name: string; type: string; doorId?: string }[]
+  accessDevices: { id: string; name: string; type: string; doorId?: string; cameraId?: string }[]
   aiSurveillanceEnabled: boolean
 }
 
@@ -22,6 +25,11 @@ export function encryptUnifiApiKeys(config: UnifiConfig): UnifiConfig {
   if (config.accessApiKey && !config.accessApiKey.startsWith(ENCRYPTED_PREFIX)) {
     const { ciphertext, nonce } = encrypt(config.accessApiKey)
     result.accessApiKey = ENCRYPTED_PREFIX + Buffer.concat([nonce, ciphertext]).toString('base64')
+  }
+  
+  if (config.rtspPassword && !config.rtspPassword.startsWith(ENCRYPTED_PREFIX)) {
+    const { ciphertext, nonce } = encrypt(config.rtspPassword)
+    result.rtspPassword = ENCRYPTED_PREFIX + Buffer.concat([nonce, ciphertext]).toString('base64')
   }
   
   return result
@@ -51,6 +59,18 @@ export function decryptUnifiApiKeys(config: UnifiConfig): UnifiConfig {
     } catch (error) {
       console.error('[UniFi] Failed to decrypt Access API key:', error)
       result.accessApiKey = ''
+    }
+  }
+  
+  if (config.rtspPassword?.startsWith(ENCRYPTED_PREFIX)) {
+    try {
+      const data = Buffer.from(config.rtspPassword.slice(ENCRYPTED_PREFIX.length), 'base64')
+      const nonce = data.slice(0, 12)
+      const ciphertext = data.slice(12)
+      result.rtspPassword = decrypt(ciphertext, nonce)
+    } catch (error) {
+      console.error('[UniFi] Failed to decrypt RTSP password:', error)
+      result.rtspPassword = ''
     }
   }
   
