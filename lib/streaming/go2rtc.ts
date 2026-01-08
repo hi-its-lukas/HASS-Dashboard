@@ -77,7 +77,7 @@ export async function startGo2rtc(streams: StreamConfig[]): Promise<boolean> {
     
     fs.writeFileSync(configPath, configContent)
     console.log('[go2rtc] Config written to:', configPath)
-    console.log('[go2rtc] Config:', configContent)
+    console.log('[go2rtc] Configured', streams.length, 'streams')
     
     go2rtcProcess = spawn(binaryPath, ['-config', configPath], {
       stdio: ['ignore', 'pipe', 'pipe']

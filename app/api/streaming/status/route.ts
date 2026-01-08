@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getSessionFromCookie } from '@/lib/auth/session'
 import { isGo2rtcRunning, getGo2rtcApiUrl } from '@/lib/streaming/go2rtc'
 import prisma from '@/lib/db/client'
+import { decryptUnifiApiKeys } from '@/lib/unifi/encryption'
 
 export async function GET() {
   try {
@@ -18,7 +19,8 @@ export async function GET() {
     let hasCredentials = false
 
     if (systemConfig?.value) {
-      const unifiConfig = JSON.parse(systemConfig.value)
+      const rawConfig = JSON.parse(systemConfig.value)
+      const unifiConfig = decryptUnifiApiKeys(rawConfig)
       liveStreamEnabled = unifiConfig.liveStreamEnabled === true
       hasCredentials = Boolean(unifiConfig.rtspUsername && unifiConfig.rtspPassword)
     }

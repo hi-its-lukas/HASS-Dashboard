@@ -2,10 +2,13 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Video, RefreshCw, X, Maximize2, ImageOff, Settings } from 'lucide-react'
+import { Video, RefreshCw, X, Maximize2, ImageOff, Settings, Play, Camera } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { useHAStore } from '@/lib/ha'
 import { useConfigStore } from '@/lib/config/store'
+import dynamic from 'next/dynamic'
+
+const WebRTCPlayer = dynamic(() => import('@/components/streaming/WebRTCPlayer'), { ssr: false })
 
 interface UnifiCameraInfo {
   id: string
@@ -24,6 +27,8 @@ export default function CamerasPage() {
   const [unifiCameras, setUnifiCameras] = useState<UnifiCameraInfo[]>([])
   const [loading, setLoading] = useState(true)
   const [useStream, setUseStream] = useState(true)
+  const [liveStreamEnabled, setLiveStreamEnabled] = useState(false)
+  const [useLiveStream, setUseLiveStream] = useState(false)
   
   const hasUnifiCameras = unifiCameraIds && unifiCameraIds.length > 0
   
@@ -39,17 +44,25 @@ export default function CamerasPage() {
       }
       
       try {
-        const response = await fetch('/api/unifi/discover-saved', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' }
-        })
+        const [camerasResponse, streamingResponse] = await Promise.all([
+          fetch('/api/unifi/discover-saved', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+          }),
+          fetch('/api/streaming/status')
+        ])
         
-        if (response.ok) {
-          const data = await response.json()
+        if (camerasResponse.ok) {
+          const data = await camerasResponse.json()
           const selectedCameras = data.cameras?.filter((cam: UnifiCameraInfo) => 
             unifiCameraIds?.includes(cam.id)
           ) || []
           setUnifiCameras(selectedCameras)
+        }
+        
+        if (streamingResponse.ok) {
+          const streamingData = await streamingResponse.json()
+          setLiveStreamEnabled(streamingData.liveStreamEnabled && streamingData.hasCredentials)
         }
       } catch (error) {
         console.error('Failed to load UniFi cameras:', error)
@@ -87,6 +100,19 @@ export default function CamerasPage() {
         </div>
         
         <div className="flex gap-2">
+          {hasUnifiCameras && liveStreamEnabled && (
+            <button
+              onClick={() => setUseLiveStream(!useLiveStream)}
+              className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-colors ${
+                useLiveStream 
+                  ? 'bg-green-500/20 text-green-400' 
+                  : 'bg-white/5 text-white hover:bg-white/10'
+              }`}
+            >
+              <Play className="w-4 h-4" />
+              {useLiveStream ? 'Live' : 'Snapshots'}
+            </button>
+          )}
           {!hasUnifiCameras && cameraEntities.length > 0 && (
             <button
               onClick={() => setUseStream(!useStream)}
@@ -149,12 +175,20 @@ export default function CamerasPage() {
                     className="relative aspect-video bg-bg-secondary cursor-pointer group"
                     onClick={() => setSelectedUnifiCamera(camera)}
                   >
-                    <UnifiCameraFeed
-                      cameraId={camera.id}
-                      cameraName={camera.name}
-                      refreshKey={refreshKey}
-                    />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                    {useLiveStream ? (
+                      <WebRTCPlayer
+                        cameraId={camera.id}
+                        className="w-full h-full"
+                        autoPlay={true}
+                      />
+                    ) : (
+                      <UnifiCameraFeed
+                        cameraId={camera.id}
+                        cameraName={camera.name}
+                        refreshKey={refreshKey}
+                      />
+                    )}
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center pointer-events-none">
                       <Maximize2 className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
                   </div>
@@ -220,6 +254,7 @@ export default function CamerasPage() {
           {selectedUnifiCamera && (
             <UnifiCameraModal
               camera={selectedUnifiCamera}
+              useLiveStream={useLiveStream && liveStreamEnabled}
               onClose={() => setSelectedUnifiCamera(null)}
             />
           )}
@@ -405,9 +440,11 @@ function UnifiCameraFeed({
 
 function UnifiCameraModal({ 
   camera, 
+  useLiveStream,
   onClose 
 }: { 
   camera: { id: string; name: string; type: string }
+  useLiveStream?: boolean
   onClose: () => void 
 }) {
   const [refreshKey, setRefreshKey] = useState(() => Date.now())
@@ -422,11 +459,13 @@ function UnifiCameraModal({
   }, [onClose])
   
   useEffect(() => {
-    const interval = setInterval(() => {
-      setRefreshKey(Date.now())
-    }, 5000)
-    return () => clearInterval(interval)
-  }, [])
+    if (!useLiveStream) {
+      const interval = setInterval(() => {
+        setRefreshKey(Date.now())
+      }, 5000)
+      return () => clearInterval(interval)
+    }
+  }, [useLiveStream])
 
   return (
     <div 
@@ -441,7 +480,13 @@ function UnifiCameraModal({
       >
         <div className="bg-bg-card rounded-2xl overflow-hidden shadow-2xl">
           <div className="relative aspect-video bg-black">
-            {error ? (
+            {useLiveStream ? (
+              <WebRTCPlayer
+                cameraId={camera.id}
+                className="w-full h-full"
+                autoPlay={true}
+              />
+            ) : error ? (
               <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500">
                 <ImageOff className="w-12 h-12 mb-2" />
                 <span className="text-sm">Snapshot nicht verfügbar</span>
@@ -455,9 +500,11 @@ function UnifiCameraModal({
                 onError={() => setError(true)}
               />
             )}
-            <div className="absolute top-4 left-4 px-3 py-1.5 bg-accent-cyan/90 rounded-lg text-sm text-white font-medium flex items-center gap-2">
+            <div className={`absolute top-4 left-4 px-3 py-1.5 rounded-lg text-sm text-white font-medium flex items-center gap-2 ${
+              useLiveStream ? 'bg-green-500/90' : 'bg-accent-cyan/90'
+            }`}>
               <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
-              UniFi Protect
+              {useLiveStream ? 'LIVE' : 'UniFi Protect'}
             </div>
             <button
               onClick={onClose}
