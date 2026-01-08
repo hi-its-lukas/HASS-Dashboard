@@ -89,6 +89,28 @@ async function main() {
     })
   }
   
+  const allPermissions = await prisma.permission.findMany()
+  if (allPermissions.length === 0) {
+    console.log('Keine Berechtigungen gefunden. Bitte zuerst "npx prisma db seed" ausführen.')
+    process.exit(1)
+  }
+  
+  const existingRolePerms = await prisma.rolePermission.count({
+    where: { roleId: ownerRole.id }
+  })
+  
+  if (existingRolePerms === 0) {
+    console.log('Füge Berechtigungen zur Owner-Rolle hinzu...')
+    for (const perm of allPermissions) {
+      await prisma.rolePermission.upsert({
+        where: { roleId_permissionId: { roleId: ownerRole.id, permissionId: perm.id } },
+        update: {},
+        create: { roleId: ownerRole.id, permissionId: perm.id }
+      })
+    }
+    console.log(`${allPermissions.length} Berechtigungen zugewiesen.`)
+  }
+  
   const username = await question('Benutzername: ')
   
   if (!username || username.length < 3) {
