@@ -22,7 +22,8 @@ import {
   Sun,
   Theater,
   Sparkles,
-  Cloud
+  Cloud,
+  DoorOpen
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useConfigStore } from '@/lib/config/store'
@@ -55,6 +56,7 @@ const navItems = [
   { href: '/covers', icon: Blinds, label: 'Rollos' },
   { href: '/awnings', icon: Sun, label: 'Markisen' },
   { href: '/curtains', icon: Theater, label: 'Gardinen' },
+  { href: '/locks', icon: DoorOpen, label: 'Türschlösser' },
   { href: '/climate', icon: Thermometer, label: 'Klima' },
   { href: '/weather', icon: Cloud, label: 'Wetter' },
   { href: '/calendar', icon: Calendar, label: 'Kalender' },

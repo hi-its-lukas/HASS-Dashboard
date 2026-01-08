@@ -17,7 +17,8 @@ import {
   Phone,
   Thermometer,
   Calendar,
-  Play
+  Play,
+  DoorOpen
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useConfigStore } from '@/lib/config/store'
@@ -29,6 +30,7 @@ const navItems = [
   { href: '/', icon: Home, label: 'Home' },
   { href: '/lights', icon: Lightbulb, label: 'Lichtquellen' },
   { href: '/covers', icon: Blinds, label: 'Rollos' },
+  { href: '/locks', icon: DoorOpen, label: 'Türschlösser' },
   { href: '/climate', icon: Thermometer, label: 'Klima' },
   { href: '/calendar', icon: Calendar, label: 'Kalender' },
   { href: '/cameras', icon: Video, label: 'Kameras' },
