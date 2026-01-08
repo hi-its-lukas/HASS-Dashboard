@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
     if (layoutConfig) {
       const { backgroundUrl, ...globalSettings } = layoutConfig as GlobalLayoutConfig & { backgroundUrl?: string }
       
-      const canEditSettings = await hasPermission(session.userId, 'settings:general')
+      const canEditSettings = await hasPermission(session.userId, 'settings:edit')
       
       if (canEditSettings && Object.keys(globalSettings).length > 0) {
         if (globalSettings.unifi?.controllerUrl) {
