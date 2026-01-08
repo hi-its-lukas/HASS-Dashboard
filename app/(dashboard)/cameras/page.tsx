@@ -1,19 +1,26 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Video, RefreshCw, X, Maximize2, ImageOff } from 'lucide-react'
+import { Video, RefreshCw, X, Maximize2, ImageOff, Settings } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { useHAStore } from '@/lib/ha'
+import { useConfigStore } from '@/lib/config/store'
 
 export default function CamerasPage() {
   const states = useHAStore((s) => s.states)
   const getEntityArea = useHAStore((s) => s.getEntityArea)
+  const configuredCameras = useConfigStore((s) => s.cameras)
+  const unifiCameras = useConfigStore((s) => s.unifi?.cameras)
   const [refreshKey, setRefreshKey] = useState(0)
   const [selectedCamera, setSelectedCamera] = useState<string | null>(null)
   const [useStream, setUseStream] = useState(true)
   
-  const cameraEntities = Object.keys(states).filter((id) => id.startsWith('camera.'))
+  const hasUnifiCameras = unifiCameras && unifiCameras.length > 0
+  
+  const cameraEntities = hasUnifiCameras 
+    ? [] 
+    : (configuredCameras || []).filter((id) => id.startsWith('camera.') && states[id])
   
   const handleRefresh = () => {
     setRefreshKey((k) => k + 1)
@@ -59,17 +66,39 @@ export default function CamerasPage() {
         </div>
       </motion.header>
 
-      {cameraEntities.length === 0 ? (
+      {hasUnifiCameras ? (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center py-12"
+        >
+          <Video className="w-12 h-12 text-accent-cyan mx-auto mb-4" />
+          <p className="text-text-secondary mb-2">UniFi Protect ist aktiv</p>
+          <p className="text-sm text-text-muted">
+            Kameras werden über UniFi Protect verwaltet.
+          </p>
+          <p className="text-sm text-text-muted mt-1">
+            Gehe zu AI Surveillance für Live-Feeds und Events.
+          </p>
+        </motion.div>
+      ) : cameraEntities.length === 0 ? (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center py-12"
         >
           <Video className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-          <p className="text-text-secondary mb-2">Keine Kameras gefunden</p>
-          <p className="text-sm text-text-muted">
-            Kameras werden automatisch aus Home Assistant erkannt
+          <p className="text-text-secondary mb-2">Keine Kameras konfiguriert</p>
+          <p className="text-sm text-text-muted mb-4">
+            Füge HA-Kameras in den Einstellungen hinzu
           </p>
+          <a 
+            href="/settings" 
+            className="inline-flex items-center gap-2 px-4 py-2 bg-accent-cyan/20 hover:bg-accent-cyan/30 text-accent-cyan rounded-xl transition-colors"
+          >
+            <Settings className="w-4 h-4" />
+            Zu den Einstellungen
+          </a>
         </motion.div>
       ) : (
         <>
