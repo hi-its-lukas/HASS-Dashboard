@@ -6,6 +6,7 @@ const prisma = new PrismaClient()
 const PERMISSIONS = [
   { key: 'settings:view', category: 'settings', displayName: 'Einstellungen ansehen', description: 'Kann Einstellungen-Seite öffnen' },
   { key: 'settings:edit', category: 'settings', displayName: 'Einstellungen bearbeiten', description: 'Kann Einstellungen ändern' },
+  { key: 'settings:ha', category: 'admin', displayName: 'Home Assistant konfigurieren', description: 'Kann HA-URL und Token ändern' },
   { key: 'users:manage', category: 'admin', displayName: 'Benutzer verwalten', description: 'Kann normale Benutzer anlegen, bearbeiten, löschen' },
   { key: 'users:view', category: 'admin', displayName: 'Benutzer ansehen', description: 'Kann Benutzerliste sehen' },
   { key: 'admins:manage', category: 'admin', displayName: 'Admins verwalten', description: 'Kann Admins und Owner anlegen/bearbeiten (nur Owner)' },
