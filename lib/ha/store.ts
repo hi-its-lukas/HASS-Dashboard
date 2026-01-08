@@ -112,6 +112,7 @@ export const useHAStore = create<HAStore>((set, get) => ({
       const response = await fetch('/api/ha/services', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           domain,
           service,
@@ -276,7 +277,7 @@ async function startPolling() {
 async function pollStates(includeRegistries = false) {
   try {
     const url = includeRegistries ? '/api/ha/poll?registries=true' : '/api/ha/poll'
-    const response = await fetch(url)
+    const response = await fetch(url, { credentials: 'include' })
     
     if (!response.ok) {
       throw new Error(`Poll failed: ${response.status}`)
