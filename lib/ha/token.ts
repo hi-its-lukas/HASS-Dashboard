@@ -97,17 +97,39 @@ export async function testHAConnection(url: string, token: string): Promise<{ su
     
     if (!response.ok) {
       if (response.status === 401) {
-        return { success: false, message: 'Ungültiger Token' }
+        return { success: false, message: 'Token ungültig oder abgelaufen - bitte neuen Token erstellen' }
       }
-      return { success: false, message: `HTTP ${response.status}` }
+      if (response.status === 403) {
+        return { success: false, message: 'Zugriff verweigert - Token hat nicht die erforderlichen Berechtigungen' }
+      }
+      if (response.status === 404) {
+        return { success: false, message: 'Home Assistant API nicht gefunden - URL prüfen' }
+      }
+      return { success: false, message: `Home Assistant antwortet mit HTTP ${response.status}` }
     }
     
     const data = await response.json()
     return { success: true, message: data.message, version: data.version }
   } catch (error) {
     if (error instanceof Error && error.name === 'AbortError') {
-      return { success: false, message: 'Zeitüberschreitung' }
+      return { success: false, message: 'Zeitüberschreitung - Home Assistant antwortet nicht (10s)' }
     }
-    return { success: false, message: error instanceof Error ? error.message : 'Verbindungsfehler' }
+    
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    
+    if (errorMessage.includes('ECONNREFUSED')) {
+      return { success: false, message: 'Verbindung abgelehnt - ist Home Assistant erreichbar? URL und Netzwerk prüfen' }
+    }
+    if (errorMessage.includes('ENOTFOUND') || errorMessage.includes('EAI_AGAIN')) {
+      return { success: false, message: 'Hostname nicht gefunden - DNS-Auflösung fehlgeschlagen. Bei Docker auf Mac: IP-Adresse statt .local verwenden' }
+    }
+    if (errorMessage.includes('ETIMEDOUT') || errorMessage.includes('ENETUNREACH')) {
+      return { success: false, message: 'Netzwerk nicht erreichbar - Firewall oder Routing prüfen' }
+    }
+    if (errorMessage.includes('CERT') || errorMessage.includes('SSL') || errorMessage.includes('certificate')) {
+      return { success: false, message: 'SSL/TLS-Fehler - bei selbstsignierten Zertifikaten http:// statt https:// verwenden' }
+    }
+    
+    return { success: false, message: `Verbindungsfehler: ${errorMessage}` }
   }
 }

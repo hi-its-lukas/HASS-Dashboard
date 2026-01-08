@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     
     const canEditHA = await hasPermission(session.userId, 'settings:ha')
     if (!canEditHA) {
-      return NextResponse.json({ error: 'Keine Berechtigung' }, { status: 403 })
+      return NextResponse.json({ error: 'Nur Administratoren können die Home Assistant-Verbindung konfigurieren' }, { status: 403 })
     }
     
     const body = await request.json()
