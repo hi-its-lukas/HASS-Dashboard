@@ -159,11 +159,10 @@ async function tryWebSocketConnection() {
   
   try {
     const protocol = typeof window !== 'undefined' && window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-    const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost'
+    const host = typeof window !== 'undefined' ? window.location.host : 'localhost'
     
-    // Use NEXT_PUBLIC_WS_HOST if set (e.g. ws.example.com), otherwise prepend 'ws.' to current hostname
-    const wsHost = process.env.NEXT_PUBLIC_WS_HOST || `ws.${hostname}`
-    const wsUrl = `${protocol}//${wsHost}/ws/ha`
+    // WebSocket proxy runs on same host/port as the app
+    const wsUrl = `${protocol}//${host}/ws/ha`
     
     wsClient = new HAWebSocketClient(wsUrl, async () => '')
     
