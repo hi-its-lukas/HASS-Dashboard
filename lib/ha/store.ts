@@ -109,15 +109,15 @@ export const useHAStore = create<HAStore>((set, get) => ({
 
   callService: async (domain: string, service: string, entityId?: string, data?: Record<string, unknown>) => {
     try {
-      const response = await fetch('/api/ha/services', {
+      const response = await fetch('/api/ha/call-service', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
           domain,
           service,
-          target: entityId ? { entity_id: entityId } : undefined,
-          service_data: data,
+          entityId,
+          data,
         }),
       })
 
