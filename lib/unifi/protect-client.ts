@@ -89,25 +89,35 @@ export class ProtectClient {
       const cameras = await this.getCameras()
       return { success: true, cameras: cameras.length }
     } catch (error) {
+      // Extract the real error from error.cause for Node fetch network failures
+      const cause = (error as { cause?: { code?: string; message?: string } })?.cause
+      const errorCode = cause?.code || ''
+      const causeMessage = cause?.message || ''
       const rawMessage = error instanceof Error ? error.message : String(error)
-      console.error('[Protect] Connection test failed:', rawMessage)
+      const fullError = `${rawMessage} ${errorCode} ${causeMessage}`.toLowerCase()
       
-      let userMessage = rawMessage
+      console.error('[Protect] Connection test failed:', { rawMessage, errorCode, causeMessage })
       
-      if (rawMessage.includes('ECONNREFUSED')) {
+      let userMessage: string
+      
+      if (errorCode === 'ECONNREFUSED' || fullError.includes('econnrefused')) {
         userMessage = 'Verbindung abgelehnt - ist der UniFi Controller erreichbar? URL und Netzwerk prüfen'
-      } else if (rawMessage.includes('ENOTFOUND') || rawMessage.includes('EAI_AGAIN')) {
+      } else if (errorCode === 'ENOTFOUND' || errorCode === 'EAI_AGAIN' || fullError.includes('enotfound')) {
         userMessage = 'Hostname nicht gefunden - DNS-Auflösung fehlgeschlagen. Bei Docker auf Mac: IP-Adresse statt .local verwenden'
-      } else if (rawMessage.includes('ETIMEDOUT') || rawMessage.includes('ENETUNREACH')) {
+      } else if (errorCode === 'ETIMEDOUT' || errorCode === 'ENETUNREACH' || fullError.includes('etimedout')) {
         userMessage = 'Netzwerk nicht erreichbar - Firewall oder Routing prüfen'
-      } else if (rawMessage.includes('CERT') || rawMessage.includes('SSL') || rawMessage.includes('certificate') || rawMessage.includes('self-signed')) {
+      } else if (fullError.includes('cert') || fullError.includes('ssl') || fullError.includes('certificate')) {
         userMessage = 'SSL/Zertifikatsfehler - Self-signed Zertifikate werden akzeptiert, anderes Problem?'
-      } else if (rawMessage.includes('401') || rawMessage.includes('Unauthorized')) {
+      } else if (fullError.includes('401') || fullError.includes('unauthorized')) {
         userMessage = 'API Key ungültig oder abgelaufen - bitte neuen Key erstellen'
-      } else if (rawMessage.includes('403') || rawMessage.includes('Forbidden')) {
+      } else if (fullError.includes('403') || fullError.includes('forbidden')) {
         userMessage = 'Zugriff verweigert - API Key hat nicht die erforderlichen Berechtigungen'
-      } else if (rawMessage.includes('timeout') || rawMessage.includes('TimeoutError')) {
+      } else if (fullError.includes('timeout') || fullError.includes('timeouterror') || errorCode === 'UND_ERR_CONNECT_TIMEOUT') {
         userMessage = 'Zeitüberschreitung - UniFi Controller antwortet nicht (30s)'
+      } else if (fullError.includes('fetch failed')) {
+        userMessage = `Netzwerkfehler - Controller nicht erreichbar (${errorCode || 'unbekannt'})`
+      } else {
+        userMessage = rawMessage
       }
       
       return { success: false, cameras: 0, error: userMessage }
