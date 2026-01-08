@@ -96,22 +96,11 @@ init_database() {
   log_info "Database ready"
 }
 
-cleanup() {
-  log_info "Shutting down..."
-  if [ -n "$WS_PROXY_PID" ]; then
-    kill "$WS_PROXY_PID" 2>/dev/null || true
-  fi
-  exit 0
-}
-
 run_app() {
   log_info "Starting HASS Dashboard on port ${PORT:-80}"
   
   # Ensure Next.js binds to all interfaces (required for Docker)
   export HOSTNAME="0.0.0.0"
-  
-  # Handle shutdown gracefully (sh-compatible syntax)
-  trap cleanup TERM INT
   
   # Start WebSocket proxy in background (optional - continues if it fails)
   log_info "Starting WebSocket proxy on port ${WS_PROXY_PORT:-6000}"
