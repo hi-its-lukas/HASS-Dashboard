@@ -195,6 +195,7 @@ async function tryWebSocketConnection() {
       devices,
       entityRegistry,
       powerTrend: generatePowerTrendData(),
+      error: null,
     })
     
     await wsClient.subscribeToStateChanges()
@@ -292,6 +293,7 @@ async function pollStates(includeRegistries = false) {
       const update: Partial<HAStore> = {
         connected: true,
         states: statesMap,
+        error: null,
       }
       
       if (data.areas) {
