@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Video, RefreshCw, X, Maximize2, ImageOff, Settings } from 'lucide-react'
 import { Card } from '@/components/ui/card'
