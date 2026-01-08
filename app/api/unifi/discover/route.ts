@@ -50,12 +50,16 @@ export async function POST(request: NextRequest) {
         const accessClient = new AccessClient(controllerUrl, accessApiKey)
         const doors = await accessClient.getDoors()
         
-        accessDevices.push(...doors.map(door => ({
-          id: door.unique_id,
-          name: door.name,
-          type: door.type || 'door',
-          doorId: door.unique_id
-        })))
+        accessDevices.push(...doors.map(door => {
+          const rawDoor = door as unknown as Record<string, unknown>
+          const id = door.unique_id || rawDoor.id || rawDoor._id || ''
+          return {
+            id: String(id),
+            name: door.name,
+            type: door.type || 'door',
+            doorId: String(id)
+          }
+        }))
       } catch (error) {
         console.error('[API] Access discovery error:', error)
       }
