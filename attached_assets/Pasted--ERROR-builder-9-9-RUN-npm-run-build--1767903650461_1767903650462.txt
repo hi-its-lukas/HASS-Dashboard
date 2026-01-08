@@ -1,0 +1,56 @@
+=> ERROR [builder 9/9] RUN npm run build                                                                                               13.1s 
+------                                                                                                                                        
+ > [builder 9/9] RUN npm run build:                                                                                                           
+0.173                                                                                                                                         
+0.173 > hass-dashboard@1.0.0 build                                                                                                            
+0.173 > next build                                                                                                                            
+0.173                                                                                                                                         
+0.505   ▲ Next.js 14.2.3                                                                                                                      
+0.505   - Environments: .env                                                                                                                  
+0.505                                                                                                                                         
+0.513    Creating an optimized production build ...                                                                                           
+0.676 > [PWA] Compile server
+0.677 > [PWA] Compile server
+0.677 > [PWA] Compile client (static)
+0.677 > [PWA] Custom worker found: /app/worker/index.js
+0.677 > [PWA] Build custom worker: /app/public/worker-21s8veYXe5InvbjP2Lfj9.js
+0.743 > [PWA] Auto register service worker with: /app/node_modules/next-pwa/register.js
+0.743 > [PWA] Service worker: /app/public/sw.js
+0.743 > [PWA]   url: /sw.js
+0.743 > [PWA]   scope: /
+10.02  ✓ Compiled successfully
+10.02    Linting and checking validity of types ...
+12.96 Failed to compile.
+12.96 
+12.96 ./app/(dashboard)/locks/page.tsx:12:51
+12.96 Type error: Property 'dashboard' does not exist on type 'ConfigStore'.
+12.96 
+12.96   10 | export default function LocksPage() {
+12.96   11 |   const unifiAccessDevices = useConfigStore((s) => s.unifi?.accessDevices) || []
+12.96 > 12 |   const configuredLocks = useConfigStore((s) => s.dashboard?.entities?.locks) || []
+12.96      |                                                   ^
+12.96   13 |   const states = useHAStore((s) => s.states)
+12.96   14 |   
+12.96   15 |   const [unlocking, setUnlocking] = useState<string | null>(null)
+------
+Dockerfile:33
+
+--------------------
+
+  31 |     RUN npx esbuild server/ws-proxy.ts --bundle --platform=node --target=node20 --outfile=server/ws-proxy.js --external:@prisma/client --external:ws --external:cookie --external:crypto --external:fs --external:path
+
+  32 |     
+
+  33 | >>> RUN npm run build
+
+  34 |     
+
+  35 |     # Stage 3: Runner
+
+--------------------
+
+failed to solve: process "/bin/sh -c npm run build" did not complete successfully: exit code: 1
+
+
+
+View build details: docker-desktop://dashboard/build/default/default/cthow2mqhsi8t0n11a7kgx3r9
