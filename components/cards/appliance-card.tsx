@@ -28,12 +28,50 @@ export function ApplianceCard({ name, entityId, icon }: ApplianceCardProps) {
   const state = useHAStore((s) => s.states[entityId])
   const callService = useHAStore((s) => s.callService)
   
+  const domain = entityId.split('.')[0]
+  const isSensor = domain === 'sensor'
   const isOn = state?.state === 'on'
   const displayName = (state?.attributes?.friendly_name as string) || name
-  const Icon = iconMap[icon] || Flame
+  const Icon = iconMap[icon] || Zap
+  
+  const unit = state?.attributes?.unit_of_measurement as string | undefined
+  const stateValue = state?.state
+  const numericValue = stateValue ? parseFloat(stateValue) : null
+  const hasValue = numericValue !== null && !isNaN(numericValue) && numericValue > 0
 
   const handleToggle = async (checked: boolean) => {
     await callService('switch', checked ? 'turn_on' : 'turn_off', entityId)
+  }
+
+  if (isSensor) {
+    return (
+      <motion.div
+        whileTap={{ scale: 0.98 }}
+        className={cn(
+          'card flex items-center justify-between p-4',
+          hasValue && 'bg-bg-cardHover'
+        )}
+      >
+        <div className="flex items-center gap-3">
+          <div className={cn(
+            'w-10 h-10 rounded-xl flex items-center justify-center',
+            hasValue ? 'bg-accent-orange/20' : 'bg-bg-secondary'
+          )}>
+            <Icon className={cn('w-5 h-5', hasValue ? 'text-accent-orange' : 'text-text-muted')} />
+          </div>
+          <span className="font-medium text-white">{displayName}</span>
+        </div>
+        <div className="text-right">
+          <span className={cn(
+            'text-lg font-semibold',
+            hasValue ? 'text-accent-orange' : 'text-text-muted'
+          )}>
+            {numericValue !== null && !isNaN(numericValue) ? Math.round(numericValue) : stateValue || '—'}
+          </span>
+          {unit && <span className="text-sm text-text-muted ml-1">{unit}</span>}
+        </div>
+      </motion.div>
+    )
   }
 
   return (
