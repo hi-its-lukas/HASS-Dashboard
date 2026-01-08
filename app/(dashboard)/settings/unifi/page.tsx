@@ -45,6 +45,7 @@ interface UnifiAccessDevice {
   name: string
   type: string
   doorId?: string
+  cameraId?: string
 }
 
 interface DiscoveredUnifi {
@@ -296,11 +297,8 @@ export default function UnifiSettingsPage() {
   }
   
   const toggleAccessDevice = (device: UnifiAccessDevice) => {
-    console.log('[UniFi] toggleAccessDevice called with:', device.id, device.name)
-    console.log('[UniFi] current accessDevices:', config.accessDevices.map(d => d.id))
     setConfig(prev => {
       const isSelected = prev.accessDevices.some(d => d.id === device.id)
-      console.log('[UniFi] isSelected:', isSelected)
       return {
         ...prev,
         accessDevices: isSelected
@@ -308,6 +306,15 @@ export default function UnifiSettingsPage() {
           : [...prev.accessDevices, device]
       }
     })
+  }
+  
+  const updateAccessDeviceCamera = (deviceId: string, cameraId: string) => {
+    setConfig(prev => ({
+      ...prev,
+      accessDevices: prev.accessDevices.map(d => 
+        d.id === deviceId ? { ...d, cameraId: cameraId || undefined } : d
+      )
+    }))
   }
   
   if (loading) {
@@ -554,25 +561,55 @@ export default function UnifiSettingsPage() {
             
             {expandedSections.access && (
               <div className="p-4 pt-0 space-y-2">
-                {discovered.accessDevices.map(device => (
-                  <div
-                    key={device.id}
-                    onClick={() => toggleAccessDevice(device)}
-                    className="flex items-center gap-3 p-3 bg-white/5 rounded-xl cursor-pointer hover:bg-white/10 transition-colors"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={config.accessDevices.some(d => d.id === device.id)}
-                      onChange={() => {}}
-                      onClick={(e) => e.stopPropagation()}
-                      className="w-5 h-5 rounded bg-white/10 border-white/20 text-purple-500 focus:ring-purple-500/50 pointer-events-none"
-                    />
-                    <div className="flex-1">
-                      <div className="text-white">{device.name}</div>
-                      <div className="text-xs text-gray-500">{device.type}</div>
+                {discovered.accessDevices.map(device => {
+                  const isSelected = config.accessDevices.some(d => d.id === device.id)
+                  const selectedDevice = config.accessDevices.find(d => d.id === device.id)
+                  return (
+                    <div
+                      key={device.id}
+                      className="p-3 bg-white/5 rounded-xl"
+                    >
+                      <div
+                        onClick={() => toggleAccessDevice(device)}
+                        className="flex items-center gap-3 cursor-pointer hover:bg-white/5 -m-3 p-3 rounded-xl transition-colors"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => {}}
+                          onClick={(e) => e.stopPropagation()}
+                          className="w-5 h-5 rounded bg-white/10 border-white/20 text-purple-500 focus:ring-purple-500/50 pointer-events-none"
+                        />
+                        <div className="flex-1">
+                          <div className="text-white">{device.name}</div>
+                          <div className="text-xs text-gray-500">{device.type}</div>
+                        </div>
+                      </div>
+                      
+                      {isSelected && discovered.cameras.length > 0 && (
+                        <div className="mt-3 pt-3 border-t border-white/10">
+                          <label className="block text-xs text-gray-400 mb-2">
+                            <Video className="w-3 h-3 inline mr-1" />
+                            Verknüpfte Kamera
+                          </label>
+                          <select
+                            value={selectedDevice?.cameraId || ''}
+                            onChange={(e) => updateAccessDeviceCamera(device.id, e.target.value)}
+                            onClick={(e) => e.stopPropagation()}
+                            className="w-full px-3 py-2 bg-[#1a2235] border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                          >
+                            <option value="">Keine Kamera</option>
+                            {discovered.cameras.map(camera => (
+                              <option key={camera.id} value={camera.id}>
+                                {camera.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             )}
           </div>
