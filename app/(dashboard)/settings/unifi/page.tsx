@@ -65,6 +65,7 @@ export default function UnifiSettingsPage() {
   const [showAccessKey, setShowAccessKey] = useState(false)
   const [discovered, setDiscovered] = useState<DiscoveredUnifi | null>(null)
   const [discoveringEntities, setDiscoveringEntities] = useState(false)
+  const [saveResult, setSaveResult] = useState<{ success: boolean; message: string } | null>(null)
   const [config, setConfig] = useState<UnifiConfig>({
     controllerUrl: '',
     protectApiKey: '',
@@ -239,16 +240,28 @@ export default function UnifiSettingsPage() {
   
   const saveSettings = async () => {
     setSaving(true)
+    setSaveResult(null)
     try {
-      await fetch('/api/settings', {
+      const res = await fetch('/api/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           layoutConfig: { unifi: config }
         })
       })
+      
+      if (res.ok) {
+        setSaveResult({ success: true, message: 'Einstellungen gespeichert!' })
+      } else {
+        const data = await res.json().catch(() => ({}))
+        setSaveResult({ 
+          success: false, 
+          message: data.error || `Fehler beim Speichern (${res.status})`
+        })
+      }
     } catch (error) {
       console.error('Failed to save settings:', error)
+      setSaveResult({ success: false, message: 'Netzwerkfehler beim Speichern' })
     } finally {
       setSaving(false)
     }
@@ -582,6 +595,21 @@ export default function UnifiSettingsPage() {
             </div>
           )}
         </div>
+        
+        {saveResult && (
+          <div className={`mb-4 p-3 rounded-xl flex items-center gap-2 ${
+            saveResult.success 
+              ? 'bg-emerald-500/20 text-emerald-400' 
+              : 'bg-red-500/20 text-red-400'
+          }`}>
+            {saveResult.success ? (
+              <CheckCircle className="w-5 h-5 flex-shrink-0" />
+            ) : (
+              <XCircle className="w-5 h-5 flex-shrink-0" />
+            )}
+            <span>{saveResult.message}</span>
+          </div>
+        )}
         
         <div className="flex gap-3">
           <button
