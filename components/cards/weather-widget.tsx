@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useState, type ReactNode } from 'react'
-import { Sun, Cloud, CloudRain, CloudSnow, CloudLightning, Wind, Droplets, Thermometer } from 'lucide-react'
+import { Sun, Cloud, CloudRain, CloudSnow, CloudLightning, Wind, Droplets, Thermometer, ChevronRight } from 'lucide-react'
 import { useHAStore } from '@/lib/ha'
+import Link from 'next/link'
 
 interface WeatherForecast {
   datetime: string
@@ -97,7 +98,7 @@ export function WeatherWidget({ weatherEntityId, temperatureSensorId }: WeatherW
   
   return (
     <div className="glass-tile p-4">
-      <div className="flex items-start justify-between mb-4">
+      <Link href="/weather" className="flex items-start justify-between mb-4 group">
         <div className="flex items-center gap-3">
           {weatherIcons[currentCondition] || <Cloud className="w-8 h-8 text-gray-400" />}
           <div>
@@ -110,16 +111,19 @@ export function WeatherWidget({ weatherEntityId, temperatureSensorId }: WeatherW
           </div>
         </div>
         
-        {indoorTemp !== undefined && (
-          <div className="text-right">
-            <div className="flex items-center gap-1 text-accent-orange">
-              <Thermometer className="w-4 h-4" />
-              <span className="text-lg font-semibold">{Math.round(indoorTemp)}{tempUnit}</span>
+        <div className="flex items-center gap-3">
+          {indoorTemp !== undefined && (
+            <div className="text-right">
+              <div className="flex items-center gap-1 text-accent-orange">
+                <Thermometer className="w-4 h-4" />
+                <span className="text-lg font-semibold">{Math.round(indoorTemp)}{tempUnit}</span>
+              </div>
+              <p className="text-text-secondary text-xs">Innen</p>
             </div>
-            <p className="text-text-secondary text-xs">Innen</p>
-          </div>
-        )}
-      </div>
+          )}
+          <ChevronRight className="w-5 h-5 text-text-muted group-hover:text-white transition-colors" />
+        </div>
+      </Link>
       
       <div className="flex gap-4 mb-4 text-sm">
         {humidity !== undefined && (
