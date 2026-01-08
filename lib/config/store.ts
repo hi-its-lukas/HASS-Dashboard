@@ -66,6 +66,7 @@ interface UserLayoutConfig {
   climates?: string[]
   calendars?: string[]
   cameras?: string[]
+  locks?: string[]
   appliances?: string[] | ApplianceConfig[]
   customButtons?: CustomButtonConfig[]
   intercoms?: IntercomConfig[]
@@ -145,6 +146,7 @@ interface ConfigStore {
   climates: string[]
   calendars: string[]
   cameras: string[]
+  locks: string[]
   unifi: UnifiConfig | null
   weatherLocations: WeatherLocation[]
   
@@ -223,6 +225,7 @@ export const useConfigStore = create<ConfigStore>((set, get) => ({
   climates: [],
   calendars: [],
   cameras: [],
+  locks: [],
   unifi: null,
   weatherLocations: [],
 
@@ -252,6 +255,7 @@ export const useConfigStore = create<ConfigStore>((set, get) => ({
         climates: data.layoutConfig?.climates || [],
         calendars: data.layoutConfig?.calendars || [],
         cameras: data.layoutConfig?.cameras || [],
+        locks: data.layoutConfig?.locks || [],
         unifi: data.layoutConfig?.unifi || null,
         weatherLocations: data.layoutConfig?.weatherLocations || []
       })

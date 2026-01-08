@@ -9,7 +9,7 @@ import { useHAStore } from '@/lib/ha/store'
 
 export default function LocksPage() {
   const unifiAccessDevices = useConfigStore((s) => s.unifi?.accessDevices) || []
-  const configuredLocks = useConfigStore((s) => s.dashboard?.entities?.locks) || []
+  const configuredLocks = useConfigStore((s) => s.locks) || []
   const states = useHAStore((s) => s.states)
   
   const [unlocking, setUnlocking] = useState<string | null>(null)
