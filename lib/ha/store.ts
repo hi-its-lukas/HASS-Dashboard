@@ -256,7 +256,7 @@ async function startPolling() {
   
   if (pollInterval) return
   
-  await pollStates()
+  await pollStates(true)
   
   pollInterval = setInterval(async () => {
     const { connectionMode } = useHAStore.getState()
@@ -268,13 +268,14 @@ async function startPolling() {
       return
     }
     
-    await pollStates()
+    await pollStates(false)
   }, POLL_INTERVAL)
 }
 
-async function pollStates() {
+async function pollStates(includeRegistries = false) {
   try {
-    const response = await fetch('/api/ha/poll')
+    const url = includeRegistries ? '/api/ha/poll?registries=true' : '/api/ha/poll'
+    const response = await fetch(url)
     
     if (!response.ok) {
       throw new Error(`Poll failed: ${response.status}`)
@@ -286,9 +287,23 @@ async function pollStates() {
       const statesMap: Record<string, HAState> = {}
       data.states.forEach((s: HAState) => { statesMap[s.entity_id] = s })
       
-      useHAStore.setState((state) => ({
+      const update: Partial<HAStore> = {
         connected: true,
         states: statesMap,
+      }
+      
+      if (data.areas) {
+        update.areas = data.areas
+      }
+      if (data.devices) {
+        update.devices = data.devices
+      }
+      if (data.entityRegistry) {
+        update.entityRegistry = data.entityRegistry
+      }
+      
+      useHAStore.setState((state) => ({
+        ...update,
         powerTrend: state.powerTrend.length ? state.powerTrend : generatePowerTrendData(),
       }))
     }
