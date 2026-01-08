@@ -1,7 +1,9 @@
-import https from 'https'
+import { Agent } from 'undici'
 
-const agent = new https.Agent({
-  rejectUnauthorized: false
+const dispatcher = new Agent({
+  connect: {
+    rejectUnauthorized: false
+  }
 })
 
 const REQUEST_TIMEOUT_MS = 30000
@@ -67,8 +69,8 @@ export class ProtectClient {
         'Content-Type': 'application/json',
         ...options.headers
       },
-      // @ts-expect-error - agent is valid for Node.js fetch
-      agent
+      // @ts-expect-error - dispatcher is undici's way to configure TLS
+      dispatcher
     })
     
     if (!response.ok) {
