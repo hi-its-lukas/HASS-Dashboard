@@ -84,13 +84,14 @@ export class ProtectClient {
     return response.json()
   }
   
-  async testConnection(): Promise<{ success: boolean; cameras: number; version?: string }> {
+  async testConnection(): Promise<{ success: boolean; cameras: number; version?: string; error?: string }> {
     try {
       const cameras = await this.getCameras()
       return { success: true, cameras: cameras.length }
     } catch (error) {
-      console.error('[Protect] Connection test failed:', error)
-      return { success: false, cameras: 0 }
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      console.error('[Protect] Connection test failed:', errorMessage)
+      return { success: false, cameras: 0, error: errorMessage }
     }
   }
   

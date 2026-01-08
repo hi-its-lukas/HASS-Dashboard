@@ -24,8 +24,12 @@ export async function POST(request: NextRequest) {
       )
     }
     
+    console.log('[API] Testing Protect connection to:', controllerUrl)
+    
     const client = new ProtectClient(controllerUrl, apiKey)
     const result = await client.testConnection()
+    
+    console.log('[API] Protect test result:', result)
     
     if (result.success) {
       return NextResponse.json({
@@ -34,14 +38,15 @@ export async function POST(request: NextRequest) {
       })
     } else {
       return NextResponse.json(
-        { error: 'Connection failed' },
+        { error: result.error || 'Connection failed' },
         { status: 400 }
       )
     }
   } catch (error) {
-    console.error('[API] Protect test error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Connection failed'
+    console.error('[API] Protect test error:', errorMessage, error)
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Connection failed' },
+      { error: errorMessage },
       { status: 500 }
     )
   }
