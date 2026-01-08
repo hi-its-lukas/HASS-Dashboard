@@ -20,7 +20,7 @@ export default function EnergyPage() {
         animate={{ opacity: 1, y: 0 }}
         className="flex items-center gap-4 mb-6"
       >
-        <h1 className="text-2xl font-bold text-white">Energy</h1>
+        <h1 className="text-2xl font-bold text-white">Energie</h1>
       </motion.header>
 
       {/* Desktop: Three column layout */}
@@ -84,33 +84,61 @@ export default function EnergyPage() {
           </motion.section>
         </div>
 
-        {/* Right column - Appliances */}
-        <div>
+        {/* Right column - Consumers and Switches */}
+        <div className="space-y-6">
+          {/* Consumers (Sensors only) */}
           <motion.section
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
           >
             <h2 className="text-sm font-medium text-text-muted uppercase tracking-wider mb-3">
-              Appliances
+              Verbraucher
             </h2>
-            {config.appliances.length === 0 ? (
-              <div className="card p-4 text-center">
-                <p className="text-text-secondary text-sm">No appliances configured</p>
+            {config.appliances.filter(a => a.entityId.startsWith('sensor.')).length === 0 ? (
+              <div className="bg-white/5 rounded-xl p-4 text-center">
+                <p className="text-text-secondary text-sm">Keine Verbraucher konfiguriert</p>
               </div>
             ) : (
               <div className="space-y-2">
-                {config.appliances.map((appliance) => (
-                  <ApplianceCard
-                    key={appliance.id}
-                    name={appliance.name}
-                    entityId={appliance.entityId}
-                    icon={appliance.icon}
-                  />
-                ))}
+                {config.appliances
+                  .filter(a => a.entityId.startsWith('sensor.'))
+                  .map((appliance) => (
+                    <ApplianceCard
+                      key={appliance.id}
+                      name={appliance.name}
+                      entityId={appliance.entityId}
+                      icon={appliance.icon}
+                    />
+                  ))}
               </div>
             )}
           </motion.section>
+
+          {/* Switches */}
+          {config.appliances.filter(a => !a.entityId.startsWith('sensor.')).length > 0 && (
+            <motion.section
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.35 }}
+            >
+              <h2 className="text-sm font-medium text-text-muted uppercase tracking-wider mb-3">
+                Schalter
+              </h2>
+              <div className="space-y-2">
+                {config.appliances
+                  .filter(a => !a.entityId.startsWith('sensor.'))
+                  .map((appliance) => (
+                    <ApplianceCard
+                      key={appliance.id}
+                      name={appliance.name}
+                      entityId={appliance.entityId}
+                      icon={appliance.icon}
+                    />
+                  ))}
+              </div>
+            </motion.section>
+          )}
         </div>
       </div>
     </div>

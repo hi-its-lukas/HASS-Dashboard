@@ -48,8 +48,8 @@ export function ApplianceCard({ name, entityId, icon }: ApplianceCardProps) {
       <motion.div
         whileTap={{ scale: 0.98 }}
         className={cn(
-          'card flex items-center justify-between p-4',
-          hasValue && 'bg-bg-cardHover'
+          'bg-white/5 rounded-xl flex items-center justify-between p-4',
+          hasValue && 'bg-white/10'
         )}
       >
         <div className="flex items-center gap-3">
@@ -78,8 +78,8 @@ export function ApplianceCard({ name, entityId, icon }: ApplianceCardProps) {
     <motion.div
       whileTap={{ scale: 0.98 }}
       className={cn(
-        'card flex items-center justify-between p-4',
-        isOn && 'bg-bg-cardHover'
+        'bg-white/5 rounded-xl flex items-center justify-between p-4',
+        isOn && 'bg-white/10'
       )}
     >
       <div className="flex items-center gap-3">
