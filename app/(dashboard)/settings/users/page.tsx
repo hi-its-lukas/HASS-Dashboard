@@ -12,8 +12,32 @@ import {
   Shield,
   User,
   Check,
-  X
+  X,
+  Info
 } from 'lucide-react'
+
+const ROLE_DESCRIPTIONS: Record<string, { description: string; permissions: string[] }> = {
+  owner: {
+    description: 'Vollzugriff auf alle Funktionen',
+    permissions: ['Alle Einstellungen', 'Benutzerverwaltung', 'Alle Module', 'Alle Aktionen']
+  },
+  admin: {
+    description: 'Administration und voller Modulzugriff',
+    permissions: ['Alle Einstellungen', 'Benutzerverwaltung', 'Alle Module', 'Alle Aktionen']
+  },
+  power_user: {
+    description: 'Alle Module, keine Benutzerverwaltung',
+    permissions: ['Einstellungen bearbeiten', 'Alle Module', 'Alle Aktionen']
+  },
+  viewer: {
+    description: 'Nur ansehen, keine Aktionen',
+    permissions: ['Einstellungen ansehen', 'Alle Module (nur lesen)']
+  },
+  guest: {
+    description: 'Eingeschränkte Sicht',
+    permissions: ['Dashboard', 'Kalender', 'Mehr-Seite']
+  }
+}
 
 interface Role {
   id: string
@@ -350,6 +374,26 @@ export default function UsersPage() {
                       </option>
                     ))}
                   </select>
+                  {(() => {
+                    const selectedRole = roles.find(r => r.id === newRoleId)
+                    const roleInfo = selectedRole ? ROLE_DESCRIPTIONS[selectedRole.name] : null
+                    return roleInfo && (
+                      <div 
+                        className="mt-2 p-3 rounded-xl text-sm"
+                        style={{ background: 'rgba(10, 132, 255, 0.1)' }}
+                      >
+                        <div className="flex items-start gap-2">
+                          <Info className="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" />
+                          <div>
+                            <div className="text-white/80 mb-1">{roleInfo.description}</div>
+                            <div className="text-white/50 text-xs">
+                              {roleInfo.permissions.join(' • ')}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })()}
                 </div>
               </div>
               
@@ -483,6 +527,26 @@ function EditUserModal({
                 </option>
               ))}
             </select>
+            {(() => {
+              const selectedRole = roles.find(r => r.id === roleId)
+              const roleInfo = selectedRole ? ROLE_DESCRIPTIONS[selectedRole.name] : null
+              return roleInfo && (
+                <div 
+                  className="mt-2 p-3 rounded-xl text-sm"
+                  style={{ background: 'rgba(10, 132, 255, 0.1)' }}
+                >
+                  <div className="flex items-start gap-2">
+                    <Info className="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <div className="text-white/80 mb-1">{roleInfo.description}</div>
+                      <div className="text-white/50 text-xs">
+                        {roleInfo.permissions.join(' • ')}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )
+            })()}
           </div>
           
           <div>
