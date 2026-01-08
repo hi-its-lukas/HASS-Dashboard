@@ -15,13 +15,19 @@ services:
       - HOSTNAME=0.0.0.0
     volumes:
       - ./data:/data
+    networks:
+      - tunnel-net
 
   cloudflared:
     image: cloudflare/cloudflared:latest
     container_name: cloudflared-tunnel
     restart: unless-stopped
     command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     depends_on:
       - app
+    networks:
+      - tunnel-net
+
+networks:
+  tunnel-net:
+    driver: bridge
