@@ -123,7 +123,7 @@ function extractSessionToken(req: IncomingMessage): string | null {
   if (!cookieHeader) return null
   
   const cookies = parseCookie(cookieHeader)
-  return cookies['session'] || null
+  return cookies['ha_session'] || null
 }
 
 function validateOrigin(req: IncomingMessage): boolean {
