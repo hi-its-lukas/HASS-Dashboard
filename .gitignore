@@ -37,6 +37,9 @@ npm-debug.log*
 public/sw.js
 public/workbox-*.js
 
+# Docker overrides (local config)
+docker-compose.override.yml
+
 # Misc
 *.tsbuildinfo
 next-env.d.ts

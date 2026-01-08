@@ -1,0 +1,32 @@
+# Docker Compose Override - Local Configuration
+# =============================================
+#
+# This file is for local overrides that should NOT be committed to Git.
+# Copy this file to docker-compose.override.yml and customize for your setup.
+#
+# Docker automatically merges docker-compose.override.yml with docker-compose.yml
+#
+# IMPORTANT: docker-compose.override.yml is in .gitignore - your local
+# settings will not be uploaded to the repository.
+
+services:
+  app:
+    # ===========================================
+    # Docker Desktop on Mac - mDNS Fix
+    # ===========================================
+    #
+    # Docker Desktop on Mac cannot resolve .local hostnames (mDNS).
+    # Add your Home Assistant IP here to enable homeassistant.local resolution.
+    #
+    # 1. Find your Home Assistant IP (e.g., from your router or HA settings)
+    # 2. Uncomment and update the extra_hosts section below
+    #
+    extra_hosts:
+      - "homeassistant.local:192.168.1.100"  # <-- Replace with your HA IP
+
+    # ===========================================
+    # Optional: Additional environment variables
+    # ===========================================
+    #
+    # environment:
+    #   - SOME_VAR=value

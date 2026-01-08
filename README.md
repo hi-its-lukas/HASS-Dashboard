@@ -30,24 +30,27 @@ HA Dashboard ist eine **alternative Benutzeroberfläche für Home Assistant** mi
 
 ### 1. Docker Container starten
 
-```yaml
-# docker-compose.yml
-services:
-  ha-dashboard:
-    image: ghcr.io/YOUR-USERNAME/ha-dashboard:latest
-    ports:
-      - "5000:5000"
-      - "6000:6000"
-    volumes:
-      - ./data:/data
-    environment:
-      - ENCRYPTION_KEY=<openssl rand -hex 32>
-      - SQLITE_URL=file:/data/ha-dashboard.db
+```bash
+git clone https://github.com/YOUR-USERNAME/ha-dashboard.git
+cd ha-dashboard
+docker compose up -d --build
 ```
 
+#### Docker Desktop auf Mac (mDNS-Fix)
+
+Docker Desktop auf Mac kann `.local` Adressen nicht auflosen. Falls du `homeassistant.local` verwenden mochtest:
+
 ```bash
-docker compose up -d
+# docker-compose.override.yml erstellen
+cp docker-compose.override.yml.example docker-compose.override.yml
+
+# IP-Adresse deines Home Assistant eintragen
+nano docker-compose.override.yml
 ```
+
+Ersetze `192.168.1.100` mit der IP deines Home Assistant. Diese Datei ist lokal und wird nicht ins Git hochgeladen.
+
+**Alternative:** Verwende direkt die IP-Adresse in den HA-Einstellungen (z.B. `http://192.168.1.100:8123`).
 
 ### 2. Admin-Benutzer erstellen
 
