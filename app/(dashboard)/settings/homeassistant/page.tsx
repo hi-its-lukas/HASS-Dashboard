@@ -194,6 +194,7 @@ export default function HomeAssistantSettingsPage() {
     calendars: false,
     cameras: false,
     energy: false,
+    weather: false,
     appliances: false,
     buttons: false,
     intercoms: false,
@@ -1213,6 +1214,71 @@ export default function HomeAssistantSettingsPage() {
                         </optgroup>
                       </select>
                     </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <div className="border border-white/5 rounded-xl overflow-hidden">
+              <button
+                onClick={() => toggleSection('weather')}
+                className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <CloudSun className="w-5 h-5 text-sky-400" />
+                  <span className="text-white font-medium">Wetter & Temperatur</span>
+                </div>
+                {expandedSections.weather ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
+              </button>
+              {expandedSections.weather && (
+                <div className="p-4 space-y-4">
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-1">Wetter-Entity (für Vorhersage im Kalender)</label>
+                    <select
+                      value={config.weatherEntityId || ''}
+                      onChange={(e) => setConfig(prev => ({
+                        ...prev,
+                        weatherEntityId: e.target.value || undefined
+                      }))}
+                      className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                    >
+                      <option value="">-- Nicht konfiguriert --</option>
+                      {discovered?.weather?.map(entity => (
+                        <option key={entity.entity_id} value={entity.entity_id}>
+                          {getFriendlyName(entity)} ({entity.state})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-1">Außentemperatur-Sensor (für Dashboard)</label>
+                    <select
+                      value={config.temperatureSensorId || ''}
+                      onChange={(e) => setConfig(prev => ({
+                        ...prev,
+                        temperatureSensorId: e.target.value || undefined
+                      }))}
+                      className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                    >
+                      <option value="">-- Nicht konfiguriert --</option>
+                      {discovered?.sensors?.filter(s => 
+                        s.attributes?.device_class === 'temperature' ||
+                        s.attributes?.unit_of_measurement === '°C' ||
+                        s.attributes?.unit_of_measurement === '°F'
+                      ).map(sensor => (
+                        <option key={sensor.entity_id} value={sensor.entity_id}>
+                          {getFriendlyName(sensor)} ({sensor.state}{String(sensor.attributes?.unit_of_measurement || '°C')})
+                        </option>
+                      ))}
+                      <optgroup label="Alle Sensoren">
+                        {discovered?.sensors?.map(sensor => (
+                          <option key={sensor.entity_id} value={sensor.entity_id}>
+                            {getFriendlyName(sensor)} ({sensor.state})
+                          </option>
+                        ))}
+                      </optgroup>
+                    </select>
                   </div>
                 </div>
               )}
