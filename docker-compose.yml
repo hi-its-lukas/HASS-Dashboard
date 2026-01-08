@@ -3,6 +3,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_WS_HOST=${NEXT_PUBLIC_WS_HOST:-}
     container_name: hass-dashboard
     restart: unless-stopped
     ports:
@@ -13,5 +15,6 @@ services:
       - ENCRYPTION_KEY=${ENCRYPTION_KEY:-}
       - SQLITE_URL=file:/data/hass-dashboard.db
       - HOSTNAME=0.0.0.0
+      - NEXT_PUBLIC_WS_HOST=${NEXT_PUBLIC_WS_HOST:-}
     volumes:
       - ./data:/data

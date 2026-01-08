@@ -47,7 +47,6 @@ let pollInterval: NodeJS.Timeout | null = null
 let wsRetryTimeout: NodeJS.Timeout | null = null
 let wsRetryCount = 0
 
-const WS_PROXY_PORT = 6000
 const POLL_INTERVAL = 5000
 const WS_RETRY_DELAYS = [5000, 10000, 20000, 60000]
 
@@ -161,7 +160,10 @@ async function tryWebSocketConnection() {
   try {
     const protocol = typeof window !== 'undefined' && window.location.protocol === 'https:' ? 'wss:' : 'ws:'
     const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost'
-    const wsUrl = `${protocol}//${hostname}:${WS_PROXY_PORT}/ws/ha`
+    
+    // Use NEXT_PUBLIC_WS_HOST if set (e.g. ws.example.com), otherwise prepend 'ws.' to current hostname
+    const wsHost = process.env.NEXT_PUBLIC_WS_HOST || `ws.${hostname}`
+    const wsUrl = `${protocol}//${wsHost}/ws/ha`
     
     wsClient = new HAWebSocketClient(wsUrl, async () => '')
     

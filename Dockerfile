@@ -21,6 +21,10 @@ RUN npx prisma generate
 
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# WebSocket host for client-side connection (e.g., ws.example.com)
+ARG NEXT_PUBLIC_WS_HOST
+ENV NEXT_PUBLIC_WS_HOST=${NEXT_PUBLIC_WS_HOST}
+
 # Bundle WebSocket proxy with esbuild (includes all dependencies except native modules)
 RUN npx esbuild server/ws-proxy.ts --bundle --platform=node --target=node20 --outfile=server/ws-proxy.js --external:@prisma/client --external:ws --external:cookie
 
