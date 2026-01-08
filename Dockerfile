@@ -10,6 +10,11 @@ RUN npm ci
 FROM node:20-bookworm-slim AS builder
 WORKDIR /app
 
+# Install OpenSSL for Prisma client generation
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    openssl \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
