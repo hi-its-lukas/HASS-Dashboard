@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { DoorOpen, Lock, Unlock, Settings, RefreshCw, AlertCircle, Phone, PhoneOff } from 'lucide-react'
+import { DoorOpen, Lock, Unlock, Settings, RefreshCw, AlertCircle } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { useConfigStore } from '@/lib/config/store'
 import { useHAStore } from '@/lib/ha/store'
@@ -15,8 +15,7 @@ export default function LocksPage() {
   const [unlocking, setUnlocking] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
-  const [talking, setTalking] = useState<string | null>(null)
-  
+    
   const hasUnifiAccess = unifiAccessDevices.length > 0
   
   const haLockEntities = hasUnifiAccess 
@@ -80,15 +79,7 @@ export default function LocksPage() {
     }
   }
   
-  const handleTalk = async (device: { id: string; name: string }) => {
-    if (talking === device.id) {
-      setTalking(null)
-      return
-    }
-    setTalking(device.id)
-    setTimeout(() => setTalking(null), 30000)
-  }
-
+  
   return (
     <div className="px-4 py-6 safe-top max-w-7xl mx-auto">
       <motion.header
@@ -176,24 +167,7 @@ export default function LocksPage() {
                       </div>
                     </div>
                     
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleTalk(device)}
-                        className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-colors ${
-                          talking === device.id
-                            ? 'bg-green-500/30 text-green-400'
-                            : 'bg-white/5 hover:bg-white/10 text-white'
-                        }`}
-                        title="Sprechen"
-                      >
-                        {talking === device.id ? (
-                          <PhoneOff className="w-4 h-4" />
-                        ) : (
-                          <Phone className="w-4 h-4" />
-                        )}
-                      </button>
-                      
-                      <button
+                    <button
                         onClick={() => handleUnifiUnlock(device)}
                         disabled={unlocking === device.id}
                         className="flex items-center gap-2 px-4 py-2 bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 rounded-xl transition-colors disabled:opacity-50"
@@ -210,7 +184,6 @@ export default function LocksPage() {
                           </>
                         )}
                       </button>
-                    </div>
                   </div>
                 </Card>
               </motion.div>
