@@ -239,6 +239,7 @@ export default function UnifiSettingsPage() {
   }
   
   const saveSettings = async () => {
+    alert('Speichern gestartet...')
     console.log('[UniFi] saveSettings called, canEditGlobalSettings:', canEditGlobalSettings)
     console.log('[UniFi] config to save:', JSON.stringify(config, null, 2))
     setSaving(true)
