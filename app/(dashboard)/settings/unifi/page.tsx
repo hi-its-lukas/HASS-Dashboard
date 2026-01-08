@@ -229,6 +229,7 @@ export default function UnifiSettingsPage() {
       
       if (res.ok) {
         const data = await res.json()
+        console.log('[UniFi] Discovered devices:', JSON.stringify(data, null, 2))
         setDiscovered(data)
       }
     } catch (error) {
@@ -295,12 +296,18 @@ export default function UnifiSettingsPage() {
   }
   
   const toggleAccessDevice = (device: UnifiAccessDevice) => {
-    setConfig(prev => ({
-      ...prev,
-      accessDevices: prev.accessDevices.some(d => d.id === device.id)
-        ? prev.accessDevices.filter(d => d.id !== device.id)
-        : [...prev.accessDevices, device]
-    }))
+    console.log('[UniFi] toggleAccessDevice called with:', device.id, device.name)
+    console.log('[UniFi] current accessDevices:', config.accessDevices.map(d => d.id))
+    setConfig(prev => {
+      const isSelected = prev.accessDevices.some(d => d.id === device.id)
+      console.log('[UniFi] isSelected:', isSelected)
+      return {
+        ...prev,
+        accessDevices: isSelected
+          ? prev.accessDevices.filter(d => d.id !== device.id)
+          : [...prev.accessDevices, device]
+      }
+    })
   }
   
   if (loading) {
