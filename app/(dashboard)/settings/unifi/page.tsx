@@ -481,21 +481,23 @@ export default function UnifiSettingsPage() {
             {expandedSections.cameras && (
               <div className="p-4 pt-0 space-y-2">
                 {discovered.cameras.map(camera => (
-                  <label
+                  <div
                     key={camera.id}
+                    onClick={() => toggleCamera(camera.id)}
                     className="flex items-center gap-3 p-3 bg-white/5 rounded-xl cursor-pointer hover:bg-white/10 transition-colors"
                   >
                     <input
                       type="checkbox"
                       checked={config.cameras.includes(camera.id)}
-                      onChange={() => toggleCamera(camera.id)}
-                      className="w-5 h-5 rounded bg-white/10 border-white/20 text-purple-500 focus:ring-purple-500/50"
+                      onChange={() => {}}
+                      onClick={(e) => e.stopPropagation()}
+                      className="w-5 h-5 rounded bg-white/10 border-white/20 text-purple-500 focus:ring-purple-500/50 pointer-events-none"
                     />
                     <div className="flex-1">
                       <div className="text-white">{camera.name}</div>
                       <div className="text-xs text-gray-500">{camera.type} • {camera.state}</div>
                     </div>
-                  </label>
+                  </div>
                 ))}
               </div>
             )}
@@ -522,21 +524,23 @@ export default function UnifiSettingsPage() {
             {expandedSections.access && (
               <div className="p-4 pt-0 space-y-2">
                 {discovered.accessDevices.map(device => (
-                  <label
+                  <div
                     key={device.id}
+                    onClick={() => toggleAccessDevice(device)}
                     className="flex items-center gap-3 p-3 bg-white/5 rounded-xl cursor-pointer hover:bg-white/10 transition-colors"
                   >
                     <input
                       type="checkbox"
                       checked={config.accessDevices.some(d => d.id === device.id)}
-                      onChange={() => toggleAccessDevice(device)}
-                      className="w-5 h-5 rounded bg-white/10 border-white/20 text-purple-500 focus:ring-purple-500/50"
+                      onChange={() => {}}
+                      onClick={(e) => e.stopPropagation()}
+                      className="w-5 h-5 rounded bg-white/10 border-white/20 text-purple-500 focus:ring-purple-500/50 pointer-events-none"
                     />
                     <div className="flex-1">
                       <div className="text-white">{device.name}</div>
                       <div className="text-xs text-gray-500">{device.type}</div>
                     </div>
-                  </label>
+                  </div>
                 ))}
               </div>
             )}
