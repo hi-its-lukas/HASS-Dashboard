@@ -7,6 +7,7 @@ const PRIVATE_IP_RANGES = [
   /^127\./,
   /^localhost$/i,
   /^0\.0\.0\.0$/,
+  /\.local$/i,
 ]
 
 const BLOCKED_HOSTS = [
