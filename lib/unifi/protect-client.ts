@@ -73,6 +73,13 @@ export class ProtectClient {
     
     if (!response.ok) {
       const text = await response.text().catch(() => 'Unknown error')
+      if (response.status === 401) {
+        throw new Error('401 Unauthorized - API Key ungültig')
+      } else if (response.status === 403) {
+        throw new Error('403 Forbidden - Keine Berechtigung')
+      } else if (response.status === 404) {
+        throw new Error('404 Not Found - Integration API nicht verfügbar. Protect Version 5.3+ erforderlich')
+      }
       throw new Error(`Protect API error: ${response.status} - ${text.slice(0, 500)}`)
     }
     
@@ -86,8 +93,10 @@ export class ProtectClient {
   
   async testConnection(): Promise<{ success: boolean; cameras: number; version?: string; error?: string }> {
     try {
+      // First try meta/info endpoint (faster, simpler)
+      const info = await this.request<{ applicationVersion?: string }>('/meta/info')
       const cameras = await this.getCameras()
-      return { success: true, cameras: cameras.length }
+      return { success: true, cameras: cameras.length, version: info.applicationVersion }
     } catch (error) {
       // Extract the real error from error.cause for Node fetch network failures
       const cause = (error as { cause?: { code?: string; message?: string } })?.cause

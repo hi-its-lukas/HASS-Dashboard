@@ -76,6 +76,13 @@ export class AccessClient {
     
     if (!response.ok) {
       const text = await response.text().catch(() => 'Unknown error')
+      if (response.status === 401) {
+        throw new Error('401 Unauthorized - API Key ungültig')
+      } else if (response.status === 403) {
+        throw new Error('403 Forbidden - Keine Berechtigung')
+      } else if (response.status === 404) {
+        throw new Error('404 Not Found - Access API nicht verfügbar')
+      }
       throw new Error(`Access API error: ${response.status} - ${text.slice(0, 500)}`)
     }
     
