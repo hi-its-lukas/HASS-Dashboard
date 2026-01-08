@@ -115,12 +115,26 @@ function startWsProxy(): Promise<void> {
 }
 
 function proxyHttpRequest(req: IncomingMessage, res: ServerResponse) {
+  const clientIp = req.socket.remoteAddress || '127.0.0.1'
+  const originalHost = req.headers.host || 'localhost'
+  const proto = req.headers['x-forwarded-proto'] || 'http'
+  
+  const proxyHeaders: Record<string, string | string[] | undefined> = {
+    ...req.headers,
+    'x-forwarded-for': req.headers['x-forwarded-for'] 
+      ? `${req.headers['x-forwarded-for']}, ${clientIp}` 
+      : clientIp,
+    'x-forwarded-host': originalHost,
+    'x-forwarded-proto': String(proto),
+    'x-real-ip': clientIp
+  }
+  
   const options = {
     hostname: '127.0.0.1',
     port: NEXT_PORT,
     path: req.url,
     method: req.method,
-    headers: { ...req.headers, host: `127.0.0.1:${NEXT_PORT}` }
+    headers: proxyHeaders
   }
   
   const proxyReq = httpRequest(options, (proxyRes) => {

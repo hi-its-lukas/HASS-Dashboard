@@ -8,6 +8,17 @@ HA Dashboard is a modern, mobile-first Progressive Web App (PWA) for Home Assist
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes (2026-01-08)
+- **Single-URL Gateway Architecture** - Nur noch eine externe URL nötig
+  - Gateway-Server (`server/gateway.ts`) auf Port 80 bündelt alle Services
+  - Spawnt Next.js intern auf Port 3000 und WS-Proxy auf Port 6000
+  - HTTP-Requests werden an Next.js weitergeleitet
+  - WebSocket-Upgrades auf `/ws/ha` werden an WS-Proxy getunnelt
+  - Keine separate Subdomain für WebSocket mehr nötig
+  - Cloudflare Tunnel nur noch zu Port 80
+  - X-Forwarded-* Headers für korrekte Cookie-Domain
+  - Child-Process Supervision (Gateway beendet sich wenn ein Service stirbt)
+
 ## Recent Changes (2026-01-07)
 - **OAuth KOMPLETT ENTFERNT** - Nur noch internes User-Management
   - Alle OAuth-Routen, Callbacks und Token-Storage entfernt
