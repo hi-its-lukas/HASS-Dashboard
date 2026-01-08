@@ -1,0 +1,78 @@
+lukashengl@mac-mini HASS-Dashboard % cd ~/Documents/GitHub/HASS-Dashboard
+ls -la | grep .env
+-rw-r--r--   1 lukashengl  staff    1144 Jan  8 16:36 .env
+-rw-r--r--   1 lukashengl  staff    1020 Jan  8 16:19 .env.example
+-rw-r--r--   1 lukashengl  staff     201 Jan  8 16:19 next-env.d.ts
+lukashengl@mac-mini HASS-Dashboard % git pull
+docker compose down
+docker compose build --no-cache
+docker compose up -d
+# WICHTIG: Berechtigungen reparieren!
+docker compose exec app npx prisma db seed
+Already up to date.
+WARN[0001] Warning: No resource found to remove for project "hass-dashboard". 
+[+] Building 0.7s (3/3) FINISHED                                                                                                              
+ => [internal] load local bake definitions                                                                                               0.0s
+ => => reading from stdin 577B                                                                                                           0.0s
+ => [internal] load build definition from Dockerfile                                                                                     0.0s
+ => => transferring dockerfile: 2.90kB                                                                                                   0.0s
+ => ERROR [internal] load metadata for docker.io/library/node:20-bookworm-slim                                                           0.6s
+------
+ > [internal] load metadata for docker.io/library/node:20-bookworm-slim:
+------
+Dockerfile:10
+
+--------------------
+
+   8 |     
+
+   9 |     # Stage 2: Builder
+
+  10 | >>> FROM node:20-bookworm-slim AS builder
+
+  11 |     WORKDIR /app
+
+  12 |     
+
+--------------------
+
+failed to solve: error getting credentials - err: exit status 1, out: `keychain cannot be accessed because the current session does not allow user interaction. The keychain may be locked; unlock it by running "security -v unlock-keychain ~/Library/Keychains/login.keychain-db" and try again`
+
+
+
+View build details: docker-desktop://dashboard/build/default/default/jwi4jyre9v0qlo02t6pqcnzv5
+
+[+] Building 0.3s (3/3) FINISHED                                                                                                              
+ => [internal] load local bake definitions                                                                                               0.0s
+ => => reading from stdin 553B                                                                                                           0.0s
+ => [internal] load build definition from Dockerfile                                                                                     0.0s
+ => => transferring dockerfile: 2.90kB                                                                                                   0.0s
+ => ERROR [internal] load metadata for docker.io/library/node:20-bookworm-slim                                                           0.2s
+------
+ > [internal] load metadata for docker.io/library/node:20-bookworm-slim:
+------
+Dockerfile:10
+
+--------------------
+
+   8 |     
+
+   9 |     # Stage 2: Builder
+
+  10 | >>> FROM node:20-bookworm-slim AS builder
+
+  11 |     WORKDIR /app
+
+  12 |     
+
+--------------------
+
+failed to solve: error getting credentials - err: exit status 1, out: `keychain cannot be accessed because the current session does not allow user interaction. The keychain may be locked; unlock it by running "security -v unlock-keychain ~/Library/Keychains/login.keychain-db" and try again`
+
+
+
+View build details: docker-desktop://dashboard/build/default/default/ouftjcs67460xe1cf6jt7302h
+
+zsh: command not found: #
+service "app" is not running
+lukashengl@mac-mini HASS-Dashboard %
