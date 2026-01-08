@@ -25,6 +25,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useConfigStore } from '@/lib/config/store'
+import { useHAStore } from '@/lib/ha'
 import { NotificationBell } from '@/components/ui/notification-bell'
 
 const DASHBOARD_TITLE_KEY = 'ha-dashboard-title'
@@ -69,6 +70,8 @@ export function Sidebar() {
   const isLoaded = useConfigStore((s) => s.isLoaded)
   const intercoms = useConfigStore((s) => s.config.intercoms)
   const unifi = useConfigStore((s) => s.unifi)
+  const connectionMode = useHAStore((s) => s.connectionMode)
+  const connected = useHAStore((s) => s.connected)
   
   const unifiAccessIntercoms = unifi?.accessDevices || []
   const aiSurveillanceEnabled = unifi?.aiSurveillanceEnabled ?? false
@@ -269,6 +272,29 @@ export function Sidebar() {
       </nav>
       
       <div className="p-3" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
+        {connected && (
+          <div className={cn(
+            'flex items-center gap-2 px-3 py-2 mb-2 rounded-lg text-xs',
+            connectionMode === 'websocket' ? 'bg-green-500/10 text-green-400' : 'bg-amber-500/10 text-amber-400'
+          )}>
+            <div className={cn(
+              'w-2 h-2 rounded-full',
+              connectionMode === 'websocket' ? 'bg-green-400' : 'bg-amber-400 animate-pulse'
+            )} />
+            <AnimatePresence mode="wait">
+              {!collapsed && (
+                <motion.span
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                >
+                  {connectionMode === 'websocket' ? 'WebSocket' : 'Polling (Backup)'}
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </div>
+        )}
+        
         <Link
           href="/settings"
           className={cn(

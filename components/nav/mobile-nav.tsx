@@ -21,6 +21,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useConfigStore } from '@/lib/config/store'
+import { useHAStore } from '@/lib/ha'
 
 const DASHBOARD_TITLE_KEY = 'ha-dashboard-title'
 
@@ -41,6 +42,8 @@ export function MobileNav() {
   const [isOpen, setIsOpen] = useState(false)
   const [title, setTitle] = useState('Zuhause')
   const intercoms = useConfigStore((s) => s.config.intercoms)
+  const connectionMode = useHAStore((s) => s.connectionMode)
+  const connected = useHAStore((s) => s.connected)
   
   useEffect(() => {
     const savedTitle = localStorage.getItem(DASHBOARD_TITLE_KEY)
@@ -175,6 +178,21 @@ export function MobileNav() {
               </nav>
               
               <div className="p-3" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                {connected && (
+                  <div className={cn(
+                    'flex items-center gap-2 px-4 py-2 mb-2 rounded-lg text-xs',
+                    connectionMode === 'websocket' ? 'bg-green-500/10 text-green-400' : 'bg-amber-500/10 text-amber-400'
+                  )}>
+                    <div className={cn(
+                      'w-2 h-2 rounded-full',
+                      connectionMode === 'websocket' ? 'bg-green-400' : 'bg-amber-400 animate-pulse'
+                    )} />
+                    <span>
+                      {connectionMode === 'websocket' ? 'WebSocket' : 'Polling (Backup)'}
+                    </span>
+                  </div>
+                )}
+                
                 <Link
                   href="/settings"
                   className={cn(
