@@ -63,7 +63,7 @@ export async function GET() {
       } as UnifiConfig & { _hasProtectKey: boolean; _hasAccessKey: boolean }
     }
     
-    const canEditGlobalSettings = await hasPermission(session.userId, 'settings:general')
+    const canEditGlobalSettings = await hasPermission(session.userId, 'settings:edit')
     
     return NextResponse.json({
       layoutConfig,
