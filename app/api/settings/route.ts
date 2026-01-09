@@ -142,8 +142,6 @@ export async function POST(request: NextRequest) {
           
           const incomingUnifi = globalSettings.unifi as UnifiConfig
           
-          console.log('[API] UniFi save - incoming liveStreamEnabled:', incomingUnifi.liveStreamEnabled, 'existing:', existingUnifi?.liveStreamEnabled)
-          
           const isMaskedOrEmpty = (val: string | undefined) => 
             !val || val.includes('••••') || val.trim() === ''
           

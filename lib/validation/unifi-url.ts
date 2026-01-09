@@ -76,6 +76,9 @@ export const UnifiConfigSchema = z.object({
   controllerUrl: z.string().max(500).optional().transform(val => val?.trim()),
   protectApiKey: z.string().max(500).optional(),
   accessApiKey: z.string().max(500).optional(),
+  rtspUsername: z.string().max(200).optional(),
+  rtspPassword: z.string().max(500).optional(),
+  liveStreamEnabled: z.boolean().optional(),
   cameras: z.array(z.string().max(100)).max(50).optional(),
   accessDevices: z.array(z.object({
     id: z.string().max(100),
@@ -85,7 +88,8 @@ export const UnifiConfigSchema = z.object({
   })).max(50).optional(),
   aiSurveillanceEnabled: z.boolean().optional(),
   _hasProtectKey: z.boolean().optional(),
-  _hasAccessKey: z.boolean().optional()
+  _hasAccessKey: z.boolean().optional(),
+  _hasRtspPassword: z.boolean().optional()
 })
 
 export type ValidatedUnifiConfig = z.infer<typeof UnifiConfigSchema>
