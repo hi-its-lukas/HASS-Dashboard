@@ -18,13 +18,8 @@ interface StreamConfig {
 
 function getGo2rtcBinaryPath(): string | null {
   const possiblePaths = [
-    // Prefer manually installed binary (more reliable on ARM64)
+    // Manually installed binary in Docker (most reliable on ARM64)
     '/usr/local/bin/go2rtc',
-    // Fallback to npm package
-    path.join(process.cwd(), 'node_modules', 'go2rtc-static', 'dist', 'go2rtc'),
-    path.join(process.cwd(), 'node_modules', 'go2rtc-static', 'go2rtc'),
-    '/app/node_modules/go2rtc-static/dist/go2rtc',
-    '/app/node_modules/go2rtc-static/go2rtc',
   ]
   
   for (const p of possiblePaths) {
@@ -34,18 +29,7 @@ function getGo2rtcBinaryPath(): string | null {
     }
   }
   
-  try {
-    const go2rtcStatic = require('go2rtc-static')
-    const modulePath = typeof go2rtcStatic === 'string' ? go2rtcStatic : go2rtcStatic.default || go2rtcStatic.path
-    if (modulePath && fs.existsSync(modulePath)) {
-      console.log('[go2rtc] Found binary via require:', modulePath)
-      return modulePath
-    }
-  } catch (e) {
-    console.log('[go2rtc] Could not require go2rtc-static:', e)
-  }
-  
-  console.log('[go2rtc] Binary not found in any location')
+  console.log('[go2rtc] Binary not found - ensure go2rtc is installed at /usr/local/bin/go2rtc')
   return null
 }
 
