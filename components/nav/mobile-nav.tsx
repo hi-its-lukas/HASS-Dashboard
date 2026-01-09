@@ -18,7 +18,12 @@ import {
   Thermometer,
   Calendar,
   Play,
-  DoorOpen
+  DoorOpen,
+  Sun,
+  Theater,
+  Cloud,
+  Bot,
+  Sparkles
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useConfigStore } from '@/lib/config/store'
@@ -30,12 +35,16 @@ const navItems = [
   { href: '/', icon: Home, label: 'Home' },
   { href: '/lights', icon: Lightbulb, label: 'Lichtquellen' },
   { href: '/covers', icon: Blinds, label: 'Rollos' },
+  { href: '/awnings', icon: Sun, label: 'Markisen' },
+  { href: '/curtains', icon: Theater, label: 'Gardinen' },
   { href: '/locks', icon: DoorOpen, label: 'Türschlösser' },
   { href: '/climate', icon: Thermometer, label: 'Klima' },
+  { href: '/weather', icon: Cloud, label: 'Wetter' },
   { href: '/calendar', icon: Calendar, label: 'Kalender' },
   { href: '/cameras', icon: Video, label: 'Kameras' },
   { href: '/energy', icon: Zap, label: 'Energie' },
   { href: '/family', icon: Users, label: 'Familie' },
+  { href: '/vacuum', icon: Bot, label: 'Saugroboter' },
   { href: '/more', icon: Play, label: 'Aktionen' },
 ]
 
@@ -44,8 +53,12 @@ export function MobileNav() {
   const [isOpen, setIsOpen] = useState(false)
   const [title, setTitle] = useState('Zuhause')
   const intercoms = useConfigStore((s) => s.config.intercoms)
+  const unifi = useConfigStore((s) => s.unifi)
   const connectionMode = useHAStore((s) => s.connectionMode)
   const connected = useHAStore((s) => s.connected)
+  
+  const unifiAccessIntercoms = unifi?.accessDevices || []
+  const aiSurveillanceEnabled = unifi?.aiSurveillanceEnabled ?? false
   
   useEffect(() => {
     const savedTitle = localStorage.getItem(DASHBOARD_TITLE_KEY)
@@ -150,12 +163,28 @@ export function MobileNav() {
                   )
                 })}
                 
-                {intercoms && intercoms.length > 0 && (
+                {aiSurveillanceEnabled && (
+                  <Link
+                    href="/surveillance"
+                    className={cn(
+                      'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
+                      pathname === '/surveillance'
+                        ? 'text-white' 
+                        : 'text-text-secondary hover:text-white'
+                    )}
+                    style={pathname === '/surveillance' ? { background: 'rgba(255, 255, 255, 0.12)' } : undefined}
+                  >
+                    <Sparkles className="w-5 h-5 flex-shrink-0" />
+                    <span className="font-medium">AI Surveillance</span>
+                  </Link>
+                )}
+                
+                {(intercoms && intercoms.length > 0) || unifiAccessIntercoms.length > 0 ? (
                   <>
                     <div className="pt-4 pb-2 px-4">
                       <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">Intercoms</span>
                     </div>
-                    {intercoms.map((intercom) => {
+                    {intercoms?.map((intercom) => {
                       const href = `/intercom/${intercom.slug}`
                       const active = pathname === href
                       return (
@@ -175,8 +204,28 @@ export function MobileNav() {
                         </Link>
                       )
                     })}
+                    {unifiAccessIntercoms.map((device) => {
+                      const href = `/intercom/unifi/${device.id}`
+                      const active = pathname === href
+                      return (
+                        <Link
+                          key={device.id}
+                          href={href}
+                          className={cn(
+                            'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
+                            active 
+                              ? 'text-white' 
+                              : 'text-text-secondary hover:text-white'
+                          )}
+                          style={active ? { background: 'rgba(255, 255, 255, 0.12)' } : undefined}
+                        >
+                          <Phone className="w-5 h-5 flex-shrink-0" />
+                          <span className="font-medium truncate">{device.name}</span>
+                        </Link>
+                      )
+                    })}
                   </>
-                )}
+                ) : null}
               </nav>
               
               <div className="p-3" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>

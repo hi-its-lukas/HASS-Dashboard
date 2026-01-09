@@ -84,7 +84,8 @@ export const UnifiConfigSchema = z.object({
     id: z.string().max(100),
     name: z.string().max(200),
     type: z.string().max(50),
-    doorId: z.string().max(100).optional()
+    doorId: z.string().max(100).optional(),
+    cameraId: z.string().max(100).optional()
   })).max(50).optional(),
   aiSurveillanceEnabled: z.boolean().optional(),
   _hasProtectKey: z.boolean().optional(),

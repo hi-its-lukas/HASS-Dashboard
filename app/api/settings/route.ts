@@ -54,7 +54,13 @@ export async function GET() {
       layoutConfig.unifi = {
         controllerUrl: rawUnifi.controllerUrl || '',
         cameras: rawUnifi.cameras || [],
-        accessDevices: rawUnifi.accessDevices || [],
+        accessDevices: rawUnifi.accessDevices?.map(device => ({
+          id: device.id,
+          name: device.name,
+          type: device.type,
+          doorId: device.doorId,
+          cameraId: device.cameraId
+        })) || [],
         aiSurveillanceEnabled: rawUnifi.aiSurveillanceEnabled ?? true,
         liveStreamEnabled: rawUnifi.liveStreamEnabled ?? false,
         rtspUsername: decrypted.rtspUsername || '',
@@ -145,6 +151,14 @@ export async function POST(request: NextRequest) {
           const isMaskedOrEmpty = (val: string | undefined) => 
             !val || val.includes('••••') || val.trim() === ''
           
+          const mergedAccessDevices = incomingUnifi.accessDevices?.map(device => {
+            const existingDevice = existingUnifi?.accessDevices?.find(d => d.id === device.id)
+            return {
+              ...device,
+              cameraId: device.cameraId ?? existingDevice?.cameraId
+            }
+          }) || existingUnifi?.accessDevices || []
+          
           const unifiToSave: UnifiConfig = {
             controllerUrl: incomingUnifi.controllerUrl || '',
             protectApiKey: isMaskedOrEmpty(incomingUnifi.protectApiKey) && existingUnifi?.protectApiKey
@@ -158,9 +172,9 @@ export async function POST(request: NextRequest) {
               ? existingUnifi.rtspPassword
               : incomingUnifi.rtspPassword || '',
             liveStreamEnabled: incomingUnifi.liveStreamEnabled ?? existingUnifi?.liveStreamEnabled ?? false,
-            cameras: incomingUnifi.cameras || [],
-            accessDevices: incomingUnifi.accessDevices || [],
-            aiSurveillanceEnabled: incomingUnifi.aiSurveillanceEnabled ?? true
+            cameras: incomingUnifi.cameras || existingUnifi?.cameras || [],
+            accessDevices: mergedAccessDevices,
+            aiSurveillanceEnabled: incomingUnifi.aiSurveillanceEnabled ?? existingUnifi?.aiSurveillanceEnabled ?? true
           }
           
           globalSettings.unifi = encryptUnifiApiKeys(unifiToSave)
