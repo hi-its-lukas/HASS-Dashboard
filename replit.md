@@ -46,7 +46,7 @@ Preferred communication style: Simple, everyday language.
 - **Responsive layout**: Mobile-first design with bottom navigation; desktop features a collapsible sidebar.
 - **Standalone output**: Next.js configured with `output: 'standalone'` for Docker deployment.
 - **UniFi Integration**: Full integration with UniFi Protect and Access using API Key authentication, with encrypted API keys and dedicated API routes for device control and event retrieval.
-- **Live Camera Streaming**: WebRTC-based live streaming using go2rtc as RTSP-to-WebRTC proxy. Supports UniFi Protect cameras with RTSP credentials stored encrypted. Toggle between snapshot and live view on camera page.
+- **Live Camera Streaming**: Native fMP4 streaming using the `unifi-protect` library's Livestream API. Streams are proxied via the WS-Proxy server for secure token handling. Toggle between snapshot and live view on camera page.
 - **AI Surveillance**: A dedicated page (`/surveillance`) for viewing and filtering smart detection events from UniFi Protect.
 - **Apple Home Design Overhaul**: Complete visual redesign inspired by Apple Home app, featuring glassmorphism UI, translucent cards, backdrop blur, and customizable warm gradient backgrounds.
 - **Dashboard Popup Notifications**: Real-time popups triggered by Home Assistant events, featuring queue management, deduplication, severity levels, and media.

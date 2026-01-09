@@ -28,7 +28,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 
 # Bundle gateway and ws-proxy with esbuild
 RUN npx esbuild server/gateway.ts --bundle --platform=node --target=node20 --outfile=server/gateway.js --external:child_process --external:http --external:net --external:fs --external:path
-RUN npx esbuild server/ws-proxy.ts --bundle --platform=node --target=node20 --outfile=server/ws-proxy.js --external:@prisma/client --external:ws --external:cookie --external:crypto --external:fs --external:path
+RUN npx esbuild server/ws-proxy.ts --bundle --platform=node --target=node20 --outfile=server/ws-proxy.js --external:@prisma/client --external:ws --external:cookie --external:crypto --external:fs --external:path --external:unifi-protect
 
 RUN npm run build
 
@@ -39,17 +39,12 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Install gosu for privilege dropping and download official go2rtc ARM64 binary
+# Install gosu for privilege dropping
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gosu \
     openssl \
-    curl \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
-
-# Download official go2rtc ARM64 binary (more reliable than npm package)
-RUN curl -L https://github.com/AlexxIT/go2rtc/releases/download/v1.9.4/go2rtc_linux_arm64 --output /usr/local/bin/go2rtc && \
-    chmod +x /usr/local/bin/go2rtc
 
 # Create app user (will be used after entrypoint fixes permissions)
 RUN groupadd --system --gid 1001 nodejs && \
@@ -68,6 +63,7 @@ COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/node_modules/bcryptjs ./node_modules/bcryptjs
 COPY --from=builder /app/node_modules/ws ./node_modules/ws
 COPY --from=builder /app/node_modules/cookie ./node_modules/cookie
+COPY --from=builder /app/node_modules/unifi-protect ./node_modules/unifi-protect
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/scripts ./scripts
 COPY --from=builder /app/server/gateway.js ./server/gateway.js
