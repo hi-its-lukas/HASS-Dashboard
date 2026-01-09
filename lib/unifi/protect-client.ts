@@ -73,10 +73,82 @@ export interface ProtectBootstrap {
 export class ProtectClient {
   private baseUrl: string
   private apiKey: string
+  private sessionCookie: string | null = null
+  private csrfToken: string | null = null
   
   constructor(controllerUrl: string, apiKey: string) {
     this.baseUrl = controllerUrl.replace(/\/$/, '')
     this.apiKey = apiKey
+  }
+  
+  async loginWithCredentials(username: string, password: string): Promise<boolean> {
+    try {
+      const csrfUrl = `${this.baseUrl}/api/auth/csrf`
+      const csrfResponse = await fetch(csrfUrl, {
+        signal: createAbortSignal(),
+        // @ts-expect-error - dispatcher is undici's way to configure TLS
+        dispatcher
+      })
+      
+      if (csrfResponse.ok) {
+        const csrfData = await csrfResponse.json() as { csrfToken?: string }
+        if (csrfData.csrfToken) {
+          this.csrfToken = csrfData.csrfToken
+        }
+        const csrfCookie = csrfResponse.headers.get('set-cookie')
+        if (csrfCookie) {
+          const match = csrfCookie.match(/csrf_token=([^;]+)/)
+          if (match) {
+            this.sessionCookie = `csrf_token=${match[1]}`
+          }
+        }
+      }
+      
+      const loginUrl = `${this.baseUrl}/api/auth/login`
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json'
+      }
+      if (this.csrfToken) {
+        headers['X-CSRF-Token'] = this.csrfToken
+      }
+      if (this.sessionCookie) {
+        headers['Cookie'] = this.sessionCookie
+      }
+      
+      const response = await fetch(loginUrl, {
+        method: 'POST',
+        signal: createAbortSignal(),
+        headers,
+        body: JSON.stringify({ username, password }),
+        // @ts-expect-error - dispatcher is undici's way to configure TLS
+        dispatcher
+      })
+      
+      if (!response.ok) {
+        console.error('[Protect] Login failed:', response.status)
+        return false
+      }
+      
+      const setCookieHeader = response.headers.get('set-cookie')
+      if (setCookieHeader) {
+        const tokenMatch = setCookieHeader.match(/TOKEN=([^;]+)/)
+        if (tokenMatch) {
+          const existingCookie = this.sessionCookie || ''
+          this.sessionCookie = existingCookie ? `${existingCookie}; TOKEN=${tokenMatch[1]}` : `TOKEN=${tokenMatch[1]}`
+        }
+      }
+      
+      const csrfHeader = response.headers.get('x-csrf-token')
+      if (csrfHeader) {
+        this.csrfToken = csrfHeader
+      }
+      
+      console.log('[Protect] Session login successful')
+      return true
+    } catch (error) {
+      console.error('[Protect] Login error:', error)
+      return false
+    }
   }
   
   private async request<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -224,22 +296,31 @@ export class ProtectClient {
   async getCamerasWithChannels(): Promise<ProtectCamera[]> {
     const url = `${this.baseUrl}/proxy/protect/api/bootstrap`
     
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json'
+    }
+    
+    if (this.sessionCookie) {
+      headers['Cookie'] = this.sessionCookie
+    }
+    if (this.csrfToken) {
+      headers['X-CSRF-Token'] = this.csrfToken
+    }
+    
     const response = await fetch(url, {
       signal: createAbortSignal(),
-      headers: {
-        'X-API-KEY': this.apiKey,
-        'Content-Type': 'application/json'
-      },
+      headers,
       // @ts-expect-error - dispatcher is undici's way to configure TLS
       dispatcher
     })
     
     if (!response.ok) {
-      console.log('[Protect] Bootstrap API failed, falling back to integration API')
+      console.log('[Protect] Bootstrap API failed with status:', response.status, '- session auth may be required')
       return this.getCameras()
     }
     
     const bootstrap = await response.json() as { cameras?: ProtectCamera[] }
+    console.log('[Protect] Bootstrap API returned', bootstrap.cameras?.length || 0, 'cameras with channel data')
     return bootstrap.cameras || []
   }
 

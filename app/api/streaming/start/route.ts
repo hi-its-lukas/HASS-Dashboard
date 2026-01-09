@@ -30,12 +30,24 @@ export async function POST() {
     const rtspChannel = unifiConfig.rtspChannel ?? 1
     
     const client = new ProtectClient(unifiConfig.controllerUrl, unifiConfig.protectApiKey)
+    
+    if (unifiConfig.rtspUsername && unifiConfig.rtspPassword) {
+      console.log('[Streaming] Attempting session login for Bootstrap API access...')
+      const loginSuccess = await client.loginWithCredentials(
+        unifiConfig.rtspUsername,
+        unifiConfig.rtspPassword
+      )
+      if (!loginSuccess) {
+        console.log('[Streaming] Session login failed - will try API key only')
+      }
+    }
+    
     const rtspTokens = await client.getRtspTokens()
     
     if (rtspTokens.length === 0) {
-      console.log('[Streaming] No RTSP tokens found - RTSP may not be enabled in UniFi Protect')
+      console.log('[Streaming] No RTSP tokens found - RTSP may not be enabled or session auth required')
       return NextResponse.json({ 
-        error: 'No RTSP tokens found. Please enable RTSP in UniFi Protect camera settings.' 
+        error: 'No RTSP tokens found. Please ensure RTSP is enabled in UniFi Protect and credentials are correct.' 
       }, { status: 400 })
     }
     
