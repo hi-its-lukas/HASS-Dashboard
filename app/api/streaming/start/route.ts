@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSessionFromCookie } from '@/lib/auth/session'
-import prisma from '@/lib/db/client'
-import { decryptUnifiApiKeys } from '@/lib/unifi/encryption'
+import { getGlobalUnifiConfig } from '@/lib/config/global-settings'
 import { startGo2rtc, isGo2rtcRunning, buildRtspUrl, getGo2rtcApiUrl } from '@/lib/streaming/go2rtc'
 
 export async function POST() {
@@ -19,16 +18,10 @@ export async function POST() {
       })
     }
 
-    const systemConfig = await prisma.systemConfig.findFirst({
-      where: { key: 'unifi' }
-    })
-
-    if (!systemConfig?.value) {
+    const unifiConfig = await getGlobalUnifiConfig()
+    if (!unifiConfig) {
       return NextResponse.json({ error: 'UniFi not configured' }, { status: 400 })
     }
-
-    const rawConfig = JSON.parse(systemConfig.value)
-    const unifiConfig = decryptUnifiApiKeys(rawConfig)
     
     if (!unifiConfig.liveStreamEnabled) {
       return NextResponse.json({ error: 'Live streaming not enabled' }, { status: 400 })

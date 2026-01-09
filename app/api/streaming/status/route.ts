@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getSessionFromCookie } from '@/lib/auth/session'
 import { isGo2rtcRunning, getGo2rtcApiUrl } from '@/lib/streaming/go2rtc'
-import prisma from '@/lib/db/client'
-import { decryptUnifiApiKeys } from '@/lib/unifi/encryption'
+import { getGlobalUnifiConfig } from '@/lib/config/global-settings'
 
 export async function GET() {
   try {
@@ -11,16 +10,11 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const systemConfig = await prisma.systemConfig.findFirst({
-      where: { key: 'unifi' }
-    })
-
     let liveStreamEnabled = false
     let hasCredentials = false
 
-    if (systemConfig?.value) {
-      const rawConfig = JSON.parse(systemConfig.value)
-      const unifiConfig = decryptUnifiApiKeys(rawConfig)
+    const unifiConfig = await getGlobalUnifiConfig()
+    if (unifiConfig) {
       liveStreamEnabled = unifiConfig.liveStreamEnabled === true
       hasCredentials = Boolean(unifiConfig.rtspUsername && unifiConfig.rtspPassword)
     }
