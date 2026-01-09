@@ -51,9 +51,9 @@ export async function POST() {
       )
     }))
 
-    const success = await startGo2rtc(streams)
+    const result = await startGo2rtc(streams)
 
-    if (success) {
+    if (result.success) {
       return NextResponse.json({ 
         success: true, 
         message: 'go2rtc started',
@@ -61,7 +61,7 @@ export async function POST() {
         streams: streams.length
       })
     } else {
-      return NextResponse.json({ error: 'Failed to start go2rtc' }, { status: 500 })
+      return NextResponse.json({ error: result.error || 'Failed to start go2rtc' }, { status: 500 })
     }
   } catch (error) {
     console.error('Error starting streaming:', error)

@@ -52,26 +52,40 @@ function generateConfig(streams: StreamConfig[]): string {
   return JSON.stringify(config, null, 2)
 }
 
-export async function startGo2rtc(streams: StreamConfig[]): Promise<boolean> {
+interface StartResult {
+  success: boolean
+  error?: string
+}
+
+export async function startGo2rtc(streams: StreamConfig[]): Promise<StartResult> {
   if (go2rtcProcess) {
     console.log('[go2rtc] Already running')
-    return true
+    return { success: true }
   }
   
   if (isStarting) {
     console.log('[go2rtc] Already starting')
-    return false
+    return { success: false, error: 'go2rtc is already starting' }
   }
   
   if (streams.length === 0) {
     console.log('[go2rtc] No streams configured')
-    return false
+    return { success: false, error: 'No streams configured' }
   }
   
   isStarting = true
   
   try {
     const binaryPath = getGo2rtcBinaryPath()
+    
+    if (!binaryPath) {
+      return { success: false, error: 'go2rtc binary not found' }
+    }
+    
+    if (!fs.existsSync(binaryPath)) {
+      return { success: false, error: `go2rtc binary not found at: ${binaryPath}` }
+    }
+    
     const configPath = path.join(os.tmpdir(), 'go2rtc.json')
     const configContent = generateConfig(streams)
     
@@ -104,10 +118,11 @@ export async function startGo2rtc(streams: StreamConfig[]): Promise<boolean> {
     await new Promise(resolve => setTimeout(resolve, 2000))
     
     console.log('[go2rtc] Started successfully on port', GO2RTC_PORT)
-    return true
+    return { success: true }
   } catch (error) {
     console.error('[go2rtc] Failed to start:', error)
-    return false
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    return { success: false, error: `Failed to start go2rtc: ${errorMessage}` }
   } finally {
     isStarting = false
   }

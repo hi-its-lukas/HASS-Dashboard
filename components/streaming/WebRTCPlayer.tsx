@@ -100,8 +100,9 @@ export default function WebRTCPlayer({
           const startRes = await fetch('/api/streaming/start', { method: 'POST' })
           const startData = await startRes.json()
           
-          if (!startData.success) {
-            setError(startData.error || 'Failed to start streaming server')
+          if (!startRes.ok || !startData.success) {
+            console.error('[WebRTCPlayer] Failed to start go2rtc:', startData.error)
+            setError(startData.error || 'Failed to start go2rtc')
             setStatus('error')
             return
           }
