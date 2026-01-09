@@ -23,7 +23,7 @@ export default function WebRTCPlayer({
   const bufferQueue = useRef<ArrayBuffer[]>([])
   const [status, setStatus] = useState<'idle' | 'connecting' | 'connected' | 'error'>('idle')
   const [error, setError] = useState<string | null>(null)
-  const [streamReady, setStreamReady] = useState(false)
+  const initSegmentReceived = useRef(false)
 
   const cleanup = useCallback(() => {
     if (wsRef.current) {
@@ -38,6 +38,7 @@ export default function WebRTCPlayer({
     mediaSourceRef.current = null
     sourceBufferRef.current = null
     bufferQueue.current = []
+    initSegmentReceived.current = false
   }, [])
 
   const appendBuffer = useCallback((data: ArrayBuffer) => {
@@ -53,7 +54,7 @@ export default function WebRTCPlayer({
         try {
           sb.appendBuffer(chunk)
         } catch (e) {
-          console.error('[MSEPlayer] appendBuffer error:', e)
+          console.error('[LivestreamPlayer] appendBuffer error:', e)
         }
       }
     }
@@ -65,6 +66,32 @@ export default function WebRTCPlayer({
     sb.onupdateend = processQueue
   }, [])
 
+  const initializeMediaSource = useCallback((codec: string) => {
+    if (!videoRef.current || !mediaSourceRef.current) return false
+    
+    const mimeCodec = codec || 'video/mp4; codecs="avc1.640028"'
+    console.log('[LivestreamPlayer] Initializing with codec:', mimeCodec)
+    
+    if (!MediaSource.isTypeSupported(mimeCodec)) {
+      console.error('[LivestreamPlayer] Codec not supported:', mimeCodec)
+      setError('Video codec not supported by browser')
+      setStatus('error')
+      return false
+    }
+    
+    try {
+      const sb = mediaSourceRef.current.addSourceBuffer(mimeCodec)
+      sourceBufferRef.current = sb
+      sb.mode = 'segments'
+      return true
+    } catch (e) {
+      console.error('[LivestreamPlayer] Failed to add source buffer:', e)
+      setError('Failed to initialize video player')
+      setStatus('error')
+      return false
+    }
+  }, [])
+
   const startStreaming = useCallback(async () => {
     if (!videoRef.current) return
 
@@ -74,10 +101,9 @@ export default function WebRTCPlayer({
 
     try {
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-      // Use /ws/mse/ path instead of /api/streaming/mse to ensure Cloudflare Tunnel forwards WebSocket upgrades
-      const wsUrl = `${protocol}//${window.location.host}/ws/mse/${encodeURIComponent(cameraId)}`
+      const wsUrl = `${protocol}//${window.location.host}/ws/livestream/${encodeURIComponent(cameraId)}`
       
-      console.log('[MSEPlayer] Connecting to:', wsUrl)
+      console.log('[LivestreamPlayer] Connecting to:', wsUrl)
       
       const ws = new WebSocket(wsUrl)
       wsRef.current = ws
@@ -87,54 +113,62 @@ export default function WebRTCPlayer({
       mediaSourceRef.current = mediaSource
       videoRef.current.src = URL.createObjectURL(mediaSource)
       
+      let sourceBufferReady = false
+      
+      mediaSource.addEventListener('sourceopen', () => {
+        console.log('[LivestreamPlayer] MediaSource opened')
+      })
+      
       ws.onopen = () => {
-        console.log('[MSEPlayer] WebSocket connected')
+        console.log('[LivestreamPlayer] WebSocket connected')
       }
       
       ws.onmessage = (event) => {
         if (typeof event.data === 'string') {
           try {
             const msg = JSON.parse(event.data)
-            if (msg.type === 'mse') {
-              const mimeCodec = msg.value
-              console.log('[MSEPlayer] Received codec:', mimeCodec)
-              
-              if (mediaSourceRef.current?.readyState === 'open') {
-                if (MediaSource.isTypeSupported(mimeCodec)) {
-                  const sb = mediaSourceRef.current.addSourceBuffer(mimeCodec)
-                  sourceBufferRef.current = sb
+            console.log('[LivestreamPlayer] Received message:', msg.type)
+            
+            if (msg.type === 'stream_started') {
+              console.log('[LivestreamPlayer] Stream started for camera:', msg.cameraId)
+            } else if (msg.type === 'codec') {
+              console.log('[LivestreamPlayer] Received codec info:', msg.codec)
+              if (mediaSourceRef.current?.readyState === 'open' && !sourceBufferReady) {
+                sourceBufferReady = initializeMediaSource(msg.codec)
+                if (sourceBufferReady) {
                   setStatus('connected')
-                } else {
-                  console.error('[MSEPlayer] Codec not supported:', mimeCodec)
-                  setError('Video codec not supported')
-                  setStatus('error')
                 }
-              } else {
-                mediaSourceRef.current?.addEventListener('sourceopen', () => {
-                  if (MediaSource.isTypeSupported(mimeCodec) && mediaSourceRef.current) {
-                    const sb = mediaSourceRef.current.addSourceBuffer(mimeCodec)
-                    sourceBufferRef.current = sb
-                    setStatus('connected')
-                  }
-                })
               }
+            } else if (msg.type === 'error') {
+              console.error('[LivestreamPlayer] Server error:', msg.message)
+              setError(msg.message)
+              setStatus('error')
             }
           } catch (e) {
-            console.error('[MSEPlayer] JSON parse error:', e)
+            console.error('[LivestreamPlayer] JSON parse error:', e)
           }
         } else if (event.data instanceof ArrayBuffer) {
-          appendBuffer(event.data)
+          if (!sourceBufferReady && mediaSourceRef.current?.readyState === 'open') {
+            sourceBufferReady = initializeMediaSource('video/mp4; codecs="avc1.640028"')
+            if (sourceBufferReady) {
+              setStatus('connected')
+            }
+          }
+          
+          if (sourceBufferReady) {
+            appendBuffer(event.data)
+          }
         }
       }
       
       ws.onerror = (e) => {
-        console.error('[MSEPlayer] WebSocket error:', e)
+        console.error('[LivestreamPlayer] WebSocket error:', e)
         setError('Connection error')
         setStatus('error')
       }
       
       ws.onclose = (e) => {
-        console.log('[MSEPlayer] WebSocket closed:', e.code, e.reason)
+        console.log('[LivestreamPlayer] WebSocket closed:', e.code, e.reason)
         if (status !== 'error') {
           setError('Stream disconnected')
           setStatus('error')
@@ -142,64 +176,22 @@ export default function WebRTCPlayer({
       }
 
     } catch (err) {
-      console.error('[MSEPlayer] Error:', err)
+      console.error('[LivestreamPlayer] Error:', err)
       const errorMessage = err instanceof Error ? err.message : 'Failed to connect'
       setError(errorMessage)
       setStatus('error')
       onError?.(errorMessage)
     }
-  }, [cameraId, onError, cleanup, appendBuffer, status])
+  }, [cameraId, onError, cleanup, appendBuffer, initializeMediaSource, status])
 
   useEffect(() => {
-    const initStreaming = async () => {
-      console.log('[MSEPlayer] Initializing for camera:', cameraId)
-      try {
-        const statusRes = await fetch('/api/streaming/status')
-        const statusData = await statusRes.json()
-        console.log('[MSEPlayer] Status:', statusData)
-
-        if (!statusData.liveStreamEnabled) {
-          console.log('[MSEPlayer] Live streaming not enabled')
-          setError('Live streaming is not enabled')
-          setStatus('error')
-          return
-        }
-
-        if (!statusData.running) {
-          console.log('[MSEPlayer] go2rtc not running, starting...')
-          const startRes = await fetch('/api/streaming/start', { method: 'POST' })
-          const startData = await startRes.json()
-          console.log('[MSEPlayer] Start response:', startData)
-          
-          if (!startRes.ok || !startData.success) {
-            console.error('[MSEPlayer] Failed to start go2rtc:', startData.error)
-            setError(startData.error || 'Failed to start go2rtc')
-            setStatus('error')
-            return
-          }
-        }
-        
-        console.log('[MSEPlayer] Stream ready, setting flag')
-        setStreamReady(true)
-      } catch (err) {
-        console.error('[MSEPlayer] Failed to initialize streaming:', err)
-        setError('Failed to initialize streaming')
-        setStatus('error')
-      }
-    }
-
-    initStreaming()
-
-    return cleanup
-  }, [cleanup, cameraId])
-
-  useEffect(() => {
-    console.log('[MSEPlayer] Effect check - streamReady:', streamReady, 'autoPlay:', autoPlay)
-    if (streamReady && autoPlay) {
-      console.log('[MSEPlayer] Starting streaming...')
+    if (autoPlay) {
+      console.log('[LivestreamPlayer] Starting streaming for camera:', cameraId)
       startStreaming()
     }
-  }, [streamReady, autoPlay, startStreaming])
+
+    return cleanup
+  }, [autoPlay, cameraId, cleanup, startStreaming])
 
   return (
     <div className={`relative ${className}`}>
