@@ -1,0 +1,28 @@
+lukashengl@mac-mini HASS-Dashboard % # Pr��fen ob go2rtc beim Stream-Abruf Fehler hat:
+docker logs hass-dashboard 2>&1 | grep -E "\[go2rtc\]" | grep -iE "rtsp|rtspx|connect|dial" | tail -20
+# Testen ob go2rtc den RTSP-Stream direkt abrufen kann (HTTP-Probe):
+docker exec hass-dashboard curl -s "http://127.0.0.1:1984/api/stream.mp4?src=68315e3702fd6803e40003fc" --max-time 5 -o /dev/null -w "%{http_code}\n"
+zsh: command not found: #
+[go2rtc] RTSP URL for 68315e37035b6803e40003ff: rtspx://***:***@10.0.0.2:7441/68315e37035b6803e40003ff_channel_1
+[Next] [go2rtc] RTSP URL for 68330e970123c803e4000703: rtspx://***:***@10.0.0.2:7441/68330e970123c803e4000703_channel_1
+[go2rtc] RTSP URL for 69047ecf0361dd03e46b58bd: rtspx://***:***@10.0.0.2:7441/69047ecf0361dd03e46b58bd_channel_1
+[go2rtc] RTSP URL for 68315e3703866803e4000400: rtspx://***:***@10.0.0.2:7441/68315e3703866803e4000400_channel_1
+[go2rtc] RTSP URL for 68315e3703a36803e4000401: rtspx://***:***@10.0.0.2:7441/68315e3703a36803e4000401_channel_1
+[go2rtc] RTSP URL for 68315e3702d06803e40003fb: rtspx://***:***@10.0.0.2:7441/68315e3702d06803e40003fb_channel_1
+[go2rtc] RTSP URL for 68315e3702fd6803e40003fc: rtspx://***:***@10.0.0.2:7441/68315e3702fd6803e40003fc_channel_1
+[go2rtc] RTSP URL for 68315e3703326803e40003fe: rtspx://***:***@10.0.0.2:7441/68315e3703326803e40003fe_channel_1
+[go2rtc] RTSP URL for 68315e3703c16803e4000402: rtspx://***:***@10.0.0.2:7441/68315e3703c16803e4000402_channel_1
+[go2rtc] RTSP URL for 68315e37035b6803e40003ff: rtspx://***:***@10.0.0.2:7441/68315e37035b6803e40003ff_channel_1
+[go2rtc] 18:07:45.409 INF [rtsp] listen addr=:8554
+[Next] [go2rtc] RTSP URL for 68330e970123c803e4000703: rtspx://***:***@10.0.0.2:7441/68330e970123c803e4000703_channel_1
+[go2rtc] RTSP URL for 69047ecf0361dd03e46b58bd: rtspx://***:***@10.0.0.2:7441/69047ecf0361dd03e46b58bd_channel_1
+[Next] [go2rtc] RTSP URL for 68315e3703866803e4000400: rtspx://***:***@10.0.0.2:7441/68315e3703866803e4000400_channel_1
+[go2rtc] RTSP URL for 68315e3703a36803e4000401: rtspx://***:***@10.0.0.2:7441/68315e3703a36803e4000401_channel_1
+[go2rtc] RTSP URL for 68315e3702d06803e40003fb: rtspx://***:***@10.0.0.2:7441/68315e3702d06803e40003fb_channel_1
+[go2rtc] RTSP URL for 68315e3702fd6803e40003fc: rtspx://***:***@10.0.0.2:7441/68315e3702fd6803e40003fc_channel_1
+[go2rtc] RTSP URL for 68315e3703326803e40003fe: rtspx://***:***@10.0.0.2:7441/68315e3703326803e40003fe_channel_1
+[go2rtc] RTSP URL for 68315e3703c16803e4000402: rtspx://***:***@10.0.0.2:7441/68315e3703c16803e4000402_channel_1
+[go2rtc] RTSP URL for 68315e37035b6803e40003ff: rtspx://***:***@10.0.0.2:7441/68315e37035b6803e40003ff_channel_1
+zsh: no matches found: (HTTP-Probe):
+000
+lukashengl@mac-mini HASS-Dashboard % 
