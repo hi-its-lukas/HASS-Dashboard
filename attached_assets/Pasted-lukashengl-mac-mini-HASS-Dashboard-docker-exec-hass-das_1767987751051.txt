@@ -1,0 +1,58 @@
+lukashengl@mac-mini HASS-Dashboard % docker exec hass-dashboard cat /tmp/go2rtc.json
+{
+  "log": {
+    "level": "debug",
+    "api": "debug",
+    "rtsp": "debug",
+    "exec": "debug"
+  },
+  "api": {
+    "listen": ":1984",
+    "origin": "*"
+  },
+  "rtsp": {
+    "listen": ":8554"
+  },
+  "webrtc": {
+    "listen": ":8555",
+    "ice_servers": [
+      {
+        "urls": [
+          "stun:stun.l.google.com:19302"
+        ]
+      }
+    ]
+  },
+  "streams": {
+    "68330e970123c803e4000703": [
+      "rtspx://10.0.0.2:7441/DUzgrnTWYAEBLv30"
+    ],
+    "69047ecf0361dd03e46b58bd": [
+      "rtspx://10.0.0.2:7441/XryYHBFbgkdMWb04"
+    ],
+    "68315e3703866803e4000400": [
+      "rtspx://10.0.0.2:7441/SR9ykHlMjdh05ndR"
+    ],
+    "68315e3703a36803e4000401": [
+      "rtspx://10.0.0.2:7441/J6rdnWBNdkvU7UBz"
+    ],
+    "68315e3702d06803e40003fb": [
+      "rtspx://10.0.0.2:7441/krcq8fWsZ1bJZv36"
+    ],
+    "68315e3702fd6803e40003fc": [
+      "rtspx://10.0.0.2:7441/4Q9HuekgLBxZEgcD"
+    ],
+    "68315e3703326803e40003fe": [
+      "rtspx://10.0.0.2:7441/bV2wQfzCLHVeU4Dy"
+    ],
+    "68315e3703c16803e4000402": [
+      "rtspx://10.0.0.2:7441/XtjvJbIFSReyYJR3"
+    ],
+    "68315e37035b6803e40003ff": [
+      "rtspx://10.0.0.2:7441/guJtyvP6Ku1J9l9n"
+    ]
+  }
+}%                                                                                                                                            
+lukashengl@mac-mini HASS-Dashboard % docker exec hass-dashboard curl -s http://127.0.0.1:1984/api/streams | head -50
+{"68315e3702d06803e40003fb":{"producers":[{"url":"rtspx://10.0.0.2:7441/krcq8fWsZ1bJZv36"}],"consumers":null},"68315e3702fd6803e40003fc":{"producers":[{"url":"rtspx://10.0.0.2:7441/4Q9HuekgLBxZEgcD"}],"consumers":null},"68315e3703326803e40003fe":{"producers":[{"url":"rtspx://10.0.0.2:7441/bV2wQfzCLHVeU4Dy"}],"consumers":null},"68315e37035b6803e40003ff":{"producers":[{"url":"rtspx://10.0.0.2:7441/guJtyvP6Ku1J9l9n"}],"consumers":null},"68315e3703866803e4000400":{"producers":[{"url":"rtspx://10.0.0.2:7441/SR9ykHlMjdh05ndR"}],"consumers":null},"68315e3703a36803e4000401":{"producers":[{"url":"rtspx://10.0.0.2:7441/J6rdnWBNdkvU7UBz"}],"consumers":null},"68315e3703c16803e4000402":{"producers":[{"url":"rtspx://10.0.0.2:7441/XtjvJbIFSReyYJR3"}],"consumers":null},"68330e970123c803e4000703":{"producers":[{"url":"rtspx://10.0.0.2:7441/DUzgrnTWYAEBLv30"}],"consumers":null},"69047ecf0361dd03e46b58bd":{"producers":[{"url":"rtspx://10.0.0.2:7441/XryYHBFbgkdMWb04"}],"consumers":null}}
+lukashengl@mac-mini HASS-Dashboard % 
