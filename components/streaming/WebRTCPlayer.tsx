@@ -151,19 +151,24 @@ export default function WebRTCPlayer({
 
   useEffect(() => {
     const initStreaming = async () => {
+      console.log('[MSEPlayer] Initializing for camera:', cameraId)
       try {
         const statusRes = await fetch('/api/streaming/status')
         const statusData = await statusRes.json()
+        console.log('[MSEPlayer] Status:', statusData)
 
         if (!statusData.liveStreamEnabled) {
+          console.log('[MSEPlayer] Live streaming not enabled')
           setError('Live streaming is not enabled')
           setStatus('error')
           return
         }
 
         if (!statusData.running) {
+          console.log('[MSEPlayer] go2rtc not running, starting...')
           const startRes = await fetch('/api/streaming/start', { method: 'POST' })
           const startData = await startRes.json()
+          console.log('[MSEPlayer] Start response:', startData)
           
           if (!startRes.ok || !startData.success) {
             console.error('[MSEPlayer] Failed to start go2rtc:', startData.error)
@@ -173,9 +178,10 @@ export default function WebRTCPlayer({
           }
         }
         
+        console.log('[MSEPlayer] Stream ready, setting flag')
         setStreamReady(true)
       } catch (err) {
-        console.error('Failed to initialize streaming:', err)
+        console.error('[MSEPlayer] Failed to initialize streaming:', err)
         setError('Failed to initialize streaming')
         setStatus('error')
       }
@@ -184,10 +190,12 @@ export default function WebRTCPlayer({
     initStreaming()
 
     return cleanup
-  }, [cleanup])
+  }, [cleanup, cameraId])
 
   useEffect(() => {
+    console.log('[MSEPlayer] Effect check - streamReady:', streamReady, 'autoPlay:', autoPlay)
     if (streamReady && autoPlay) {
+      console.log('[MSEPlayer] Starting streaming...')
       startStreaming()
     }
   }, [streamReady, autoPlay, startStreaming])
