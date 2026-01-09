@@ -28,7 +28,7 @@ export default function CamerasPage() {
   const [loading, setLoading] = useState(true)
   const [useStream, setUseStream] = useState(true)
   const [liveStreamEnabled, setLiveStreamEnabled] = useState(false)
-  const [useLiveStream, setUseLiveStream] = useState(false)
+  const [useLiveStream, setUseLiveStream] = useState(true)
   
   const hasUnifiCameras = unifiCameraIds && unifiCameraIds.length > 0
   
