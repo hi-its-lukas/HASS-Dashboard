@@ -56,11 +56,15 @@ export async function GET() {
         cameras: rawUnifi.cameras || [],
         accessDevices: rawUnifi.accessDevices || [],
         aiSurveillanceEnabled: rawUnifi.aiSurveillanceEnabled ?? true,
+        liveStreamEnabled: rawUnifi.liveStreamEnabled ?? false,
+        rtspUsername: decrypted.rtspUsername || '',
         protectApiKey: '',
         accessApiKey: '',
+        rtspPassword: '',
         _hasProtectKey: !!decrypted.protectApiKey,
-        _hasAccessKey: !!decrypted.accessApiKey
-      } as UnifiConfig & { _hasProtectKey: boolean; _hasAccessKey: boolean }
+        _hasAccessKey: !!decrypted.accessApiKey,
+        _hasRtspPassword: !!decrypted.rtspPassword
+      } as UnifiConfig & { _hasProtectKey: boolean; _hasAccessKey: boolean; _hasRtspPassword: boolean }
     }
     
     const canEditGlobalSettings = await hasPermission(session.userId, 'settings:edit')
@@ -149,6 +153,11 @@ export async function POST(request: NextRequest) {
             accessApiKey: isMaskedOrEmpty(incomingUnifi.accessApiKey) && existingUnifi?.accessApiKey
               ? existingUnifi.accessApiKey
               : incomingUnifi.accessApiKey || '',
+            rtspUsername: incomingUnifi.rtspUsername || existingUnifi?.rtspUsername || '',
+            rtspPassword: isMaskedOrEmpty(incomingUnifi.rtspPassword) && existingUnifi?.rtspPassword
+              ? existingUnifi.rtspPassword
+              : incomingUnifi.rtspPassword || '',
+            liveStreamEnabled: incomingUnifi.liveStreamEnabled ?? existingUnifi?.liveStreamEnabled ?? false,
             cameras: incomingUnifi.cameras || [],
             accessDevices: incomingUnifi.accessDevices || [],
             aiSurveillanceEnabled: incomingUnifi.aiSurveillanceEnabled ?? true

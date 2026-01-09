@@ -268,13 +268,16 @@ export default function UnifiSettingsPage() {
         
         const hadProtectKey = config.protectApiKey && !config.protectApiKey.includes('••••')
         const hadAccessKey = config.accessApiKey && !config.accessApiKey.includes('••••')
+        const hadRtspPassword = config.rtspPassword && !config.rtspPassword.includes('••••')
         
         setConfig(prev => ({
           ...prev,
           protectApiKey: hadProtectKey ? '••••••••••••••••••••••••' : prev.protectApiKey,
           accessApiKey: hadAccessKey ? '••••••••••••••••••••••••' : prev.accessApiKey,
+          rtspPassword: hadRtspPassword ? '••••••••••••••••••••••••' : prev.rtspPassword,
           _hasProtectKey: hadProtectKey || prev._hasProtectKey,
-          _hasAccessKey: hadAccessKey || prev._hasAccessKey
+          _hasAccessKey: hadAccessKey || prev._hasAccessKey,
+          _hasRtspPassword: hadRtspPassword || prev._hasRtspPassword
         }))
       } else {
         const data = await res.json().catch(() => ({}))
