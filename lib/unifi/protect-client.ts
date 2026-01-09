@@ -315,12 +315,28 @@ export class ProtectClient {
     })
     
     if (!response.ok) {
-      console.log('[Protect] Bootstrap API failed with status:', response.status, '- session auth may be required')
+      console.log('[Protect] Bootstrap API failed with status:', response.status)
+      console.log('[Protect] Session cookie:', this.sessionCookie ? 'present' : 'missing')
+      console.log('[Protect] CSRF token:', this.csrfToken ? 'present' : 'missing')
+      console.log('[Protect] Falling back to integration API (no RTSP tokens available)')
       return this.getCameras()
     }
     
     const bootstrap = await response.json() as { cameras?: ProtectCamera[] }
-    console.log('[Protect] Bootstrap API returned', bootstrap.cameras?.length || 0, 'cameras with channel data')
+    console.log('[Protect] Bootstrap API SUCCESS - got', bootstrap.cameras?.length || 0, 'cameras')
+    
+    if (bootstrap.cameras && bootstrap.cameras.length > 0) {
+      const firstCam = bootstrap.cameras[0]
+      const channels = firstCam.channels
+      const hasChannels = channels && channels.length > 0
+      const hasRtspAlias = hasChannels && channels[0]?.rtspAlias
+      console.log('[Protect] First camera has channels:', hasChannels)
+      console.log('[Protect] First camera has rtspAlias:', !!hasRtspAlias)
+      if (hasRtspAlias && channels) {
+        console.log('[Protect] Sample rtspAlias:', channels[0]?.rtspAlias?.substring(0, 8) + '...')
+      }
+    }
+    
     return bootstrap.cameras || []
   }
 

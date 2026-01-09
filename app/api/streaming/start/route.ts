@@ -33,16 +33,23 @@ export async function POST() {
     
     if (unifiConfig.rtspUsername && unifiConfig.rtspPassword) {
       console.log('[Streaming] Attempting session login for Bootstrap API access...')
+      console.log('[Streaming] Using username:', unifiConfig.rtspUsername)
       const loginSuccess = await client.loginWithCredentials(
         unifiConfig.rtspUsername,
         unifiConfig.rtspPassword
       )
-      if (!loginSuccess) {
-        console.log('[Streaming] Session login failed - will try API key only')
+      if (loginSuccess) {
+        console.log('[Streaming] Session login SUCCESSFUL - Bootstrap API should work')
+      } else {
+        console.log('[Streaming] Session login FAILED - Bootstrap API will likely fail too')
       }
+    } else {
+      console.log('[Streaming] No RTSP credentials configured - cannot authenticate to Bootstrap API')
     }
     
+    console.log('[Streaming] Fetching RTSP tokens from Bootstrap API...')
     const rtspTokens = await client.getRtspTokens()
+    console.log('[Streaming] Got', rtspTokens.length, 'cameras with RTSP tokens')
     
     if (rtspTokens.length === 0) {
       console.log('[Streaming] No RTSP tokens found - RTSP may not be enabled or session auth required')
