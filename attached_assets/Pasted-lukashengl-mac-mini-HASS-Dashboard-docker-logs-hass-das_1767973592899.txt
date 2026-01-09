@@ -1,0 +1,102 @@
+lukashengl@mac-mini HASS-Dashboard % docker logs hass-dashboard 2>&1 | tail -100
+    "floor_id": "443f89ec-7eea-11ef-aa81-dab3701b86e8",
+    "full_name": "Dream MachinePro - 1F - Garagentor",
+    "id": "cfef6da4-71a8-44ee-86a3-08b71f1fd773",
+    "is_bind_hub": true,
+    "name": "Garagentor",
+    "type": "door"
+  },
+  {
+    "door_lock_relay_status": "lock",
+    "door_position_status": "none",
+    "floor_id": "ce20dfa3-7d87-11ef-aa81-dab3701b86e8",
+    "full_name": "Dream MachinePro - EG - Hoftor",
+    "id": "6a0808ab-1886-42c2-ab66-b7bcf3efce33",
+    "is_bind_hub": true,
+    "name": "Hoftor",
+    "type": "door"
+  },
+  {
+    "door_lock_relay_status": "lock",
+    "door_position_status": "none",
+    "floor_id": "443f89ec-7eea-11ef-aa81-dab3701b86e8",
+    "full_name": "Dream MachinePro - 1F - Door 2537",
+    "id": "2381a3da-1329-4a7a-8849-e5b2935e930b",
+    "is_bind_hub": true,
+    "name": "Door 2537",
+    "type": "door"
+  }
+]
+[Next] [API] Door mapping: {
+  unique_id: undefined,
+  id: 'cfef6da4-71a8-44ee-86a3-08b71f1fd773',
+  _id: undefined,
+  name: 'Garagentor',
+  finalId: 'cfef6da4-71a8-44ee-86a3-08b71f1fd773'
+}
+[Next] [API] Door mapping: {
+  unique_id: undefined,
+  id: '6a0808ab-1886-42c2-ab66-b7bcf3efce33',
+  _id: undefined,
+  name: 'Hoftor',
+  finalId: '6a0808ab-1886-42c2-ab66-b7bcf3efce33'
+}
+[Next] [API] Door mapping: {
+  unique_id: undefined,
+  id: '2381a3da-1329-4a7a-8849-e5b2935e930b',
+  _id: undefined,
+  name: 'Door 2537',
+  finalId: '2381a3da-1329-4a7a-8849-e5b2935e930b'
+}
+[Gateway] WebSocket upgrade request: /ws/mse/68330e970123c803e4000703
+[Gateway] Routing MSE stream 68330e970123c803e4000703 to go2rtc (port 1984), path: /api/ws?src=68330e970123c803e4000703
+[Gateway] Connecting to target port 1984 for /api/ws?src=68330e970123c803e4000703
+[Gateway] Connected to target port 1984
+[Gateway] WebSocket upgrade request: /ws/mse/68315e37035b6803e40003ff
+[Gateway] Routing MSE stream 68315e37035b6803e40003ff to go2rtc (port 1984), path: /api/ws?src=68315e37035b6803e40003ff
+[Gateway] Connecting to target port 1984 for /api/ws?src=68315e37035b6803e40003ff
+[Gateway] Connected to target port 1984
+[Gateway] WebSocket upgrade request: /ws/mse/68315e3703c16803e4000402
+[Gateway] Routing MSE stream 68315e3703c16803e4000402 to go2rtc (port 1984), path: /api/ws?src=68315e3703c16803e4000402
+[Gateway] Connecting to target port 1984 for /api/ws?src=68315e3703c16803e4000402
+[Gateway] Connected to target port 1984
+[Gateway] WebSocket upgrade request: /ws/mse/68315e3702fd6803e40003fc
+[Gateway] Routing MSE stream 68315e3702fd6803e40003fc to go2rtc (port 1984), path: /api/ws?src=68315e3702fd6803e40003fc
+[Gateway] Connecting to target port 1984 for /api/ws?src=68315e3702fd6803e40003fc
+[Gateway] Connected to target port 1984
+[Gateway] WebSocket upgrade request: /ws/mse/68315e3703326803e40003fe
+[Gateway] Routing MSE stream 68315e3703326803e40003fe to go2rtc (port 1984), path: /api/ws?src=68315e3703326803e40003fe
+[Gateway] Connecting to target port 1984 for /api/ws?src=68315e3703326803e40003fe
+[Gateway] Connected to target port 1984
+[Gateway] WebSocket upgrade request: /ws/mse/68315e3702d06803e40003fb
+[Gateway] Routing MSE stream 68315e3702d06803e40003fb to go2rtc (port 1984), path: /api/ws?src=68315e3702d06803e40003fb
+[Gateway] Connecting to target port 1984 for /api/ws?src=68315e3702d06803e40003fb
+[Gateway] Connected to target port 1984
+[Gateway] WebSocket upgrade request: /ws/mse/68315e3703a36803e4000401
+[Gateway] Routing MSE stream 68315e3703a36803e4000401 to go2rtc (port 1984), path: /api/ws?src=68315e3703a36803e4000401
+[Gateway] Connecting to target port 1984 for /api/ws?src=68315e3703a36803e4000401
+[Gateway] Connected to target port 1984
+[Gateway] WebSocket upgrade request: /ws/mse/68315e3703866803e4000400
+[Gateway] Routing MSE stream 68315e3703866803e4000400 to go2rtc (port 1984), path: /api/ws?src=68315e3703866803e4000400
+[Gateway] Connecting to target port 1984 for /api/ws?src=68315e3703866803e4000400
+[Gateway] Connected to target port 1984
+[Gateway] WebSocket upgrade request: /ws/mse/69047ecf0361dd03e46b58bd
+[Gateway] Routing MSE stream 69047ecf0361dd03e46b58bd to go2rtc (port 1984), path: /api/ws?src=69047ecf0361dd03e46b58bd
+[Gateway] Connecting to target port 1984 for /api/ws?src=69047ecf0361dd03e46b58bd
+[Gateway] Connected to target port 1984
+[Gateway] WebSocket upgrade request: /ws/ha
+[Gateway] Routing to WS Proxy (port 6000)
+[Gateway] Connecting to target port 6000 for /ws/ha
+[Gateway] Connected to target port 6000
+[WS-Proxy] Client connected: bb88693f-e199-440f-99fa-0d96c064d3f3
+[Gateway] WebSocket upgrade request: /ws/ha
+[Gateway] Routing to WS Proxy (port 6000)
+[Gateway] Connecting to target port 6000 for /ws/ha
+[Gateway] Connected to target port 6000
+[WS-Proxy] Client connected: 6f9c5fcf-b81e-4b34-9c34-552ea1fe405d
+[Gateway] WebSocket upgrade request: /ws/ha
+[Gateway] Routing to WS Proxy (port 6000)
+[Gateway] Connecting to target port 6000 for /ws/ha
+[Gateway] Connected to target port 6000
+[WS-Proxy] Client connected: 4fa124f5-954b-4381-b49f-3a243843a183
+lukashengl@mac-mini HASS-Dashboard % 
