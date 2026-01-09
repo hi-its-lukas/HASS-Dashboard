@@ -13,6 +13,18 @@ function createAbortSignal(timeoutMs: number = REQUEST_TIMEOUT_MS): AbortSignal 
   return AbortSignal.timeout(timeoutMs)
 }
 
+export interface ProtectCameraChannel {
+  id: number
+  name: string
+  enabled: boolean
+  isRtspEnabled: boolean
+  rtspAlias: string
+  width: number
+  height: number
+  fps: number
+  bitrate: number
+}
+
 export interface ProtectCamera {
   id: string
   name: string
@@ -26,6 +38,15 @@ export interface ProtectCamera {
     hasSmartDetect: boolean
     hasPackageCamera: boolean
   }
+  channels?: ProtectCameraChannel[]
+}
+
+export interface CameraRtspTokens {
+  cameraId: string
+  cameraName: string
+  high?: string
+  medium?: string
+  low?: string
 }
 
 export interface ProtectEvent {
@@ -198,5 +219,83 @@ export class ProtectClient {
     
     const arrayBuffer = await response.arrayBuffer()
     return Buffer.from(arrayBuffer)
+  }
+
+  async getCamerasWithChannels(): Promise<ProtectCamera[]> {
+    const url = `${this.baseUrl}/proxy/protect/api/bootstrap`
+    
+    const response = await fetch(url, {
+      signal: createAbortSignal(),
+      headers: {
+        'X-API-KEY': this.apiKey,
+        'Content-Type': 'application/json'
+      },
+      // @ts-expect-error - dispatcher is undici's way to configure TLS
+      dispatcher
+    })
+    
+    if (!response.ok) {
+      console.log('[Protect] Bootstrap API failed, falling back to integration API')
+      return this.getCameras()
+    }
+    
+    const bootstrap = await response.json() as { cameras?: ProtectCamera[] }
+    return bootstrap.cameras || []
+  }
+
+  async getRtspTokens(): Promise<CameraRtspTokens[]> {
+    try {
+      const cameras = await this.getCamerasWithChannels()
+      const tokens: CameraRtspTokens[] = []
+      
+      for (const camera of cameras) {
+        if (!camera.channels || camera.channels.length === 0) {
+          console.log(`[Protect] Camera ${camera.name} has no channels`)
+          continue
+        }
+        
+        const cameraTokens: CameraRtspTokens = {
+          cameraId: camera.id,
+          cameraName: camera.name
+        }
+        
+        for (const channel of camera.channels) {
+          if (!channel.isRtspEnabled || !channel.rtspAlias) {
+            continue
+          }
+          
+          if (channel.id === 0) {
+            cameraTokens.high = channel.rtspAlias
+          } else if (channel.id === 1) {
+            cameraTokens.medium = channel.rtspAlias
+          } else if (channel.id === 2) {
+            cameraTokens.low = channel.rtspAlias
+          }
+        }
+        
+        if (cameraTokens.high || cameraTokens.medium || cameraTokens.low) {
+          tokens.push(cameraTokens)
+          console.log(`[Protect] RTSP tokens for ${camera.name}:`, {
+            high: cameraTokens.high ? '✓' : '✗',
+            medium: cameraTokens.medium ? '✓' : '✗',
+            low: cameraTokens.low ? '✓' : '✗'
+          })
+        }
+      }
+      
+      return tokens
+    } catch (error) {
+      console.error('[Protect] Failed to get RTSP tokens:', error)
+      return []
+    }
+  }
+
+  getNvrHost(): string {
+    try {
+      const url = new URL(this.baseUrl)
+      return url.hostname
+    } catch {
+      return this.baseUrl.replace(/https?:\/\//, '').split('/')[0]
+    }
   }
 }
