@@ -224,6 +224,9 @@ const wss = new WebSocketServer({ noServer: true })
 const livestreamWss = new WebSocketServer({ noServer: true })
 
 let livestreamManager: ProtectLivestreamManager | null = null
+let livestreamManagerInitializing: Promise<ProtectLivestreamManager | null> | null = null
+let lastInitAttempt: number = 0
+const INIT_COOLDOWN_MS = 10000
 
 async function getUnifiProtectConfig(): Promise<{ host: string; username: string; password: string; channel: number } | null> {
   try {
@@ -278,25 +281,44 @@ async function getUnifiProtectConfig(): Promise<{ host: string; username: string
 }
 
 async function ensureLivestreamManager(): Promise<ProtectLivestreamManager | null> {
-  const config = await getUnifiProtectConfig()
-  if (!config) {
-    console.log('[WS-Proxy] UniFi Protect not configured')
-    return null
-  }
-  
   if (livestreamManager?.isConnected()) {
-    livestreamManager.setChannel(config.channel)
     return livestreamManager
   }
   
-  try {
-    livestreamManager = await initProtectLivestreamManager(config.host, config.username, config.password, config.channel)
-    console.log('[WS-Proxy] Livestream manager initialized with channel:', config.channel)
-    return livestreamManager
-  } catch (err) {
-    console.error('[WS-Proxy] Failed to initialize livestream manager:', err)
+  if (livestreamManagerInitializing) {
+    console.log('[WS-Proxy] Waiting for existing initialization...')
+    return livestreamManagerInitializing
+  }
+  
+  const now = Date.now()
+  if (now - lastInitAttempt < INIT_COOLDOWN_MS) {
+    console.log('[WS-Proxy] Cooldown active, skipping init attempt')
     return null
   }
+  
+  lastInitAttempt = now
+  
+  livestreamManagerInitializing = (async () => {
+    try {
+      const config = await getUnifiProtectConfig()
+      if (!config) {
+        console.log('[WS-Proxy] UniFi Protect not configured')
+        return null
+      }
+      
+      console.log('[WS-Proxy] Initializing livestream manager...')
+      livestreamManager = await initProtectLivestreamManager(config.host, config.username, config.password, config.channel)
+      console.log('[WS-Proxy] Livestream manager initialized successfully')
+      return livestreamManager
+    } catch (err) {
+      console.error('[WS-Proxy] Failed to initialize livestream manager:', err)
+      return null
+    } finally {
+      livestreamManagerInitializing = null
+    }
+  })()
+  
+  return livestreamManagerInitializing
 }
 
 livestreamWss.on('connection', async (clientWs: WebSocket, { userId, cameraId }: { userId: string; cameraId: string }) => {

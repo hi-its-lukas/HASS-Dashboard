@@ -1,0 +1,102 @@
+lukashengl@mac-mini HASS-Dashboard % docker logs hass-dashboard 2>&1 | tail -100
+[WS-Proxy] Livestream upgrade for camera: 68315e3703866803e4000400
+[WS-Proxy] Livestream client connected: 4fa124f5-954b-4381-b49f-3a243843a183 for camera 68315e3703866803e4000400
+[WS-Proxy] UniFi Protect config loaded: { host: '10.0.0.2', username: 'HASS-Dashboard1', channel: undefined }
+[ProtectLivestream] Connecting to: 10.0.0.2
+[ProtectLivestream] Found 9 cameras
+[ProtectLivestream] Starting new stream for: Garten von oben ( 68315e3703a36803e4000401 ) channel: 1
+[ProtectLivestream] Stream started for: Garten von oben
+[ProtectLivestream] Login failed
+[ProtectLivestream] Cannot start stream - not connected
+[ProtectLivestream] Codec info for Garten von oben : avc1.4d401f,mp4a.40.2
+[WS-Proxy] Sending codec to client for 68315e3703a36803e4000401: avc1.4d401f,mp4a.40.2
+[WS-Proxy] Livestream client disconnected: 4fa124f5-954b-4381-b49f-3a243843a183 for camera 68315e3703a36803e4000401
+[ProtectLivestream] Client removed from 68315e3703a36803e4000401 - remaining clients: 0
+[ProtectLivestream] No more clients, stopping stream: 68315e3703a36803e4000401
+[ProtectLivestream] Stream closed for: Garten von oben
+[ProtectLivestream] No clients for 68315e3703a36803e4000401 - not reconnecting
+[Gateway] WebSocket upgrade request: /ws/livestream/68315e3703a36803e4000401
+[Gateway] Routing livestream for camera 68315e3703a36803e4000401 to WS Proxy (port 6000)
+[Gateway] Connecting to target port 6000 for /ws/livestream/68315e3703a36803e4000401
+[Gateway] Connected to target port 6000
+[WS-Proxy] Livestream upgrade for camera: 68315e3703a36803e4000401
+[WS-Proxy] Livestream client connected: 4fa124f5-954b-4381-b49f-3a243843a183 for camera 68315e3703a36803e4000401
+[WS-Proxy] UniFi Protect config loaded: { host: '10.0.0.2', username: 'HASS-Dashboard1', channel: undefined }
+[ProtectLivestream] Connecting to: 10.0.0.2
+[ProtectLivestream] Login failed
+[WS-Proxy] Livestream manager initialized with channel: 1
+[ProtectLivestream] Connecting to: 10.0.0.2
+[Gateway] WebSocket upgrade request: /ws/livestream/68315e3702d06803e40003fb
+[Gateway] Routing livestream for camera 68315e3702d06803e40003fb to WS Proxy (port 6000)
+[Gateway] Connecting to target port 6000 for /ws/livestream/68315e3702d06803e40003fb
+[Gateway] Connected to target port 6000
+[WS-Proxy] Livestream upgrade for camera: 68315e3702d06803e40003fb
+[WS-Proxy] Livestream client connected: 4fa124f5-954b-4381-b49f-3a243843a183 for camera 68315e3702d06803e40003fb
+[WS-Proxy] UniFi Protect config loaded: { host: '10.0.0.2', username: 'HASS-Dashboard1', channel: undefined }
+[ProtectLivestream] Connecting to: 10.0.0.2
+[ProtectLivestream] Login failed
+[WS-Proxy] Livestream manager initialized with channel: 1
+[ProtectLivestream] Connecting to: 10.0.0.2
+[ProtectLivestream] Login failed
+[WS-Proxy] Livestream manager initialized with channel: 1
+[ProtectLivestream] Connecting to: 10.0.0.2
+[ProtectLivestream] Login failed
+[ProtectLivestream] Cannot start stream - not connected
+[Gateway] WebSocket upgrade request: /ws/livestream/68315e3702fd6803e40003fc
+[Gateway] Routing livestream for camera 68315e3702fd6803e40003fc to WS Proxy (port 6000)
+[Gateway] Connecting to target port 6000 for /ws/livestream/68315e3702fd6803e40003fc
+[Gateway] Connected to target port 6000
+[WS-Proxy] Livestream upgrade for camera: 68315e3702fd6803e40003fc
+[WS-Proxy] Livestream client connected: 4fa124f5-954b-4381-b49f-3a243843a183 for camera 68315e3702fd6803e40003fc
+[WS-Proxy] UniFi Protect config loaded: { host: '10.0.0.2', username: 'HASS-Dashboard1', channel: undefined }
+[ProtectLivestream] Connecting to: 10.0.0.2
+[ProtectLivestream] Login failed
+[ProtectLivestream] Cannot start stream - not connected
+[ProtectLivestream] Login failed
+[ProtectLivestream] Cannot start stream - not connected
+[Gateway] WebSocket upgrade request: /ws/livestream/68315e3703326803e40003fe
+[Gateway] Routing livestream for camera 68315e3703326803e40003fe to WS Proxy (port 6000)
+[Gateway] Connecting to target port 6000 for /ws/livestream/68315e3703326803e40003fe
+[Gateway] Connected to target port 6000
+[WS-Proxy] Livestream upgrade for camera: 68315e3703326803e40003fe
+[WS-Proxy] Livestream client connected: 4fa124f5-954b-4381-b49f-3a243843a183 for camera 68315e3703326803e40003fe
+[WS-Proxy] UniFi Protect config loaded: { host: '10.0.0.2', username: 'HASS-Dashboard1', channel: undefined }
+[ProtectLivestream] Connecting to: 10.0.0.2
+[WS-Proxy] Livestream manager initialized with channel: 1
+[ProtectLivestream] Connecting to: 10.0.0.2
+[ProtectLivestream] Login failed
+[Gateway] WebSocket upgrade request: /ws/livestream/69047ecf0361dd03e46b58bd
+[Gateway] Routing livestream for camera 69047ecf0361dd03e46b58bd to WS Proxy (port 6000)
+[Gateway] Connecting to target port 6000 for /ws/livestream/69047ecf0361dd03e46b58bd
+[Gateway] Connected to target port 6000
+[WS-Proxy] Livestream upgrade for camera: 69047ecf0361dd03e46b58bd
+[WS-Proxy] Livestream client connected: 4fa124f5-954b-4381-b49f-3a243843a183 for camera 69047ecf0361dd03e46b58bd
+[WS-Proxy] UniFi Protect config loaded: { host: '10.0.0.2', username: 'HASS-Dashboard1', channel: undefined }
+[ProtectLivestream] Connecting to: 10.0.0.2
+[ProtectLivestream] Login failed
+[ProtectLivestream] Cannot start stream - not connected
+[Gateway] WebSocket upgrade request: /ws/livestream/68315e3703c16803e4000402
+[Gateway] Routing livestream for camera 68315e3703c16803e4000402 to WS Proxy (port 6000)
+[Gateway] Connecting to target port 6000 for /ws/livestream/68315e3703c16803e4000402
+[Gateway] Connected to target port 6000
+[WS-Proxy] Livestream upgrade for camera: 68315e3703c16803e4000402
+[WS-Proxy] Livestream client connected: 4fa124f5-954b-4381-b49f-3a243843a183 for camera 68315e3703c16803e4000402
+[WS-Proxy] UniFi Protect config loaded: { host: '10.0.0.2', username: 'HASS-Dashboard1', channel: undefined }
+[ProtectLivestream] Connecting to: 10.0.0.2
+[WS-Proxy] Livestream manager initialized with channel: 1
+[ProtectLivestream] Connecting to: 10.0.0.2
+[ProtectLivestream] Login failed
+[ProtectLivestream] Login failed
+[WS-Proxy] Livestream manager initialized with channel: 1
+[ProtectLivestream] Connecting to: 10.0.0.2
+[ProtectLivestream] Login failed
+[WS-Proxy] Livestream manager initialized with channel: 1
+[ProtectLivestream] Connecting to: 10.0.0.2
+[ProtectLivestream] Login failed
+[ProtectLivestream] Cannot start stream - not connected
+[ProtectLivestream] Login failed
+[ProtectLivestream] Cannot start stream - not connected
+10.0.0.2: API error: Protect controller is taking too long to respond to a request. This error can usually be safely ignored.
+[ProtectLivestream] Login failed
+[ProtectLivestream] Cannot start stream - not connected
+lukashengl@mac-mini HASS-Dashboard % 
