@@ -126,14 +126,21 @@ export async function startGo2rtc(streams: StreamConfig[]): Promise<StartResult>
       console.error('[go2rtc ERROR]', data.toString().trim())
     })
     
-    go2rtcProcess.on('close', (code) => {
-      console.log('[go2rtc] Process exited with code:', code)
+    go2rtcProcess.on('close', (code, signal) => {
+      console.log('[go2rtc] Process exited with code:', code, 'signal:', signal)
+      if (code !== 0) {
+        console.error('[go2rtc] CRASH DETECTED - exit code:', code, 'signal:', signal)
+      }
       go2rtcProcess = null
     })
     
     go2rtcProcess.on('error', (err) => {
-      console.error('[go2rtc] Process error:', err)
+      console.error('[go2rtc] Process spawn error:', err.message)
       go2rtcProcess = null
+    })
+    
+    go2rtcProcess.on('exit', (code, signal) => {
+      console.log('[go2rtc] Process exit event - code:', code, 'signal:', signal)
     })
     
     await new Promise(resolve => setTimeout(resolve, 2000))
@@ -158,7 +165,29 @@ export function stopGo2rtc(): void {
 }
 
 export function isGo2rtcRunning(): boolean {
-  return go2rtcProcess !== null && !go2rtcProcess.killed
+  // Check if we have a process reference and it's not killed
+  if (go2rtcProcess === null || go2rtcProcess.killed) {
+    return false
+  }
+  
+  // Also verify the process is actually still alive
+  try {
+    process.kill(go2rtcProcess.pid!, 0)
+    return true
+  } catch {
+    // Process doesn't exist anymore
+    go2rtcProcess = null
+    return false
+  }
+}
+
+export async function checkGo2rtcHealth(): Promise<boolean> {
+  try {
+    const response = await fetch(`http://127.0.0.1:${GO2RTC_PORT}/api`)
+    return response.ok
+  } catch {
+    return false
+  }
 }
 
 export function getGo2rtcApiUrl(): string {
