@@ -234,11 +234,18 @@ export function buildRtspUrl(
 
 export function buildTokenRtspUrl(
   nvrHost: string,
-  rtspToken: string
+  rtspToken: string,
+  secure: boolean = false
 ): string {
-  const url = `rtspx://${nvrHost}:7441/${rtspToken}`
-  console.log(`[go2rtc] Token-based RTSP URL: rtspx://${nvrHost}:7441/${rtspToken.substring(0, 4)}...`)
-  return url
+  if (secure) {
+    const url = `rtspx://${nvrHost}:7441/${rtspToken}`
+    console.log(`[go2rtc] Token-based RTSP URL (secure): rtspx://${nvrHost}:7441/${rtspToken.substring(0, 4)}...`)
+    return url
+  } else {
+    const url = `rtsp://${nvrHost}:7447/${rtspToken}`
+    console.log(`[go2rtc] Token-based RTSP URL (unsecure): rtsp://${nvrHost}:7447/${rtspToken.substring(0, 4)}...`)
+    return url
+  }
 }
 
 export { GO2RTC_PORT, GO2RTC_WEBRTC_PORT }
