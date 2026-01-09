@@ -1,0 +1,452 @@
+lukashengl@mac-mini HASS-Dashboard % docker logs -f hass-dashboard
+[INIT] Fixing ownership of /data
+[INIT] Using ENCRYPTION_KEY from environment
+[INIT] Existing database found at /data/hass-dashboard.db
+[INIT] Syncing database schema...
+Environment variables loaded from .env
+Prisma schema loaded from prisma/schema.prisma
+Datasource "db": SQLite database "hass-dashboard.db" at "file:/data/hass-dashboard.db"
+
+The database is already in sync with the Prisma schema.
+
+✔ Generated Prisma Client (v5.22.0) to ./node_modules/@prisma/client in 47ms
+
+[INIT] Database ready
+[INIT] Starting HASS Dashboard Gateway on port 8080
+[INIT] Dropping privileges to nextjs
+[Gateway] Starting WS Proxy on internal port 6000
+[Gateway] Starting Next.js on internal port 3000
+[WS-Proxy] Encryption key loaded successfully
+[WS-Proxy] WebSocket proxy running on port 6000
+[Next]   ▲ Next.js 14.2.3
+[Next]   - Local:        http://127.0.0.1:3000
+  - Network:      http://127.0.0.1:3000
+[Next] 
+[Next]  ✓ Starting...
+[Next]  ✓ Ready in 24ms
+[Gateway] Child processes ready
+[Gateway] go2rtc watcher started, will auto-start when config is available
+[Gateway] Gateway ready on http://0.0.0.0:8080
+[Gateway] HTTP requests → Next.js (port 3000)
+[Gateway] WebSocket /ws/ha → WS Proxy (port 6000)
+[Gateway] WebSocket /ws/mse/:cameraId → go2rtc (port 1984)
+[Gateway] WebSocket upgrade request: /ws/ha
+[Gateway] Routing to WS Proxy (port 6000)
+[Gateway] Connecting to target port 6000 for /ws/ha
+[Gateway] Connected to target port 6000
+[WS-Proxy] Client connected: bb88693f-e199-440f-99fa-0d96c064d3f3
+[Gateway] WebSocket upgrade request: /ws/ha
+[Gateway] Routing to WS Proxy (port 6000)
+[Gateway] Connecting to target port 6000 for /ws/ha
+[Gateway] Connected to target port 6000
+[WS-Proxy] Client connected: bb88693f-e199-440f-99fa-0d96c064d3f3
+[Gateway] WebSocket upgrade request: /ws/ha
+[Gateway] Routing to WS Proxy (port 6000)
+[Gateway] Connecting to target port 6000 for /ws/ha
+[Gateway] Connected to target port 6000
+[WS-Proxy] Client connected: 6f9c5fcf-b81e-4b34-9c34-552ea1fe405d
+[Gateway] WebSocket upgrade request: /ws/ha
+[Gateway] Routing to WS Proxy (port 6000)
+[Gateway] Connecting to target port 6000 for /ws/ha
+[Gateway] Connected to target port 6000
+[WS-Proxy] Client connected: 6f9c5fcf-b81e-4b34-9c34-552ea1fe405d
+[Gateway] WebSocket upgrade request: /ws/ha
+[Gateway] Routing to WS Proxy (port 6000)
+[Gateway] Connecting to target port 6000 for /ws/ha
+[Gateway] Connected to target port 6000
+[WS-Proxy] Client connected: bb88693f-e199-440f-99fa-0d96c064d3f3
+[Gateway] WebSocket upgrade request: /ws/ha
+[Gateway] Routing to WS Proxy (port 6000)
+[Gateway] Connecting to target port 6000 for /ws/ha
+[Gateway] Connected to target port 6000
+[WS-Proxy] Client connected: bb88693f-e199-440f-99fa-0d96c064d3f3
+[Gateway] WebSocket upgrade request: /ws/ha
+[Gateway] Routing to WS Proxy (port 6000)
+[Gateway] Connecting to target port 6000 for /ws/ha
+[Gateway] Connected to target port 6000
+[WS-Proxy] Client connected: 6f9c5fcf-b81e-4b34-9c34-552ea1fe405d
+[Gateway] WebSocket upgrade request: /ws/ha
+[Gateway] Routing to WS Proxy (port 6000)
+[Gateway] Connecting to target port 6000 for /ws/ha
+[Gateway] Connected to target port 6000
+[WS-Proxy] Client connected: bb88693f-e199-440f-99fa-0d96c064d3f3
+[Gateway] WebSocket upgrade request: /ws/ha
+[Gateway] Routing to WS Proxy (port 6000)
+[Gateway] Connecting to target port 6000 for /ws/ha
+[Gateway] Connected to target port 6000
+[WS-Proxy] Client connected: bb88693f-e199-440f-99fa-0d96c064d3f3
+[Gateway] WebSocket upgrade request: /ws/ha
+[Gateway] Routing to WS Proxy (port 6000)
+[Gateway] Connecting to target port 6000 for /ws/ha
+[Gateway] Connected to target port 6000
+[WS-Proxy] Client connected: bb88693f-e199-440f-99fa-0d96c064d3f3
+[Gateway] WebSocket upgrade request: /ws/ha
+[Gateway] Routing to WS Proxy (port 6000)
+[Gateway] Connecting to target port 6000 for /ws/ha
+[Gateway] Connected to target port 6000
+[WS-Proxy] Client connected: bb88693f-e199-440f-99fa-0d96c064d3f3
+[Gateway] WebSocket upgrade request: /ws/ha
+[Gateway] Routing to WS Proxy (port 6000)
+[Gateway] Connecting to target port 6000 for /ws/ha
+[Gateway] Connected to target port 6000
+[WS-Proxy] Client connected: bb88693f-e199-440f-99fa-0d96c064d3f3
+[Gateway] WebSocket upgrade request: /ws/ha
+[Gateway] Routing to WS Proxy (port 6000)
+[Gateway] Connecting to target port 6000 for /ws/ha
+[Gateway] Connected to target port 6000
+[WS-Proxy] Client connected: 6f9c5fcf-b81e-4b34-9c34-552ea1fe405d
+[Gateway] WebSocket upgrade request: /ws/ha
+[Gateway] Routing to WS Proxy (port 6000)
+[Gateway] Connecting to target port 6000 for /ws/ha
+[Gateway] Connected to target port 6000
+[WS-Proxy] Client connected: bb88693f-e199-440f-99fa-0d96c064d3f3
+[Gateway] WebSocket upgrade request: /ws/ha
+[Gateway] Routing to WS Proxy (port 6000)
+[Gateway] Connecting to target port 6000 for /ws/ha
+[Gateway] Connected to target port 6000
+[WS-Proxy] Client connected: 6f9c5fcf-b81e-4b34-9c34-552ea1fe405d
+[Gateway] WebSocket upgrade request: /ws/ha
+[Gateway] Routing to WS Proxy (port 6000)
+[Gateway] Connecting to target port 6000 for /ws/ha
+[Gateway] Connected to target port 6000
+[WS-Proxy] Client connected: bb88693f-e199-440f-99fa-0d96c064d3f3
+[Gateway] WebSocket upgrade request: /ws/ha
+[Gateway] Routing to WS Proxy (port 6000)
+[Gateway] Connecting to target port 6000 for /ws/ha
+[Gateway] Connected to target port 6000
+[WS-Proxy] Client connected: 6f9c5fcf-b81e-4b34-9c34-552ea1fe405d
+[Gateway] WebSocket upgrade request: /ws/ha
+[Gateway] Routing to WS Proxy (port 6000)
+[Gateway] Connecting to target port 6000 for /ws/ha
+[Gateway] Connected to target port 6000
+[WS-Proxy] Client connected: 4fa124f5-954b-4381-b49f-3a243843a183
+[Gateway] WebSocket upgrade request: /ws/ha
+[Gateway] Routing to WS Proxy (port 6000)
+[Gateway] Connecting to target port 6000 for /ws/ha
+[Gateway] Connected to target port 6000
+[WS-Proxy] Client connected: 4fa124f5-954b-4381-b49f-3a243843a183
+[WS-Proxy] Client disconnected: 4fa124f5-954b-4381-b49f-3a243843a183
+[WS-Proxy] Client disconnected: 4fa124f5-954b-4381-b49f-3a243843a183
+[WS-Proxy] HA connection closed for user: 4fa124f5-954b-4381-b49f-3a243843a183
+[WS-Proxy] HA connection closed for user: 4fa124f5-954b-4381-b49f-3a243843a183
+[Gateway] WebSocket upgrade request: /ws/ha
+[Gateway] Routing to WS Proxy (port 6000)
+[Gateway] Connecting to target port 6000 for /ws/ha
+[Gateway] Connected to target port 6000
+[WS-Proxy] Client connected: 4fa124f5-954b-4381-b49f-3a243843a183
+[Next] [API] Raw doors from Access API: [
+  {
+    "door_lock_relay_status": "lock",
+    "door_position_status": "none",
+    "floor_id": "443f89ec-7eea-11ef-aa81-dab3701b86e8",
+    "full_name": "Dream MachinePro - 1F - Garagentor",
+    "id": "cfef6da4-71a8-44ee-86a3-08b71f1fd773",
+    "is_bind_hub": true,
+    "name": "Garagentor",
+    "type": "door"
+  },
+  {
+    "door_lock_relay_status": "lock",
+    "door_position_status": "none",
+    "floor_id": "443f89ec-7eea-11ef-aa81-dab3701b86e8",
+    "full_name": "Dream MachinePro - 1F - Door 2537",
+    "id": "2381a3da-1329-4a7a-8849-e5b2935e930b",
+    "is_bind_hub": true,
+    "name": "Door 2537",
+    "type": "door"
+  },
+  {
+    "door_lock_relay_status": "lock",
+    "door_position_status": "none",
+    "floor_id": "ce20dfa3-7d87-11ef-aa81-dab3701b86e8",
+    "full_name": "Dream MachinePro - EG - Hoftor",
+    "id": "6a0808ab-1886-42c2-ab66-b7bcf3efce33",
+    "is_bind_hub": true,
+    "name": "Hoftor",
+    "type": "door"
+  }
+]
+[Next] [API] Door mapping: {
+  unique_id: undefined,
+  id: 'cfef6da4-71a8-44ee-86a3-08b71f1fd773',
+  _id: undefined,
+  name: 'Garagentor',
+  finalId: 'cfef6da4-71a8-44ee-86a3-08b71f1fd773'
+}
+[Next] [API] Door mapping: {
+  unique_id: undefined,
+  id: '2381a3da-1329-4a7a-8849-e5b2935e930b',
+  _id: undefined,
+  name: 'Door 2537',
+  finalId: '2381a3da-1329-4a7a-8849-e5b2935e930b'
+}
+[Next] [API] Door mapping: {
+  unique_id: undefined,
+  id: '6a0808ab-1886-42c2-ab66-b7bcf3efce33',
+  _id: undefined,
+  name: 'Hoftor',
+  finalId: '6a0808ab-1886-42c2-ab66-b7bcf3efce33'
+}
+[Next] [Streaming] Attempting session login for Bootstrap API access...
+[Streaming] Using username: HASS-Dashboard1
+[Next] [Streaming] Attempting session login for Bootstrap API access...
+[Next] [Streaming] Using username: HASS-Dashboard1
+[Next] [Streaming] Attempting session login for Bootstrap API access...
+[Next] [Streaming] Using username: HASS-Dashboard1
+[Next] [Protect] Session login successful
+[Next] [Streaming] Session login SUCCESSFUL - Bootstrap API should work
+[Streaming] Fetching RTSP tokens from Bootstrap API...
+[Next] [Protect] Session login successful
+[Next] [Streaming] Session login SUCCESSFUL - Bootstrap API should work
+[Streaming] Fetching RTSP tokens from Bootstrap API...
+[Next] [Streaming] Attempting session login for Bootstrap API access...
+[Streaming] Using username: HASS-Dashboard1
+[Next] [Protect] Session login successful
+[Streaming] Session login SUCCESSFUL - Bootstrap API should work
+[Next] [Streaming] Fetching RTSP tokens from Bootstrap API...
+[Next] [Streaming] Attempting session login for Bootstrap API access...
+[Next] [Streaming] Using username: HASS-Dashboard1
+[Next] [Protect] Session login successful
+[Next] [Streaming] Session login SUCCESSFUL - Bootstrap API should work
+[Streaming] Fetching RTSP tokens from Bootstrap API...
+[Next] [Streaming] Attempting session login for Bootstrap API access...
+[Streaming] Using username: HASS-Dashboard1
+[Next] [Protect] Session login successful
+[Streaming] Session login SUCCESSFUL - Bootstrap API should work
+[Streaming] Fetching RTSP tokens from Bootstrap API...
+[Next] [Streaming] Attempting session login for Bootstrap API access...
+[Next] [Streaming] Using username: HASS-Dashboard1
+[Next] [Streaming] Attempting session login for Bootstrap API access...
+[Streaming] Using username: HASS-Dashboard1
+[Next] [Protect] Login failed: 429
+[Next] [Streaming] Session login FAILED - Bootstrap API will likely fail too
+[Streaming] Fetching RTSP tokens from Bootstrap API...
+[Next] [Protect] Bootstrap API failed with status: 401
+[Protect] Session cookie: missing
+[Next] [Protect] CSRF token: missing
+[Protect] Falling back to integration API (no RTSP tokens available)
+[Next] [Streaming] Attempting session login for Bootstrap API access...
+[Streaming] Using username: HASS-Dashboard1
+[Next] [Protect] Login failed: 429
+[Next] [Streaming] Session login FAILED - Bootstrap API will likely fail too
+[Streaming] Fetching RTSP tokens from Bootstrap API...
+[Next] [Protect] Bootstrap API SUCCESS - got 9 cameras
+[Next] [Protect] First camera has channels: true
+[Protect] First camera has rtspAlias: false
+[Next] [Protect] RTSP tokens for Hautüre: { high: '✗', medium: '✓', low: '✗' }
+[Next] [Protect] RTSP tokens for Garagentor: { high: '✗', medium: '✓', low: '✗' }
+[Protect] RTSP tokens for Einfahrt von hinten: { high: '✗', medium: '✓', low: '✗' }
+[Next] [Protect] RTSP tokens for Garten von Seite: { high: '✗', medium: '✓', low: '✗' }
+[Protect] RTSP tokens for Haus vorne: { high: '✗', medium: '✓', low: '✗' }
+[Protect] RTSP tokens for Garten von hinten: { high: '✗', medium: '✓', low: '✗' }
+[Next] [Protect] RTSP tokens for Garten von oben: { high: '✗', medium: '✓', low: '✗' }
+[Protect] RTSP tokens for Carport: { high: '✓', medium: '✓', low: '✓' }
+[Next] [Protect] RTSP tokens for Hoftor: { high: '✗', medium: '✓', low: '✗' }
+[Streaming] Got 9 cameras with RTSP tokens
+[Next] [go2rtc] Token-based RTSP URL: rtspx://10.0.0.2:7441/DUzg...
+[go2rtc] Token-based RTSP URL: rtspx://10.0.0.2:7441/XryY...
+[Next] [go2rtc] Token-based RTSP URL: rtspx://10.0.0.2:7441/SR9y...
+[go2rtc] Token-based RTSP URL: rtspx://10.0.0.2:7441/J6rd...
+[go2rtc] Token-based RTSP URL: rtspx://10.0.0.2:7441/krcq...
+[go2rtc] Token-based RTSP URL: rtspx://10.0.0.2:7441/4Q9H...
+[Next] [go2rtc] Token-based RTSP URL: rtspx://10.0.0.2:7441/bV2w...
+[go2rtc] Token-based RTSP URL: rtspx://10.0.0.2:7441/Xtjv...
+[Next] [go2rtc] Token-based RTSP URL: rtspx://10.0.0.2:7441/guJt...
+[Next] [Streaming] Writing go2rtc config with 9 token-based streams for host: 10.0.0.2 quality: medium
+[Next] [go2rtc] Config written to: /tmp/go2rtc.json
+[go2rtc] Configured 9 streams
+[Next] [Protect] Bootstrap API failed with status: 401
+[Protect] Session cookie: missing
+[Next] [Protect] CSRF token: missing
+[Protect] Falling back to integration API (no RTSP tokens available)
+[Next] [Protect] Login failed: 429
+[Next] [Streaming] Session login FAILED - Bootstrap API will likely fail too
+[Streaming] Fetching RTSP tokens from Bootstrap API...
+[Next] [Protect] Bootstrap API failed with status: 401
+[Protect] Session cookie: missing
+[Next] [Protect] CSRF token: missing
+[Protect] Falling back to integration API (no RTSP tokens available)
+[Next] [Streaming] Session login FAILED - Bootstrap API will likely fail too
+[Streaming] Fetching RTSP tokens from Bootstrap API...
+[Next] [Protect] Login failed: 429
+[Next] [Protect] Camera Hautüre has no channels
+[Protect] Camera Garagentor has no channels
+[Protect] Camera Einfahrt von hinten has no channels
+[Next] [Protect] Camera Garten von Seite has no channels
+[Protect] Camera Haus vorne has no channels
+[Protect] Camera Garten von hinten has no channels
+[Protect] Camera Garten von oben has no channels
+[Protect] Camera Carport has no channels
+[Protect] Camera Hoftor has no channels
+[Next] [Streaming] Got 0 cameras with RTSP tokens
+[Streaming] No RTSP tokens found - RTSP may not be enabled or session auth required
+[Next] [Protect] Bootstrap API failed with status: 401
+[Protect] Session cookie: missing
+[Next] [Protect] CSRF token: missing
+[Protect] Falling back to integration API (no RTSP tokens available)
+[Next] [Protect] Camera Hautüre has no channels
+[Protect] Camera Garagentor has no channels
+[Protect] Camera Einfahrt von hinten has no channels
+[Next] [Protect] Camera Garten von Seite has no channels
+[Protect] Camera Haus vorne has no channels
+[Next] [Protect] Camera Garten von hinten has no channels
+[Protect] Camera Garten von oben has no channels
+[Protect] Camera Carport has no channels
+[Protect] Camera Hoftor has no channels
+[Next] [Streaming] Got 0 cameras with RTSP tokens
+[Streaming] No RTSP tokens found - RTSP may not be enabled or session auth required
+[Next] [Protect] Camera Hautüre has no channels
+[Protect] Camera Garagentor has no channels
+[Protect] Camera Einfahrt von hinten has no channels
+[Next] [Protect] Camera Garten von Seite has no channels
+[Protect] Camera Haus vorne has no channels
+[Protect] Camera Garten von hinten has no channels
+[Protect] Camera Garten von oben has no channels
+[Protect] Camera Carport has no channels
+[Protect] Camera Hoftor has no channels
+[Next] [Streaming] Got 0 cameras with RTSP tokens
+[Streaming] No RTSP tokens found - RTSP may not be enabled or session auth required
+[Next] [Protect] Bootstrap API SUCCESS - got 9 cameras
+[Protect] First camera has channels: true
+[Next] [Protect] First camera has rtspAlias: false
+[Next] [Protect] RTSP tokens for Hautüre: { high: '✗', medium: '✓', low: '✗' }
+[Next] [Protect] RTSP tokens for Garagentor: { high: '✗', medium: '✓', low: '✗' }
+[Next] [Protect] RTSP tokens for Einfahrt von hinten: { high: '✗', medium: '✓', low: '✗' }
+[Next] [Protect] RTSP tokens for Garten von Seite: { high: '✗', medium: '✓', low: '✗' }
+[Next] [Protect] RTSP tokens for Haus vorne: { high: '✗', medium: '✓', low: '✗' }
+[Next] [Protect] RTSP tokens for Garten von hinten: { high: '✗', medium: '✓', low: '✗' }
+[Next] [Protect] RTSP tokens for Garten von oben: { high: '✗', medium: '✓', low: '✗' }
+[Next] [Protect] RTSP tokens for Carport: { high: '✓', medium: '✓', low: '✓' }
+[Next] [Protect] RTSP tokens for Hoftor: { high: '✗', medium: '✓', low: '✗' }
+[Streaming] Got 9 cameras with RTSP tokens
+[Next] [go2rtc] Token-based RTSP URL: rtspx://10.0.0.2:7441/DUzg...
+[go2rtc] Token-based RTSP URL: rtspx://10.0.0.2:7441/XryY...
+[Next] [go2rtc] Token-based RTSP URL: rtspx://10.0.0.2:7441/SR9y...
+[go2rtc] Token-based RTSP URL: rtspx://10.0.0.2:7441/J6rd...
+[go2rtc] Token-based RTSP URL: rtspx://10.0.0.2:7441/krcq...
+[Next] [go2rtc] Token-based RTSP URL: rtspx://10.0.0.2:7441/4Q9H...
+[go2rtc] Token-based RTSP URL: rtspx://10.0.0.2:7441/bV2w...
+[Next] [go2rtc] Token-based RTSP URL: rtspx://10.0.0.2:7441/Xtjv...
+[go2rtc] Token-based RTSP URL: rtspx://10.0.0.2:7441/guJt...
+[Next] [Streaming] Writing go2rtc config with 9 token-based streams for host: 10.0.0.2 quality: medium
+[Next] [go2rtc] Config written to: /tmp/go2rtc.json
+[go2rtc] Configured 9 streams
+[Next] [Protect] Camera Hautüre has no channels
+[Protect] Camera Garagentor has no channels
+[Next] [Protect] Camera Einfahrt von hinten has no channels
+[Protect] Camera Garten von Seite has no channels
+[Protect] Camera Haus vorne has no channels
+[Protect] Camera Garten von hinten has no channels
+[Protect] Camera Garten von oben has no channels
+[Protect] Camera Carport has no channels
+[Protect] Camera Hoftor has no channels
+[Next] [Streaming] Got 0 cameras with RTSP tokens
+[Streaming] No RTSP tokens found - RTSP may not be enabled or session auth required
+[Next] [Protect] Bootstrap API SUCCESS - got 9 cameras
+[Protect] First camera has channels: true
+[Next] [Protect] First camera has rtspAlias: false
+[Next] [Protect] RTSP tokens for Hautüre: { high: '✗', medium: '✓', low: '✗' }
+[Next] [Protect] RTSP tokens for Garagentor: { high: '✗', medium: '✓', low: '✗' }
+[Next] [Protect] RTSP tokens for Einfahrt von hinten: { high: '✗', medium: '✓', low: '✗' }
+[Next] [Protect] RTSP tokens for Garten von Seite: { high: '✗', medium: '✓', low: '✗' }
+[Next] [Protect] RTSP tokens for Haus vorne: { high: '✗', medium: '✓', low: '✗' }
+[Next] [Protect] RTSP tokens for Garten von hinten: { high: '✗', medium: '✓', low: '✗' }
+[Next] [Protect] RTSP tokens for Garten von oben: { high: '✗', medium: '✓', low: '✗' }
+[Protect] RTSP tokens for Carport: { high: '✓', medium: '✓', low: '✓' }
+[Next] [Protect] RTSP tokens for Hoftor: { high: '✗', medium: '✓', low: '✗' }
+[Next] [Streaming] Got 9 cameras with RTSP tokens
+[go2rtc] Token-based RTSP URL: rtspx://10.0.0.2:7441/DUzg...
+[go2rtc] Token-based RTSP URL: rtspx://10.0.0.2:7441/XryY...
+[Next] [go2rtc] Token-based RTSP URL: rtspx://10.0.0.2:7441/SR9y...
+[go2rtc] Token-based RTSP URL: rtspx://10.0.0.2:7441/J6rd...
+[go2rtc] Token-based RTSP URL: rtspx://10.0.0.2:7441/krcq...
+[go2rtc] Token-based RTSP URL: rtspx://10.0.0.2:7441/4Q9H...
+[Next] [go2rtc] Token-based RTSP URL: rtspx://10.0.0.2:7441/bV2w...
+[Next] [go2rtc] Token-based RTSP URL: rtspx://10.0.0.2:7441/Xtjv...
+[Next] [go2rtc] Token-based RTSP URL: rtspx://10.0.0.2:7441/guJt...
+[Next] [Streaming] Writing go2rtc config with 9 token-based streams for host: 10.0.0.2 quality: medium
+[Next] [go2rtc] Config written to: /tmp/go2rtc.json
+[go2rtc] Configured 9 streams
+[Next] [Protect] Bootstrap API SUCCESS - got 9 cameras
+[Next] [Protect] First camera has channels: true
+[Protect] First camera has rtspAlias: false
+[Next] [Protect] RTSP tokens for Hautüre: { high: '✗', medium: '✓', low: '✗' }
+[Protect] RTSP tokens for Garagentor: { high: '✗', medium: '✓', low: '✗' }
+[Next] [Protect] RTSP tokens for Einfahrt von hinten: { high: '✗', medium: '✓', low: '✗' }
+[Protect] RTSP tokens for Garten von Seite: { high: '✗', medium: '✓', low: '✗' }
+[Protect] RTSP tokens for Haus vorne: { high: '✗', medium: '✓', low: '✗' }
+[Next] [Protect] RTSP tokens for Garten von hinten: { high: '✗', medium: '✓', low: '✗' }
+[Protect] RTSP tokens for Garten von oben: { high: '✗', medium: '✓', low: '✗' }
+[Next] [Protect] RTSP tokens for Carport: { high: '✓', medium: '✓', low: '✓' }
+[Next] [Protect] RTSP tokens for Hoftor: { high: '✗', medium: '✓', low: '✗' }
+[Streaming] Got 9 cameras with RTSP tokens
+[go2rtc] Token-based RTSP URL: rtspx://10.0.0.2:7441/DUzg...
+[go2rtc] Token-based RTSP URL: rtspx://10.0.0.2:7441/XryY...
+[go2rtc] Token-based RTSP URL: rtspx://10.0.0.2:7441/SR9y...
+[go2rtc] Token-based RTSP URL: rtspx://10.0.0.2:7441/J6rd...
+[go2rtc] Token-based RTSP URL: rtspx://10.0.0.2:7441/krcq...
+[Next] [go2rtc] Token-based RTSP URL: rtspx://10.0.0.2:7441/4Q9H...
+[go2rtc] Token-based RTSP URL: rtspx://10.0.0.2:7441/bV2w...
+[go2rtc] Token-based RTSP URL: rtspx://10.0.0.2:7441/Xtjv...
+[go2rtc] Token-based RTSP URL: rtspx://10.0.0.2:7441/guJt...
+[Next] [Streaming] Writing go2rtc config with 9 token-based streams for host: 10.0.0.2 quality: medium
+[Next] [go2rtc] Config written to: /tmp/go2rtc.json
+[go2rtc] Configured 9 streams
+[Next] [Protect] Bootstrap API SUCCESS - got 9 cameras
+[Protect] First camera has channels: true
+[Next] [Protect] First camera has rtspAlias: false
+[Protect] RTSP tokens for Hautüre: { high: '✗', medium: '✓', low: '✗' }
+[Next] [Protect] RTSP tokens for Garagentor: { high: '✗', medium: '✓', low: '✗' }
+[Next] [Protect] RTSP tokens for Einfahrt von hinten: { high: '✗', medium: '✓', low: '✗' }
+[Next] [Protect] RTSP tokens for Garten von Seite: { high: '✗', medium: '✓', low: '✗' }
+[Next] [Protect] RTSP tokens for Haus vorne: { high: '✗', medium: '✓', low: '✗' }
+[Next] [Protect] RTSP tokens for Garten von hinten: { high: '✗', medium: '✓', low: '✗' }
+[Next] [Protect] RTSP tokens for Garten von oben: { high: '✗', medium: '✓', low: '✗' }
+[Next] [Protect] RTSP tokens for Carport: { high: '✓', medium: '✓', low: '✓' }
+[Protect] RTSP tokens for Hoftor: { high: '✗', medium: '✓', low: '✗' }
+[Next] [Streaming] Got 9 cameras with RTSP tokens
+[go2rtc] Token-based RTSP URL: rtspx://10.0.0.2:7441/DUzg...
+[Next] [go2rtc] Token-based RTSP URL: rtspx://10.0.0.2:7441/XryY...
+[Next] [go2rtc] Token-based RTSP URL: rtspx://10.0.0.2:7441/SR9y...
+[go2rtc] Token-based RTSP URL: rtspx://10.0.0.2:7441/J6rd...
+[go2rtc] Token-based RTSP URL: rtspx://10.0.0.2:7441/krcq...
+[Next] [go2rtc] Token-based RTSP URL: rtspx://10.0.0.2:7441/4Q9H...
+[Next] [go2rtc] Token-based RTSP URL: rtspx://10.0.0.2:7441/bV2w...
+[go2rtc] Token-based RTSP URL: rtspx://10.0.0.2:7441/Xtjv...
+[Next] [go2rtc] Token-based RTSP URL: rtspx://10.0.0.2:7441/guJt...
+[Next] [Streaming] Writing go2rtc config with 9 token-based streams for host: 10.0.0.2 quality: medium
+[Next] [go2rtc] Config written to: /tmp/go2rtc.json
+[go2rtc] Configured 9 streams
+[Gateway] go2rtc config detected, starting go2rtc...
+[Gateway] Starting go2rtc with config /tmp/go2rtc.json
+[go2rtc] 19:39:18.318 INF go2rtc platform=linux/arm64 revision=a4885c2 version=1.9.4
+19:39:18.319 DBG build vcs.time=2024-06-18T18:33:36Z version=go1.22.4
+19:39:18.319 INF config path=/tmp/go2rtc.json
+[go2rtc] 19:39:18.319 INF [rtsp] listen addr=:8554
+[go2rtc] 19:39:18.319 INF [api] listen addr=:1984
+[go2rtc] 19:39:18.319 INF [webrtc] listen addr=:8555
+[Gateway] WebSocket upgrade request: /ws/mse/68315e37035b6803e40003ff
+[Gateway] Routing MSE stream 68315e37035b6803e40003ff to go2rtc (port 1984), path: /api/ws?src=68315e37035b6803e40003ff
+[Gateway] Connecting to go2rtc port 1984 for camera 68315e37035b6803e40003ff
+[Gateway] Connected to go2rtc for camera 68315e37035b6803e40003ff
+[Gateway] Sending WebSocket upgrade to go2rtc: GET /api/ws?src=68315e37035b6803e40003ff
+[Gateway] WebSocket upgrade request: /ws/mse/68330e970123c803e4000703
+[Gateway] Routing MSE stream 68330e970123c803e4000703 to go2rtc (port 1984), path: /api/ws?src=68330e970123c803e4000703
+[Gateway] Connecting to go2rtc port 1984 for camera 68330e970123c803e4000703
+[Gateway] Connected to go2rtc for camera 68330e970123c803e4000703
+[Gateway] Sending WebSocket upgrade to go2rtc: GET /api/ws?src=68330e970123c803e4000703
+[Gateway] WebSocket upgrade request: /ws/mse/68315e3703c16803e4000402
+[Gateway] Routing MSE stream 68315e3703c16803e4000402 to go2rtc (port 1984), path: /api/ws?src=68315e3703c16803e4000402
+[Gateway] Connecting to go2rtc port 1984 for camera 68315e3703c16803e4000402
+[Gateway] Connected to go2rtc for camera 68315e3703c16803e4000402
+[Gateway] Sending WebSocket upgrade to go2rtc: GET /api/ws?src=68315e3703c16803e4000402
+[Gateway] WebSocket upgrade request: /ws/mse/68315e3702fd6803e40003fc
+[Gateway] Routing MSE stream 68315e3702fd6803e40003fc to go2rtc (port 1984), path: /api/ws?src=68315e3702fd6803e40003fc
+[Gateway] Connecting to go2rtc port 1984 for camera 68315e3702fd6803e40003fc
+[Gateway] Connected to go2rtc for camera 68315e3702fd6803e40003fc
+[Gateway] Sending WebSocket upgrade to go2rtc: GET /api/ws?src=68315e3702fd6803e40003fc
+[Gateway] WebSocket upgrade request: /ws/mse/68315e3703326803e40003fe
+[Gateway] Routing MSE stream 68315e3703326803e40003fe to go2rtc (port 1984), path: /api/ws?src=68315e3703326803e40003fe
+[Gateway] Connecting to go2rtc port 1984 for camera 68315e3703326803e40003fe
+[Gateway] Connected to go2rtc for camera 68315e3703326803e40003fe
+[Gateway] Sending WebSocket upgrade to go2rtc: GET /api/ws?src=68315e3703326803e40003fe
