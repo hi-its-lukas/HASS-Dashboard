@@ -1,11 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { DoorOpen, Unlock, ArrowLeft, RefreshCw, AlertCircle, Video } from 'lucide-react'
+import { DoorOpen, Unlock, ArrowLeft, RefreshCw, AlertCircle, Video, Play, Camera } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { useConfigStore } from '@/lib/config/store'
+import dynamic from 'next/dynamic'
+
+const WebRTCPlayer = dynamic(() => import('@/components/streaming/WebRTCPlayer'), { ssr: false })
 
 export default function UnifiIntercomPage() {
   const params = useParams()
@@ -19,6 +22,23 @@ export default function UnifiIntercomPage() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
+  const [liveStreamEnabled, setLiveStreamEnabled] = useState(false)
+  const [useLiveStream, setUseLiveStream] = useState(false)
+  
+  useEffect(() => {
+    async function checkStreamingStatus() {
+      try {
+        const response = await fetch('/api/streaming/status')
+        if (response.ok) {
+          const data = await response.json()
+          setLiveStreamEnabled(data.liveStreamEnabled && data.hasCredentials)
+        }
+      } catch (error) {
+        console.error('Failed to check streaming status:', error)
+      }
+    }
+    checkStreamingStatus()
+  }, [])
   
   const device = accessDevices.find((d) => d.id === deviceId)
   
@@ -90,12 +110,27 @@ export default function UnifiIntercomPage() {
           </div>
         </div>
         
-        <button
-          onClick={() => setRefreshKey((k) => k + 1)}
-          className="flex items-center gap-2 px-3 py-2 bg-white/5 hover:bg-white/10 text-white rounded-xl transition-colors"
-        >
-          <RefreshCw className="w-4 h-4" />
-        </button>
+        <div className="flex gap-2">
+          {device.cameraId && liveStreamEnabled && (
+            <button
+              onClick={() => setUseLiveStream(!useLiveStream)}
+              className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-colors ${
+                useLiveStream 
+                  ? 'bg-green-500/20 text-green-400' 
+                  : 'bg-white/5 text-white hover:bg-white/10'
+              }`}
+            >
+              <Play className="w-4 h-4" />
+              {useLiveStream ? 'Live' : 'Snap'}
+            </button>
+          )}
+          <button
+            onClick={() => setRefreshKey((k) => k + 1)}
+            className="flex items-center gap-2 px-3 py-2 bg-white/5 hover:bg-white/10 text-white rounded-xl transition-colors"
+          >
+            <RefreshCw className="w-4 h-4" />
+          </button>
+        </div>
       </motion.header>
 
       {error && (
@@ -128,18 +163,32 @@ export default function UnifiIntercomPage() {
         <Card className="overflow-hidden">
           <div className="aspect-video bg-bg-secondary relative">
             {device.cameraId ? (
-              <img
-                key={refreshKey}
-                src={`/api/unifi/camera/${encodeURIComponent(device.cameraId)}/snapshot?t=${refreshKey}`}
-                alt={device.name}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement
-                  target.style.display = 'none'
-                  target.nextElementSibling?.classList.remove('hidden')
-                }}
-              />
+              useLiveStream ? (
+                <WebRTCPlayer
+                  cameraId={device.cameraId}
+                  className="w-full h-full"
+                  autoPlay={true}
+                />
+              ) : (
+                <img
+                  key={refreshKey}
+                  src={`/api/unifi/camera/${encodeURIComponent(device.cameraId)}/snapshot?t=${refreshKey}`}
+                  alt={device.name}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement
+                    target.style.display = 'none'
+                    target.nextElementSibling?.classList.remove('hidden')
+                  }}
+                />
+              )
             ) : null}
+            {useLiveStream && device.cameraId && (
+              <div className="absolute top-2 left-2 px-2 py-1 bg-green-500/80 rounded text-xs text-white font-medium flex items-center gap-1">
+                <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                LIVE
+              </div>
+            )}
             <div className={`absolute inset-0 flex items-center justify-center ${device.cameraId ? 'hidden' : ''}`}>
               <div className="text-center">
                 <Video className="w-12 h-12 text-gray-600 mx-auto mb-2" />
