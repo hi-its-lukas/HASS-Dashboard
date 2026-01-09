@@ -43,6 +43,12 @@ function generateConfig(streams: StreamConfig[]): string {
   }
   
   const config = {
+    log: {
+      level: "debug",
+      api: "debug",
+      rtsp: "debug",
+      exec: "debug"
+    },
     api: {
       listen: `:${GO2RTC_PORT}`,
       origin: '*'
