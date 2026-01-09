@@ -27,7 +27,7 @@ RUN npx prisma generate
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # Bundle gateway and ws-proxy with esbuild
-RUN npx esbuild server/gateway.ts --bundle --platform=node --target=node20 --outfile=server/gateway.js --external:child_process --external:http --external:net
+RUN npx esbuild server/gateway.ts --bundle --platform=node --target=node20 --outfile=server/gateway.js --external:child_process --external:http --external:net --external:fs --external:path
 RUN npx esbuild server/ws-proxy.ts --bundle --platform=node --target=node20 --outfile=server/ws-proxy.js --external:@prisma/client --external:ws --external:cookie --external:crypto --external:fs --external:path
 
 RUN npm run build

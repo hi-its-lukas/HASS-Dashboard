@@ -1,16 +1,115 @@
 import { createServer, IncomingMessage, ServerResponse, request as httpRequest } from 'http'
 import { Socket, connect as netConnect } from 'net'
-import { spawn, ChildProcess } from 'child_process'
+import { spawn, ChildProcess, execSync } from 'child_process'
+import * as fs from 'fs'
+import * as path from 'path'
 
 const PUBLIC_PORT = parseInt(process.env.PORT || '8080', 10)
 const NEXT_PORT = 3000
 const WS_PROXY_PORT = 6000
 const GO2RTC_PORT = 1984
+const GO2RTC_RTSP_PORT = 8554
+const GO2RTC_WEBRTC_PORT = 8555
 const HOSTNAME = process.env.HOSTNAME || '0.0.0.0'
 
 let nextProcess: ChildProcess | null = null
 let wsProxyProcess: ChildProcess | null = null
+let go2rtcProcess: ChildProcess | null = null
 let shuttingDown = false
+
+// go2rtc configuration stored by Next.js API
+const GO2RTC_CONFIG_PATH = '/tmp/go2rtc.json'
+const GO2RTC_BINARY_PATH = '/usr/local/bin/go2rtc'
+
+function startGo2rtc(): void {
+  if (go2rtcProcess) {
+    log('go2rtc already running')
+    return
+  }
+  
+  if (!fs.existsSync(GO2RTC_BINARY_PATH)) {
+    log(`go2rtc binary not found at ${GO2RTC_BINARY_PATH}`)
+    return
+  }
+  
+  if (!fs.existsSync(GO2RTC_CONFIG_PATH)) {
+    log(`go2rtc config not found at ${GO2RTC_CONFIG_PATH}, will start when config is created`)
+    return
+  }
+  
+  log(`Starting go2rtc with config ${GO2RTC_CONFIG_PATH}`)
+  
+  go2rtcProcess = spawn(GO2RTC_BINARY_PATH, ['-config', GO2RTC_CONFIG_PATH], {
+    stdio: ['ignore', 'pipe', 'pipe'],
+    detached: false
+  })
+  
+  go2rtcProcess.stdout?.on('data', (data) => {
+    const output = data.toString().trim()
+    if (output) {
+      console.log(`[go2rtc] ${output}`)
+    }
+  })
+  
+  go2rtcProcess.stderr?.on('data', (data) => {
+    const output = data.toString().trim()
+    if (output) {
+      console.error(`[go2rtc ERROR] ${output}`)
+    }
+  })
+  
+  go2rtcProcess.on('exit', (code, signal) => {
+    log(`go2rtc exited with code ${code}, signal ${signal}`)
+    go2rtcProcess = null
+    
+    // Write crash log
+    const timestamp = new Date().toISOString()
+    const crashMsg = `[${timestamp}] go2rtc exited - code: ${code}, signal: ${signal}\n`
+    try {
+      fs.appendFileSync('/data/go2rtc_crash.log', crashMsg)
+    } catch (e) {
+      // Ignore
+    }
+    
+    // Auto-restart after 5 seconds if not shutting down
+    if (!shuttingDown && code !== 0) {
+      log('go2rtc crashed, restarting in 5 seconds...')
+      setTimeout(() => {
+        if (!shuttingDown) startGo2rtc()
+      }, 5000)
+    }
+  })
+  
+  go2rtcProcess.on('error', (err) => {
+    log(`go2rtc spawn error: ${err.message}`)
+    go2rtcProcess = null
+  })
+}
+
+function stopGo2rtc(): void {
+  if (go2rtcProcess) {
+    log('Stopping go2rtc...')
+    go2rtcProcess.kill('SIGTERM')
+    go2rtcProcess = null
+  }
+}
+
+function isGo2rtcRunning(): boolean {
+  return go2rtcProcess !== null && !go2rtcProcess.killed
+}
+
+// Watch for config file changes to auto-start go2rtc
+function watchGo2rtcConfig(): void {
+  const configDir = path.dirname(GO2RTC_CONFIG_PATH)
+  
+  // Check periodically for config file
+  setInterval(() => {
+    if (!go2rtcProcess && fs.existsSync(GO2RTC_CONFIG_PATH)) {
+      log('go2rtc config detected, starting go2rtc...')
+      startGo2rtc()
+    }
+  }, 2000)
+}
 
 function log(msg: string) {
   console.log(`[Gateway] ${msg}`)
@@ -208,6 +307,8 @@ async function shutdown() {
   
   log('Shutting down...')
   
+  stopGo2rtc()
+  
   if (nextProcess) {
     nextProcess.kill('SIGTERM')
   }
@@ -228,6 +329,10 @@ async function main() {
     ])
     
     log('Child processes ready')
+    
+    // Start watching for go2rtc config and auto-start when ready
+    watchGo2rtcConfig()
+    log('go2rtc watcher started, will auto-start when config is available')
     
     const server = createServer(proxyHttpRequest)
     

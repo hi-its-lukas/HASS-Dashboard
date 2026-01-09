@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSessionFromCookie } from '@/lib/auth/session'
-import { isGo2rtcRunning, getGo2rtcApiUrl, checkGo2rtcHealth } from '@/lib/streaming/go2rtc'
+import { getGo2rtcApiUrl, GO2RTC_PORT } from '@/lib/streaming/go2rtc'
 import { getGlobalUnifiConfig } from '@/lib/config/global-settings'
 
 export async function GET() {
@@ -19,16 +19,22 @@ export async function GET() {
       hasCredentials = Boolean(unifiConfig.rtspUsername && unifiConfig.rtspPassword)
     }
 
-    // Check both process state and actual health
-    const processRunning = isGo2rtcRunning()
-    const isHealthy = await checkGo2rtcHealth()
-    const running = processRunning && isHealthy
+    // Check go2rtc health by calling its API (managed by Gateway now)
+    let isHealthy = false
+    try {
+      const response = await fetch(`http://127.0.0.1:${GO2RTC_PORT}/api`, {
+        signal: AbortSignal.timeout(2000)
+      })
+      isHealthy = response.ok
+    } catch {
+      isHealthy = false
+    }
 
     return NextResponse.json({
-      running,
-      processRunning,
+      running: isHealthy,
+      processRunning: isHealthy,
       isHealthy,
-      apiUrl: running ? getGo2rtcApiUrl() : null,
+      apiUrl: isHealthy ? getGo2rtcApiUrl() : null,
       liveStreamEnabled,
       hasCredentials
     })

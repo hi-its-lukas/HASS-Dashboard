@@ -33,6 +33,8 @@ function getGo2rtcBinaryPath(): string | null {
   return null
 }
 
+const GO2RTC_CONFIG_PATH = '/tmp/go2rtc.json'
+
 function generateConfig(streams: StreamConfig[]): string {
   const streamsConfig: Record<string, string[]> = {}
   
@@ -58,6 +60,13 @@ function generateConfig(streams: StreamConfig[]): string {
   }
   
   return JSON.stringify(config, null, 2)
+}
+
+export function writeGo2rtcConfig(streams: StreamConfig[]): void {
+  const configContent = generateConfig(streams)
+  fs.writeFileSync(GO2RTC_CONFIG_PATH, configContent)
+  console.log('[go2rtc] Config written to:', GO2RTC_CONFIG_PATH)
+  console.log('[go2rtc] Configured', streams.length, 'streams')
 }
 
 interface StartResult {

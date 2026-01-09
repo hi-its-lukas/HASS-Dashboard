@@ -1,21 +1,13 @@
 import { NextResponse } from 'next/server'
 import { getSessionFromCookie } from '@/lib/auth/session'
 import { getGlobalUnifiConfig } from '@/lib/config/global-settings'
-import { startGo2rtc, isGo2rtcRunning, buildRtspUrl, getGo2rtcApiUrl } from '@/lib/streaming/go2rtc'
+import { writeGo2rtcConfig, buildRtspUrl, getGo2rtcApiUrl, GO2RTC_PORT } from '@/lib/streaming/go2rtc'
 
 export async function POST() {
   try {
     const session = await getSessionFromCookie()
     if (!session?.userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    if (isGo2rtcRunning()) {
-      return NextResponse.json({ 
-        success: true, 
-        message: 'go2rtc already running',
-        apiUrl: getGo2rtcApiUrl()
-      })
     }
 
     const unifiConfig = await getGlobalUnifiConfig()
@@ -40,14 +32,10 @@ export async function POST() {
 
     const rtspChannel = unifiConfig.rtspChannel ?? 1
     
-    // Limit cameras on initial start to reduce ARM64/Docker load
-    const MAX_INITIAL_CAMERAS = 3
-    const camerasToStart = unifiConfig.cameras.slice(0, MAX_INITIAL_CAMERAS)
+    // Use all cameras - Gateway manages go2rtc lifecycle now
+    const useSecure = true // Use RTSPS with #insecure flag
     
-    // Use RTSP (not RTSPS) to reduce TLS overhead on ARM64/Docker
-    const useSecure = false // Temporarily disable TLS for stability testing
-    
-    const streams = camerasToStart.map((cameraId: string) => ({
+    const streams = unifiConfig.cameras.map((cameraId: string) => ({
       cameraId,
       name: cameraId,
       rtspUrl: buildRtspUrl(
@@ -60,22 +48,39 @@ export async function POST() {
       )
     }))
     
-    console.log('[Streaming] Starting go2rtc with', streams.length, 'streams (limited from', unifiConfig.cameras.length, ') for host:', nvrHost, 'channel:', rtspChannel, 'secure:', useSecure)
+    console.log('[Streaming] Writing go2rtc config with', streams.length, 'streams for host:', nvrHost, 'channel:', rtspChannel)
 
-    const result = await startGo2rtc(streams)
+    // Write config file - Gateway will auto-detect and start go2rtc
+    writeGo2rtcConfig(streams)
 
-    if (result.success) {
-      return NextResponse.json({ 
-        success: true, 
-        message: 'go2rtc started',
-        apiUrl: getGo2rtcApiUrl(),
-        streams: streams.length
+    // Wait a moment for Gateway to detect and start go2rtc
+    await new Promise(resolve => setTimeout(resolve, 3000))
+
+    // Check if go2rtc is now running by trying to reach its API
+    try {
+      const healthCheck = await fetch(`http://127.0.0.1:${GO2RTC_PORT}/api`, { 
+        signal: AbortSignal.timeout(2000) 
       })
-    } else {
-      return NextResponse.json({ error: result.error || 'Failed to start go2rtc' }, { status: 500 })
+      if (healthCheck.ok) {
+        return NextResponse.json({ 
+          success: true, 
+          message: 'go2rtc config written, Gateway started go2rtc',
+          apiUrl: getGo2rtcApiUrl(),
+          streams: streams.length
+        })
+      }
+    } catch (e) {
+      // go2rtc not yet running
     }
+
+    return NextResponse.json({ 
+      success: true, 
+      message: 'go2rtc config written, Gateway will start go2rtc shortly',
+      apiUrl: getGo2rtcApiUrl(),
+      streams: streams.length
+    })
   } catch (error) {
-    console.error('Error starting streaming:', error)
+    console.error('Error writing streaming config:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
