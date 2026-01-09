@@ -91,6 +91,23 @@ function decryptToken(value: string): string {
   return decrypted.toString('utf-8')
 }
 
+function decryptFromParts(ciphertext: Buffer, nonce: Buffer): string {
+  const key = cachedEncryptionKey!
+  const AUTH_TAG_LENGTH = 16
+  const authTag = ciphertext.slice(-AUTH_TAG_LENGTH)
+  const encryptedData = ciphertext.slice(0, -AUTH_TAG_LENGTH)
+  
+  const decipher = createDecipheriv('aes-256-gcm', key, nonce)
+  decipher.setAuthTag(authTag)
+  
+  const decrypted = Buffer.concat([
+    decipher.update(encryptedData),
+    decipher.final()
+  ])
+  
+  return decrypted.toString('utf-8')
+}
+
 async function getHAConfig(): Promise<{ url: string; token: string } | null> {
   const [urlConfig, tokenConfig] = await Promise.all([
     prisma.systemConfig.findUnique({ where: { key: 'ha_instance_url' } }),
@@ -209,26 +226,49 @@ const livestreamWss = new WebSocketServer({ noServer: true })
 let livestreamManager: ProtectLivestreamManager | null = null
 
 async function getUnifiProtectConfig(): Promise<{ host: string; username: string; password: string; channel: number } | null> {
-  const [hostConfig, usernameConfig, passwordConfig, channelConfig] = await Promise.all([
-    prisma.systemConfig.findUnique({ where: { key: 'unifi_protect_host' } }),
-    prisma.systemConfig.findUnique({ where: { key: 'unifi_protect_username' } }),
-    prisma.systemConfig.findUnique({ where: { key: 'unifi_protect_password' } }),
-    prisma.systemConfig.findUnique({ where: { key: 'unifi_rtsp_channel' } })
-  ])
-  
-  if (!hostConfig || !usernameConfig || !passwordConfig) return null
-  
-  const password = passwordConfig.encrypted 
-    ? decryptToken(passwordConfig.value)
-    : passwordConfig.value
-  
-  const channel = channelConfig ? parseInt(channelConfig.value, 10) : 1
-  
-  return { 
-    host: hostConfig.value, 
-    username: usernameConfig.value, 
-    password,
-    channel
+  try {
+    const record = await prisma.systemConfig.findUnique({
+      where: { key: 'global_layout_config' }
+    })
+    
+    if (!record) return null
+    
+    let config: { unifi?: { controllerUrl?: string; rtspUsername?: string; rtspPassword?: string; rtspChannel?: number } }
+    
+    if (record.encrypted) {
+      const decrypted = decryptToken(record.value)
+      config = JSON.parse(decrypted)
+    } else {
+      config = JSON.parse(record.value)
+    }
+    
+    const unifi = config.unifi
+    if (!unifi?.controllerUrl || !unifi?.rtspUsername || !unifi?.rtspPassword) {
+      console.log('[WS-Proxy] UniFi Protect incomplete config:', { 
+        hasHost: !!unifi?.controllerUrl, 
+        hasUser: !!unifi?.rtspUsername, 
+        hasPass: !!unifi?.rtspPassword 
+      })
+      return null
+    }
+    
+    let password = unifi.rtspPassword
+    if (password.startsWith('enc:')) {
+      const data = Buffer.from(password.slice(4), 'base64')
+      const nonce = data.slice(0, 12)
+      const ciphertext = data.slice(12)
+      password = decryptFromParts(ciphertext, nonce)
+    }
+    
+    return {
+      host: unifi.controllerUrl,
+      username: unifi.rtspUsername,
+      password,
+      channel: unifi.rtspChannel ?? 1
+    }
+  } catch (error) {
+    console.error('[WS-Proxy] Error loading UniFi config:', error)
+    return null
   }
 }
 

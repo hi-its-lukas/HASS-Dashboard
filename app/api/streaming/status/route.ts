@@ -15,7 +15,9 @@ export async function GET() {
     const unifiConfig = await getGlobalUnifiConfig()
     if (unifiConfig) {
       liveStreamEnabled = unifiConfig.liveStreamEnabled === true
-      hasCredentials = Boolean(unifiConfig.rtspUsername && unifiConfig.rtspPassword)
+      const hasApiKey = Boolean(unifiConfig.protectApiKey)
+      const hasUserPass = Boolean(unifiConfig.rtspUsername && unifiConfig.rtspPassword)
+      hasCredentials = hasApiKey || hasUserPass
     }
 
     return NextResponse.json({
