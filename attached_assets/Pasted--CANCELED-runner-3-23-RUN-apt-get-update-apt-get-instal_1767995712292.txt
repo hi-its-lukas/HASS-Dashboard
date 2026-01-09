@@ -1,0 +1,77 @@
+ => CANCELED [runner  3/23] RUN apt-get update && apt-get install -y --no-install-recommends     gosu     openssl     ca-certificates  141.2s
+ => [builder 3/9] RUN apt-get update && apt-get install -y --no-install-recommends     openssl     && rm -rf /var/lib/apt/lists/*      131.8s
+ => [deps 3/4] COPY package.json package-lock.json* ./                                                                                   0.0s
+ => [deps 4/4] RUN npm ci                                                                                                               10.5s
+ => [builder 4/9] COPY --from=deps /app/node_modules ./node_modules                                                                      1.3s
+ => [builder 5/9] COPY . .                                                                                                               0.1s
+ => [builder 6/9] RUN npx prisma generate                                                                                                1.3s
+ => [builder 7/9] RUN npx esbuild server/gateway.ts --bundle --platform=node --target=node20 --outfile=server/gateway.js --external:chi  0.2s
+ => [builder 8/9] RUN npx esbuild server/ws-proxy.ts --bundle --platform=node --target=node20 --outfile=server/ws-proxy.js --external:@  0.3s
+ => ERROR [builder 9/9] RUN npm run build                                                                                                6.3s
+------                                                                                                                                        
+ > [builder 9/9] RUN npm run build:                                                                                                           
+0.167                                                                                                                                         
+0.167 > hass-dashboard@1.0.0 build                                                                                                            
+0.167 > next build                                                                                                                            
+0.167                                                                                                                                         
+0.499   ▲ Next.js 14.2.3                                                                                                                      
+0.499   - Environments: .env                                                                                                                  
+0.499                                                                                                                                         
+0.508    Creating an optimized production build ...                                                                                           
+0.684 > [PWA] Compile server                                                                                                                  
+0.685 > [PWA] Compile server                                                                                                                  
+0.685 > [PWA] Compile client (static)
+0.685 > [PWA] Custom worker found: /app/worker/index.js
+0.685 > [PWA] Build custom worker: /app/public/worker-YozZihCDWazY-8tRoudup.js
+0.751 > [PWA] Auto register service worker with: /app/node_modules/next-pwa/register.js
+0.751 > [PWA] Service worker: /app/public/sw.js
+0.751 > [PWA]   url: /sw.js
+0.751 > [PWA]   scope: /
+6.172 Failed to compile.
+6.172 
+6.172 ./node_modules/unifi-protect/node_modules/undici/lib/web/fetch/util.js
+6.172 Module parse failed: Unexpected token (779:57)
+6.172 File was processed with these loaders:
+6.172  * ./node_modules/next/dist/build/webpack/loaders/next-swc-loader.js
+6.172 You may need an additional loader to handle the result of these loaders.
+6.172 |       // 5. If object is not a default iterator object for interface,
+6.172 |       //    then throw a TypeError.
+6.172 >       if (typeof this !== 'object' || this === null || !(#target in this)) {
+6.172 |         throw new TypeError(
+6.172 |           `'next' called on an object that does not implement interface ${name} Iterator.`
+6.172 
+6.172 Import trace for requested module:
+6.172 ./node_modules/unifi-protect/node_modules/undici/lib/web/fetch/util.js
+6.172 ./node_modules/unifi-protect/node_modules/undici/lib/web/fetch/response.js
+6.172 ./node_modules/unifi-protect/node_modules/undici/index.js
+6.172 ./node_modules/unifi-protect/dist/protect-api.js
+6.172 ./node_modules/unifi-protect/dist/index.js
+6.172 ./app/api/debug/protect-test/route.ts
+6.172 
+6.172 
+6.172 > Build failed because of webpack errors
+------
+Dockerfile:33
+
+--------------------
+
+  31 |     RUN npx esbuild server/ws-proxy.ts --bundle --platform=node --target=node20 --outfile=server/ws-proxy.js --external:@prisma/client --external:ws --external:cookie --external:crypto --external:fs --external:path --external:unifi-protect
+
+  32 |     
+
+  33 | >>> RUN npm run build
+
+  34 |     
+
+  35 |     # Stage 3: Runner
+
+--------------------
+
+failed to solve: process "/bin/sh -c npm run build" did not complete successfully: exit code: 1
+
+
+
+View build details: docker-desktop://dashboard/build/default/default/0ri7u3wf88b2r9nad5axxf2so
+
+[+] Running 1/1
+ ✔ Container hass-dashboard  Started  
