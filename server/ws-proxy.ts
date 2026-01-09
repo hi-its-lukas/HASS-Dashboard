@@ -260,8 +260,13 @@ async function getUnifiProtectConfig(): Promise<{ host: string; username: string
       password = decryptFromParts(ciphertext, nonce)
     }
     
+    let host = unifi.controllerUrl
+    host = host.replace(/^https?:\/\//, '').replace(/\/+$/, '')
+    
+    console.log('[WS-Proxy] UniFi Protect config loaded:', { host, username: unifi.rtspUsername, channel: unifi.rtspChannel })
+    
     return {
-      host: unifi.controllerUrl,
+      host,
       username: unifi.rtspUsername,
       password,
       channel: unifi.rtspChannel ?? 1
