@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Video, RefreshCw, X, Maximize2, ImageOff, Settings, Play, Camera } from 'lucide-react'
 import { Card } from '@/components/ui/card'
@@ -17,6 +18,9 @@ interface UnifiCameraInfo {
 }
 
 export default function CamerasPage() {
+  const searchParams = useSearchParams()
+  const testCameraId = searchParams.get('test')
+  
   const states = useHAStore((s) => s.states)
   const getEntityArea = useHAStore((s) => s.getEntityArea)
   const configuredCameras = useConfigStore((s) => s.cameras)
@@ -78,7 +82,12 @@ export default function CamerasPage() {
     setRefreshKey((k) => k + 1)
   }
 
-  const totalCameras = hasUnifiCameras ? unifiCameras.length : cameraEntities.length
+  const displayedUnifiCameras = testCameraId 
+    ? unifiCameras.filter(cam => cam.id === testCameraId)
+    : unifiCameras
+    
+  const totalCameras = hasUnifiCameras ? displayedUnifiCameras.length : cameraEntities.length
+  const isTestMode = !!testCameraId
 
   return (
     <div className="px-4 py-6 safe-top max-w-7xl mx-auto">
@@ -162,8 +171,13 @@ export default function CamerasPage() {
         </motion.div>
       ) : (
         <>
+          {isTestMode && (
+            <div className="mb-4 p-3 bg-yellow-500/20 rounded-xl text-yellow-400 text-sm">
+              Test-Modus: Nur eine Kamera wird angezeigt
+            </div>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {unifiCameras.map((camera, index) => (
+            {displayedUnifiCameras.map((camera, index) => (
               <motion.div
                 key={`unifi-${camera.id}`}
                 initial={{ opacity: 0, y: 20 }}
