@@ -253,6 +253,80 @@ function proxyHttpRequest(req: IncomingMessage, res: ServerResponse) {
   req.pipe(proxyReq)
 }
 
+// Special WebSocket proxy for go2rtc that ensures proper upgrade headers
+function proxyWebSocketToGo2rtc(req: IncomingMessage, clientSocket: Socket, head: Buffer, cameraId: string, go2rtcPath: string) {
+  log(`Connecting to go2rtc port ${GO2RTC_PORT} for camera ${cameraId}`)
+  
+  const targetSocket = netConnect(GO2RTC_PORT, '127.0.0.1', () => {
+    log(`Connected to go2rtc for camera ${cameraId}`)
+    
+    // Build proper WebSocket upgrade request for go2rtc
+    // Must include all required WebSocket headers with correct values
+    const wsKey = req.headers['sec-websocket-key'] || ''
+    const wsVersion = req.headers['sec-websocket-version'] || '13'
+    const wsProtocol = req.headers['sec-websocket-protocol'] || ''
+    const wsExtensions = req.headers['sec-websocket-extensions'] || ''
+    
+    let upgradeRequest = `GET ${go2rtcPath} HTTP/1.1\r\n`
+    upgradeRequest += `Host: 127.0.0.1:${GO2RTC_PORT}\r\n`
+    upgradeRequest += `Connection: Upgrade\r\n`
+    upgradeRequest += `Upgrade: websocket\r\n`
+    upgradeRequest += `Sec-WebSocket-Key: ${wsKey}\r\n`
+    upgradeRequest += `Sec-WebSocket-Version: ${wsVersion}\r\n`
+    
+    if (wsProtocol) {
+      upgradeRequest += `Sec-WebSocket-Protocol: ${wsProtocol}\r\n`
+    }
+    if (wsExtensions) {
+      upgradeRequest += `Sec-WebSocket-Extensions: ${wsExtensions}\r\n`
+    }
+    
+    // Add origin header if present
+    const origin = req.headers['origin']
+    if (origin) {
+      upgradeRequest += `Origin: ${origin}\r\n`
+    }
+    
+    upgradeRequest += `\r\n`
+    
+    log(`Sending WebSocket upgrade to go2rtc: GET ${go2rtcPath}`)
+    
+    targetSocket.write(upgradeRequest)
+    if (head.length > 0) {
+      targetSocket.write(head)
+    }
+    
+    targetSocket.pipe(clientSocket)
+    clientSocket.pipe(targetSocket)
+  })
+  
+  targetSocket.on('error', (err: NodeJS.ErrnoException) => {
+    log(`go2rtc proxy error: ${err.message}`)
+    if (err.code === 'ECONNREFUSED') {
+      log(`go2rtc not reachable - may not be running`)
+      try {
+        clientSocket.write('HTTP/1.1 502 Bad Gateway\r\n\r\n')
+      } catch (e) {
+        // Ignore write errors
+      }
+    }
+    clientSocket.destroy()
+  })
+  
+  clientSocket.on('error', (err) => {
+    log(`Client socket error (go2rtc): ${err.message}`)
+    targetSocket.destroy()
+  })
+  
+  clientSocket.on('close', () => {
+    targetSocket.destroy()
+  })
+  
+  targetSocket.on('close', () => {
+    clientSocket.destroy()
+  })
+}
+
 function proxyWebSocketUpgrade(req: IncomingMessage, clientSocket: Socket, head: Buffer, targetPort: number) {
   log(`Connecting to target port ${targetPort} for ${req.url}`)
   
@@ -358,10 +432,8 @@ async function main() {
         if (cameraId) {
           const go2rtcUrl = `/api/ws?src=${encodeURIComponent(cameraId)}`
           log(`Routing MSE stream ${cameraId} to go2rtc (port ${GO2RTC_PORT}), path: ${go2rtcUrl}`)
-          // Create a proxy request with modified URL but same headers
-          const proxyReq = Object.create(req)
-          proxyReq.url = go2rtcUrl
-          proxyWebSocketUpgrade(proxyReq, socket as Socket, head, GO2RTC_PORT)
+          // Proxy WebSocket to go2rtc with correct URL and headers
+          proxyWebSocketToGo2rtc(req, socket as Socket, head, cameraId, go2rtcUrl)
         } else {
           log(`MSE request missing camera ID: ${url}`)
           ;(socket as Socket).destroy()
