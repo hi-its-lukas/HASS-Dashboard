@@ -40,7 +40,14 @@ export async function POST() {
 
     const rtspChannel = unifiConfig.rtspChannel ?? 1
     
-    const streams = unifiConfig.cameras.map((cameraId: string) => ({
+    // Limit cameras on initial start to reduce ARM64/Docker load
+    const MAX_INITIAL_CAMERAS = 3
+    const camerasToStart = unifiConfig.cameras.slice(0, MAX_INITIAL_CAMERAS)
+    
+    // Use RTSP (not RTSPS) to reduce TLS overhead on ARM64/Docker
+    const useSecure = false // Temporarily disable TLS for stability testing
+    
+    const streams = camerasToStart.map((cameraId: string) => ({
       cameraId,
       name: cameraId,
       rtspUrl: buildRtspUrl(
@@ -49,11 +56,11 @@ export async function POST() {
         unifiConfig.rtspUsername!,
         unifiConfig.rtspPassword!,
         rtspChannel,
-        true
+        useSecure
       )
     }))
     
-    console.log('[Streaming] Starting go2rtc with', streams.length, 'streams for host:', nvrHost, 'channel:', rtspChannel)
+    console.log('[Streaming] Starting go2rtc with', streams.length, 'streams (limited from', unifiConfig.cameras.length, ') for host:', nvrHost, 'channel:', rtspChannel, 'secure:', useSecure)
 
     const result = await startGo2rtc(streams)
 

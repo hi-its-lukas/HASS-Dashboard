@@ -174,8 +174,17 @@ function proxyWebSocketUpgrade(req: IncomingMessage, clientSocket: Socket, head:
     clientSocket.pipe(targetSocket)
   })
   
-  targetSocket.on('error', (err) => {
+  targetSocket.on('error', (err: NodeJS.ErrnoException) => {
     log(`WS proxy error to port ${targetPort}: ${err.message}`)
+    // Send HTTP 502 if connection refused (target not running)
+    if (err.code === 'ECONNREFUSED') {
+      log(`Target port ${targetPort} not reachable - service may have crashed`)
+      try {
+        clientSocket.write('HTTP/1.1 502 Bad Gateway\r\n\r\n')
+      } catch (e) {
+        // Ignore write errors
+      }
+    }
     clientSocket.destroy()
   })
   

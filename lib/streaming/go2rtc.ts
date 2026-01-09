@@ -18,6 +18,9 @@ interface StreamConfig {
 
 function getGo2rtcBinaryPath(): string | null {
   const possiblePaths = [
+    // Prefer manually installed binary (more reliable on ARM64)
+    '/usr/local/bin/go2rtc',
+    // Fallback to npm package
     path.join(process.cwd(), 'node_modules', 'go2rtc-static', 'dist', 'go2rtc'),
     path.join(process.cwd(), 'node_modules', 'go2rtc-static', 'go2rtc'),
     '/app/node_modules/go2rtc-static/dist/go2rtc',
@@ -127,9 +130,18 @@ export async function startGo2rtc(streams: StreamConfig[]): Promise<StartResult>
     })
     
     go2rtcProcess.on('close', (code, signal) => {
+      const timestamp = new Date().toISOString()
+      const crashMsg = `[${timestamp}] go2rtc exited - code: ${code}, signal: ${signal}`
       console.log('[go2rtc] Process exited with code:', code, 'signal:', signal)
       if (code !== 0) {
         console.error('[go2rtc] CRASH DETECTED - exit code:', code, 'signal:', signal)
+        // Write crash log to persistent storage
+        try {
+          const crashLogPath = '/app/data/go2rtc_crash.log'
+          fs.appendFileSync(crashLogPath, crashMsg + '\n')
+        } catch (e) {
+          // Ignore if we can't write to data directory
+        }
       }
       go2rtcProcess = null
     })
@@ -143,7 +155,8 @@ export async function startGo2rtc(streams: StreamConfig[]): Promise<StartResult>
       console.log('[go2rtc] Process exit event - code:', code, 'signal:', signal)
     })
     
-    await new Promise(resolve => setTimeout(resolve, 2000))
+    // Wait longer for ARM64/Docker startup
+    await new Promise(resolve => setTimeout(resolve, 5000))
     
     console.log('[go2rtc] Started successfully on port', GO2RTC_PORT)
     return { success: true }

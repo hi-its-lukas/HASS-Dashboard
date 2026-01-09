@@ -39,11 +39,17 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Install gosu for privilege dropping (Debian equivalent of su-exec)
+# Install gosu for privilege dropping and download official go2rtc ARM64 binary
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gosu \
     openssl \
+    curl \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
+
+# Download official go2rtc ARM64 binary (more reliable than npm package)
+RUN curl -L https://github.com/AlexxIT/go2rtc/releases/download/v1.9.4/go2rtc_linux_arm64 --output /usr/local/bin/go2rtc && \
+    chmod +x /usr/local/bin/go2rtc
 
 # Create app user (will be used after entrypoint fixes permissions)
 RUN groupadd --system --gid 1001 nodejs && \
