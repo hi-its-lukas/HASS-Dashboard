@@ -1,0 +1,131 @@
+lukashengl@mac-mini HASS-Dashboard % # Pr��fen was go2rtc bei WebSocket-Anfragen loggt:
+docker logs hass-dashboard 2>&1 | tail -100 | grep -E "go2rtc|api|ws"
+# Direkt go2rtc WebSocket ��ber wscat testen (falls installiert):
+docker exec hass-dashboard curl -v -H "Connection: Upgrade" -H "Upgrade: websocket" -H "Sec-WebSocket-Key: dGVzdA==" -H "Sec-WebSocket-Version: 13" "http://127.0.0.1:1984/api/ws?src=68315e3702fd6803e40003fc" 2>&1 | head -30
+# Vollst��ndige go2rtc Logs pr��fen:
+docker logs hass-dashboard 2>&1 | grep "\[go2rtc\]" | tail -50
+zsh: command not found: #
+[Gateway] WebSocket upgrade request: /ws/mse/68330e970123c803e4000703
+[Gateway] Routing MSE stream 68330e970123c803e4000703 to go2rtc (port 1984), path: /api/ws?src=68330e970123c803e4000703
+[Gateway] Connecting to go2rtc port 1984 for camera 68330e970123c803e4000703
+[Gateway] Connected to go2rtc for camera 68330e970123c803e4000703
+[Gateway] Sending WebSocket upgrade to go2rtc: GET /api/ws?src=68330e970123c803e4000703
+[Gateway] WebSocket upgrade request: /ws/mse/68315e37035b6803e40003ff
+[Gateway] Routing MSE stream 68315e37035b6803e40003ff to go2rtc (port 1984), path: /api/ws?src=68315e37035b6803e40003ff
+[Gateway] Connecting to go2rtc port 1984 for camera 68315e37035b6803e40003ff
+[Gateway] Connected to go2rtc for camera 68315e37035b6803e40003ff
+[Gateway] Sending WebSocket upgrade to go2rtc: GET /api/ws?src=68315e37035b6803e40003ff
+[Gateway] WebSocket upgrade request: /ws/mse/68315e3703c16803e4000402
+[Gateway] Routing MSE stream 68315e3703c16803e4000402 to go2rtc (port 1984), path: /api/ws?src=68315e3703c16803e4000402
+[Gateway] Connecting to go2rtc port 1984 for camera 68315e3703c16803e4000402
+[Gateway] Connected to go2rtc for camera 68315e3703c16803e4000402
+[Gateway] Sending WebSocket upgrade to go2rtc: GET /api/ws?src=68315e3703c16803e4000402
+[Gateway] WebSocket upgrade request: /ws/mse/68315e3702fd6803e40003fc
+[Gateway] Routing MSE stream 68315e3702fd6803e40003fc to go2rtc (port 1984), path: /api/ws?src=68315e3702fd6803e40003fc
+[Gateway] Connecting to go2rtc port 1984 for camera 68315e3702fd6803e40003fc
+[Gateway] Connected to go2rtc for camera 68315e3702fd6803e40003fc
+[Gateway] Sending WebSocket upgrade to go2rtc: GET /api/ws?src=68315e3702fd6803e40003fc
+[Gateway] WebSocket upgrade request: /ws/mse/68315e3703326803e40003fe
+[Gateway] Routing MSE stream 68315e3703326803e40003fe to go2rtc (port 1984), path: /api/ws?src=68315e3703326803e40003fe
+[Gateway] Connecting to go2rtc port 1984 for camera 68315e3703326803e40003fe
+[Gateway] Connected to go2rtc for camera 68315e3703326803e40003fe
+[Gateway] Sending WebSocket upgrade to go2rtc: GET /api/ws?src=68315e3703326803e40003fe
+[Gateway] WebSocket upgrade request: /ws/mse/68315e3702d06803e40003fb
+[Gateway] Routing MSE stream 68315e3702d06803e40003fb to go2rtc (port 1984), path: /api/ws?src=68315e3702d06803e40003fb
+[Gateway] Connecting to go2rtc port 1984 for camera 68315e3702d06803e40003fb
+[Gateway] Connected to go2rtc for camera 68315e3702d06803e40003fb
+[Gateway] Sending WebSocket upgrade to go2rtc: GET /api/ws?src=68315e3702d06803e40003fb
+[Gateway] WebSocket upgrade request: /ws/mse/68315e3703a36803e4000401
+[Gateway] Routing MSE stream 68315e3703a36803e4000401 to go2rtc (port 1984), path: /api/ws?src=68315e3703a36803e4000401
+[Gateway] Connecting to go2rtc port 1984 for camera 68315e3703a36803e4000401
+[Gateway] Connected to go2rtc for camera 68315e3703a36803e4000401
+[Gateway] Sending WebSocket upgrade to go2rtc: GET /api/ws?src=68315e3703a36803e4000401
+[Gateway] WebSocket upgrade request: /ws/mse/68315e3703866803e4000400
+[Gateway] Routing MSE stream 68315e3703866803e4000400 to go2rtc (port 1984), path: /api/ws?src=68315e3703866803e4000400
+[Gateway] Connecting to go2rtc port 1984 for camera 68315e3703866803e4000400
+[Gateway] Connected to go2rtc for camera 68315e3703866803e4000400
+[Gateway] Sending WebSocket upgrade to go2rtc: GET /api/ws?src=68315e3703866803e4000400
+[Gateway] WebSocket upgrade request: /ws/mse/69047ecf0361dd03e46b58bd
+[Gateway] Routing MSE stream 69047ecf0361dd03e46b58bd to go2rtc (port 1984), path: /api/ws?src=69047ecf0361dd03e46b58bd
+[Gateway] Connecting to go2rtc port 1984 for camera 69047ecf0361dd03e46b58bd
+[Gateway] Connected to go2rtc for camera 69047ecf0361dd03e46b58bd
+[Gateway] Sending WebSocket upgrade to go2rtc: GET /api/ws?src=69047ecf0361dd03e46b58bd
+zsh: no matches found: (falls installiert):
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0*   Trying 127.0.0.1:1984...
+* Connected to 127.0.0.1 (127.0.0.1) port 1984 (#0)
+> GET /api/ws?src=68315e3702fd6803e40003fc HTTP/1.1
+> Host: 127.0.0.1:1984
+> User-Agent: curl/7.88.1
+> Accept: */*
+> Connection: Upgrade
+> Upgrade: websocket
+> Sec-WebSocket-Key: dGVzdA==
+> Sec-WebSocket-Version: 13
+> 
+< HTTP/1.1 400 Bad Request
+< Access-Control-Allow-Headers: Authorization, Content-Type
+< Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS
+< Access-Control-Allow-Origin: *
+< Content-Type: text/plain; charset=utf-8
+< Sec-Websocket-Version: 13
+< X-Content-Type-Options: nosniff
+< Date: Fri, 09 Jan 2026 18:11:35 GMT
+< Content-Length: 12
+< 
+{ [12 bytes data]
+100    12  100    12    0     0  13245      0 --:--:-- --:--:-- --:--:-- 12000
+* Connection #0 to host 127.0.0.1 left intact
+Bad Request
+zsh: command not found: #
+[Next] [go2rtc] RTSP URL for 68330e970123c803e4000703: rtspx://***:***@10.0.0.2:7441/68330e970123c803e4000703_channel_1
+[Next] [go2rtc] RTSP URL for 69047ecf0361dd03e46b58bd: rtspx://***:***@10.0.0.2:7441/69047ecf0361dd03e46b58bd_channel_1
+[go2rtc] RTSP URL for 68315e3703866803e4000400: rtspx://***:***@10.0.0.2:7441/68315e3703866803e4000400_channel_1
+[go2rtc] RTSP URL for 68315e3703a36803e4000401: rtspx://***:***@10.0.0.2:7441/68315e3703a36803e4000401_channel_1
+[go2rtc] RTSP URL for 68315e3702d06803e40003fb: rtspx://***:***@10.0.0.2:7441/68315e3702d06803e40003fb_channel_1
+[go2rtc] RTSP URL for 68315e3702fd6803e40003fc: rtspx://***:***@10.0.0.2:7441/68315e3702fd6803e40003fc_channel_1
+[go2rtc] RTSP URL for 68315e3703326803e40003fe: rtspx://***:***@10.0.0.2:7441/68315e3703326803e40003fe_channel_1
+[go2rtc] RTSP URL for 68315e3703c16803e4000402: rtspx://***:***@10.0.0.2:7441/68315e3703c16803e4000402_channel_1
+[go2rtc] RTSP URL for 68315e37035b6803e40003ff: rtspx://***:***@10.0.0.2:7441/68315e37035b6803e40003ff_channel_1
+[Next] [go2rtc] Config written to: /tmp/go2rtc.json
+[Next] [go2rtc] Configured 9 streams
+[Next] [go2rtc] RTSP URL for 68330e970123c803e4000703: rtspx://***:***@10.0.0.2:7441/68330e970123c803e4000703_channel_1
+[Next] [go2rtc] RTSP URL for 69047ecf0361dd03e46b58bd: rtspx://***:***@10.0.0.2:7441/69047ecf0361dd03e46b58bd_channel_1
+[go2rtc] RTSP URL for 68315e3703866803e4000400: rtspx://***:***@10.0.0.2:7441/68315e3703866803e4000400_channel_1
+[go2rtc] RTSP URL for 68315e3703a36803e4000401: rtspx://***:***@10.0.0.2:7441/68315e3703a36803e4000401_channel_1
+[go2rtc] RTSP URL for 68315e3702d06803e40003fb: rtspx://***:***@10.0.0.2:7441/68315e3702d06803e40003fb_channel_1
+[go2rtc] RTSP URL for 68315e3702fd6803e40003fc: rtspx://***:***@10.0.0.2:7441/68315e3702fd6803e40003fc_channel_1
+[go2rtc] RTSP URL for 68315e3703326803e40003fe: rtspx://***:***@10.0.0.2:7441/68315e3703326803e40003fe_channel_1
+[go2rtc] RTSP URL for 68315e3703c16803e4000402: rtspx://***:***@10.0.0.2:7441/68315e3703c16803e4000402_channel_1
+[go2rtc] RTSP URL for 68315e37035b6803e40003ff: rtspx://***:***@10.0.0.2:7441/68315e37035b6803e40003ff_channel_1
+[Next] [go2rtc] Config written to: /tmp/go2rtc.json
+[go2rtc] Configured 9 streams
+[Next] [go2rtc] RTSP URL for 68330e970123c803e4000703: rtspx://***:***@10.0.0.2:7441/68330e970123c803e4000703_channel_1
+[go2rtc] RTSP URL for 69047ecf0361dd03e46b58bd: rtspx://***:***@10.0.0.2:7441/69047ecf0361dd03e46b58bd_channel_1
+[go2rtc] RTSP URL for 68315e3703866803e4000400: rtspx://***:***@10.0.0.2:7441/68315e3703866803e4000400_channel_1
+[go2rtc] RTSP URL for 68315e3703a36803e4000401: rtspx://***:***@10.0.0.2:7441/68315e3703a36803e4000401_channel_1
+[go2rtc] RTSP URL for 68315e3702d06803e40003fb: rtspx://***:***@10.0.0.2:7441/68315e3702d06803e40003fb_channel_1
+[go2rtc] RTSP URL for 68315e3702fd6803e40003fc: rtspx://***:***@10.0.0.2:7441/68315e3702fd6803e40003fc_channel_1
+[go2rtc] RTSP URL for 68315e3703326803e40003fe: rtspx://***:***@10.0.0.2:7441/68315e3703326803e40003fe_channel_1
+[go2rtc] RTSP URL for 68315e3703c16803e4000402: rtspx://***:***@10.0.0.2:7441/68315e3703c16803e4000402_channel_1
+[go2rtc] RTSP URL for 68315e37035b6803e40003ff: rtspx://***:***@10.0.0.2:7441/68315e37035b6803e40003ff_channel_1
+[Next] [go2rtc] Config written to: /tmp/go2rtc.json
+[go2rtc] Configured 9 streams
+[go2rtc] 18:07:45.408 INF go2rtc platform=linux/arm64 revision=a4885c2 version=1.9.4
+[go2rtc] 18:07:45.409 INF [rtsp] listen addr=:8554
+[go2rtc] 18:07:45.409 INF [webrtc] listen addr=:8555
+[go2rtc] 18:07:45.409 INF [api] listen addr=:1984
+[Next] [go2rtc] RTSP URL for 68330e970123c803e4000703: rtspx://***:***@10.0.0.2:7441/68330e970123c803e4000703_channel_1
+[go2rtc] RTSP URL for 69047ecf0361dd03e46b58bd: rtspx://***:***@10.0.0.2:7441/69047ecf0361dd03e46b58bd_channel_1
+[Next] [go2rtc] RTSP URL for 68315e3703866803e4000400: rtspx://***:***@10.0.0.2:7441/68315e3703866803e4000400_channel_1
+[go2rtc] RTSP URL for 68315e3703a36803e4000401: rtspx://***:***@10.0.0.2:7441/68315e3703a36803e4000401_channel_1
+[go2rtc] RTSP URL for 68315e3702d06803e40003fb: rtspx://***:***@10.0.0.2:7441/68315e3702d06803e40003fb_channel_1
+[go2rtc] RTSP URL for 68315e3702fd6803e40003fc: rtspx://***:***@10.0.0.2:7441/68315e3702fd6803e40003fc_channel_1
+[go2rtc] RTSP URL for 68315e3703326803e40003fe: rtspx://***:***@10.0.0.2:7441/68315e3703326803e40003fe_channel_1
+[go2rtc] RTSP URL for 68315e3703c16803e4000402: rtspx://***:***@10.0.0.2:7441/68315e3703c16803e4000402_channel_1
+[go2rtc] RTSP URL for 68315e37035b6803e40003ff: rtspx://***:***@10.0.0.2:7441/68315e37035b6803e40003ff_channel_1
+[Next] [go2rtc] Config written to: /tmp/go2rtc.json
+[go2rtc] Configured 9 streams
+[go2rtc] 18:11:35.660 ERR github.com/AlexxIT/go2rtc/internal/api/ws/ws.go:105 > host=127.0.0.1:1984 origin= error="websocket: not a websocket handshake: 'Sec-WebSocket-Key' header must be Base64 encoded value of 16-byte in length"
+lukashengl@mac-mini HASS-Dashboard % 
