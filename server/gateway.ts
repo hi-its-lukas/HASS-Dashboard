@@ -235,8 +235,10 @@ async function main() {
         if (cameraId) {
           const go2rtcUrl = `/api/ws?src=${encodeURIComponent(cameraId)}`
           log(`Routing MSE stream ${cameraId} to go2rtc (port ${GO2RTC_PORT}), path: ${go2rtcUrl}`)
-          const modifiedReq = { ...req, url: go2rtcUrl }
-          proxyWebSocketUpgrade(modifiedReq as IncomingMessage, socket as Socket, head, GO2RTC_PORT)
+          // Create a proxy request with modified URL but same headers
+          const proxyReq = Object.create(req)
+          proxyReq.url = go2rtcUrl
+          proxyWebSocketUpgrade(proxyReq, socket as Socket, head, GO2RTC_PORT)
         } else {
           log(`MSE request missing camera ID: ${url}`)
           ;(socket as Socket).destroy()
