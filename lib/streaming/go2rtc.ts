@@ -216,15 +216,16 @@ export function buildRtspUrl(
   channel: number = 1,
   secure: boolean = true
 ): string {
-  const protocol = secure ? 'rtsps' : 'rtsp'
+  // Use rtspx:// for UniFi Protect - it handles SSL cert verification automatically
+  // rtspx:// = RTSPS with automatic certificate bypass (go2rtc specific)
+  // Port 7441 = secure RTSP port on UniFi NVR
+  const protocol = secure ? 'rtspx' : 'rtsp'
   const port = secure ? 7441 : 7447
   const encodedUser = encodeURIComponent(username)
   const encodedPass = encodeURIComponent(password)
   
-  // Add #insecure to skip SSL certificate validation for RTSPS
-  const insecureFlag = secure ? '#insecure' : ''
-  const url = `${protocol}://${encodedUser}:${encodedPass}@${nvrHost}:${port}/${cameraId}_channel_${channel}${insecureFlag}`
-  console.log(`[go2rtc] RTSP URL for ${cameraId}: ${protocol}://***:***@${nvrHost}:${port}/${cameraId}_channel_${channel}${insecureFlag}`)
+  const url = `${protocol}://${encodedUser}:${encodedPass}@${nvrHost}:${port}/${cameraId}_channel_${channel}`
+  console.log(`[go2rtc] RTSP URL for ${cameraId}: ${protocol}://***:***@${nvrHost}:${port}/${cameraId}_channel_${channel}`)
   return url
 }
 
