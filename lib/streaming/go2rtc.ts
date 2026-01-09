@@ -16,13 +16,34 @@ interface StreamConfig {
   rtspUrl: string
 }
 
-function getGo2rtcBinaryPath(): string {
+function getGo2rtcBinaryPath(): string | null {
+  const possiblePaths = [
+    path.join(process.cwd(), 'node_modules', 'go2rtc-static', 'dist', 'go2rtc'),
+    path.join(process.cwd(), 'node_modules', 'go2rtc-static', 'go2rtc'),
+    '/app/node_modules/go2rtc-static/dist/go2rtc',
+    '/app/node_modules/go2rtc-static/go2rtc',
+  ]
+  
+  for (const p of possiblePaths) {
+    if (fs.existsSync(p)) {
+      console.log('[go2rtc] Found binary at:', p)
+      return p
+    }
+  }
+  
   try {
     const go2rtcStatic = require('go2rtc-static')
-    return typeof go2rtcStatic === 'string' ? go2rtcStatic : go2rtcStatic.default || go2rtcStatic.path
-  } catch {
-    return 'go2rtc'
+    const modulePath = typeof go2rtcStatic === 'string' ? go2rtcStatic : go2rtcStatic.default || go2rtcStatic.path
+    if (modulePath && fs.existsSync(modulePath)) {
+      console.log('[go2rtc] Found binary via require:', modulePath)
+      return modulePath
+    }
+  } catch (e) {
+    console.log('[go2rtc] Could not require go2rtc-static:', e)
   }
+  
+  console.log('[go2rtc] Binary not found in any location')
+  return null
 }
 
 function generateConfig(streams: StreamConfig[]): string {

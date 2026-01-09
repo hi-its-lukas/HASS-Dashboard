@@ -62,6 +62,7 @@ COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/node_modules/bcryptjs ./node_modules/bcryptjs
 COPY --from=builder /app/node_modules/ws ./node_modules/ws
 COPY --from=builder /app/node_modules/cookie ./node_modules/cookie
+COPY --from=builder /app/node_modules/go2rtc-static ./node_modules/go2rtc-static
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/scripts ./scripts
 COPY --from=builder /app/server/gateway.js ./server/gateway.js
