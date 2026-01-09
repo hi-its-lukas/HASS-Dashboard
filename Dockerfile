@@ -64,6 +64,7 @@ COPY --from=builder /app/node_modules/bcryptjs ./node_modules/bcryptjs
 COPY --from=builder /app/node_modules/ws ./node_modules/ws
 COPY --from=builder /app/node_modules/cookie ./node_modules/cookie
 COPY --from=builder /app/node_modules/unifi-protect ./node_modules/unifi-protect
+COPY --from=builder /app/node_modules/undici ./node_modules/undici
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/scripts ./scripts
 COPY --from=builder /app/server/gateway.js ./server/gateway.js

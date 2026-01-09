@@ -208,11 +208,12 @@ const livestreamWss = new WebSocketServer({ noServer: true })
 
 let livestreamManager: ProtectLivestreamManager | null = null
 
-async function getUnifiProtectConfig(): Promise<{ host: string; username: string; password: string } | null> {
-  const [hostConfig, usernameConfig, passwordConfig] = await Promise.all([
+async function getUnifiProtectConfig(): Promise<{ host: string; username: string; password: string; channel: number } | null> {
+  const [hostConfig, usernameConfig, passwordConfig, channelConfig] = await Promise.all([
     prisma.systemConfig.findUnique({ where: { key: 'unifi_protect_host' } }),
     prisma.systemConfig.findUnique({ where: { key: 'unifi_protect_username' } }),
-    prisma.systemConfig.findUnique({ where: { key: 'unifi_protect_password' } })
+    prisma.systemConfig.findUnique({ where: { key: 'unifi_protect_password' } }),
+    prisma.systemConfig.findUnique({ where: { key: 'unifi_rtsp_channel' } })
   ])
   
   if (!hostConfig || !usernameConfig || !passwordConfig) return null
@@ -221,27 +222,31 @@ async function getUnifiProtectConfig(): Promise<{ host: string; username: string
     ? decryptToken(passwordConfig.value)
     : passwordConfig.value
   
+  const channel = channelConfig ? parseInt(channelConfig.value, 10) : 1
+  
   return { 
     host: hostConfig.value, 
     username: usernameConfig.value, 
-    password 
+    password,
+    channel
   }
 }
 
 async function ensureLivestreamManager(): Promise<ProtectLivestreamManager | null> {
-  if (livestreamManager?.isConnected()) {
-    return livestreamManager
-  }
-  
   const config = await getUnifiProtectConfig()
   if (!config) {
     console.log('[WS-Proxy] UniFi Protect not configured')
     return null
   }
   
+  if (livestreamManager?.isConnected()) {
+    livestreamManager.setChannel(config.channel)
+    return livestreamManager
+  }
+  
   try {
-    livestreamManager = await initProtectLivestreamManager(config.host, config.username, config.password)
-    console.log('[WS-Proxy] Livestream manager initialized')
+    livestreamManager = await initProtectLivestreamManager(config.host, config.username, config.password, config.channel)
+    console.log('[WS-Proxy] Livestream manager initialized with channel:', config.channel)
     return livestreamManager
   } catch (err) {
     console.error('[WS-Proxy] Failed to initialize livestream manager:', err)
@@ -259,17 +264,19 @@ livestreamWss.on('connection', async (clientWs: WebSocket, { userId, cameraId }:
     return
   }
   
-  let initSegmentSent = false
+  let codecSent = false
+  
+  const onCodec = (codec: string) => {
+    if (clientWs.readyState === WebSocket.OPEN && !codecSent) {
+      console.log(`[WS-Proxy] Sending codec to client for ${cameraId}:`, codec)
+      clientWs.send(JSON.stringify({ type: 'codec', codec }))
+      codecSent = true
+    }
+  }
   
   const onData = (data: Buffer) => {
     if (clientWs.readyState === WebSocket.OPEN) {
       clientWs.send(data)
-    }
-  }
-  
-  const onCodec = (codec: string) => {
-    if (clientWs.readyState === WebSocket.OPEN) {
-      clientWs.send(JSON.stringify({ type: 'codec', codec }))
     }
   }
   
@@ -293,12 +300,12 @@ livestreamWss.on('connection', async (clientWs: WebSocket, { userId, cameraId }:
   
   clientWs.on('close', () => {
     console.log(`[WS-Proxy] Livestream client disconnected: ${userId} for camera ${cameraId}`)
-    manager.stopStream(cameraId, onData)
+    manager.stopStream(cameraId, onData, onCodec)
   })
   
   clientWs.on('error', (err) => {
     console.error(`[WS-Proxy] Livestream client error for ${userId}:`, err.message)
-    manager.stopStream(cameraId, onData)
+    manager.stopStream(cameraId, onData, onCodec)
   })
 })
 
