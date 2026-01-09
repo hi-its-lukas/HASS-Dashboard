@@ -38,6 +38,8 @@ export async function POST() {
     const controllerUrl = new URL(unifiConfig.controllerUrl)
     const nvrHost = controllerUrl.hostname
 
+    const rtspChannel = unifiConfig.rtspChannel ?? 1
+    
     const streams = unifiConfig.cameras.map((cameraId: string) => ({
       cameraId,
       name: cameraId,
@@ -46,12 +48,12 @@ export async function POST() {
         cameraId,
         unifiConfig.rtspUsername!,
         unifiConfig.rtspPassword!,
-        1,
+        rtspChannel,
         true
       )
     }))
     
-    console.log('[Streaming] Starting go2rtc with', streams.length, 'streams for host:', nvrHost)
+    console.log('[Streaming] Starting go2rtc with', streams.length, 'streams for host:', nvrHost, 'channel:', rtspChannel)
 
     const result = await startGo2rtc(streams)
 

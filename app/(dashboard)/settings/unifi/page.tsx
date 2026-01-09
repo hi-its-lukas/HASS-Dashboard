@@ -29,6 +29,7 @@ interface UnifiConfig {
   accessApiKey: string
   rtspUsername: string
   rtspPassword: string
+  rtspChannel: number
   liveStreamEnabled: boolean
   cameras: string[]
   accessDevices: UnifiAccessDevice[]
@@ -79,6 +80,7 @@ export default function UnifiSettingsPage() {
     accessApiKey: '',
     rtspUsername: '',
     rtspPassword: '',
+    rtspChannel: 1,
     liveStreamEnabled: false,
     cameras: [],
     accessDevices: [],
@@ -707,6 +709,25 @@ export default function UnifiSettingsPage() {
                         {showRtspPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                       </button>
                     </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-2">
+                      <Video className="w-4 h-4 inline mr-2" />
+                      Stream-Qualität
+                    </label>
+                    <select
+                      value={config.rtspChannel ?? 1}
+                      onChange={(e) => setConfig(prev => ({ ...prev, rtspChannel: parseInt(e.target.value) }))}
+                      className="w-full px-4 py-3 bg-[#1a2235] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-green-500/50 appearance-none cursor-pointer"
+                    >
+                      <option value={0}>Hoch (1920x1080)</option>
+                      <option value={1}>Mittel (1280x720)</option>
+                      <option value={2}>Niedrig (640x360)</option>
+                    </select>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Wähle die Qualität, die in UniFi Protect aktiviert ist
+                    </p>
                   </div>
                 </div>
               )}

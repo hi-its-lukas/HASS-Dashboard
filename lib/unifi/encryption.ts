@@ -8,6 +8,7 @@ export interface UnifiConfig {
   accessApiKey: string
   rtspUsername?: string
   rtspPassword?: string
+  rtspChannel?: number
   liveStreamEnabled?: boolean
   cameras: string[]
   accessDevices: { id: string; name: string; type: string; doorId?: string; cameraId?: string }[]
