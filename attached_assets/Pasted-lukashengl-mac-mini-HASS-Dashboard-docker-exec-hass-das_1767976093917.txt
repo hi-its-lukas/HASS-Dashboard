@@ -1,0 +1,33 @@
+lukashengl@mac-mini HASS-Dashboard % docker exec hass-dashboard /usr/local/bin/go2rtc --version
+go2rtc version 1.9.4 (a4885c2) linux/arm64
+lukashengl@mac-mini HASS-Dashboard % docker logs hass-dashboard 2>&1 | grep -E "go2rtc|Streaming" | tail -30
+[Next] [go2rtc] RTSP URL for 68330e970123c803e4000703: rtsp://***:***@unifi-network-video-recorder.local:7447/68330e970123c803e4000703_channel_1
+[go2rtc] RTSP URL for 69047ecf0361dd03e46b58bd: rtsp://***:***@unifi-network-video-recorder.local:7447/69047ecf0361dd03e46b58bd_channel_1
+[go2rtc] RTSP URL for 68315e3703866803e4000400: rtsp://***:***@unifi-network-video-recorder.local:7447/68315e3703866803e4000400_channel_1
+[Next] [Streaming] Starting go2rtc with 3 streams (limited from 9 ) for host: unifi-network-video-recorder.local channel: 1 secure: false
+[Next] [go2rtc] Found binary at: /usr/local/bin/go2rtc
+[Next] [go2rtc] Config written to: /tmp/go2rtc.json
+[go2rtc] Configured 3 streams
+[Next] [go2rtc] 16:27:16.385 INF go2rtc platform=linux/arm64 revision=a4885c2 version=1.9.4
+16:27:16.385 INF config path=/tmp/go2rtc.json
+[Next] [go2rtc] 16:27:16.385 INF [rtsp] listen addr=:8554
+[Next] [go2rtc] 16:27:16.385 INF [webrtc] listen addr=:8555
+[Gateway] Routing MSE stream 68315e37035b6803e40003ff to go2rtc (port 1984), path: /api/ws?src=68315e37035b6803e40003ff
+[Gateway] Routing MSE stream 68315e3703c16803e4000402 to go2rtc (port 1984), path: /api/ws?src=68315e3703c16803e4000402
+[Gateway] Routing MSE stream 68315e3702fd6803e40003fc to go2rtc (port 1984), path: /api/ws?src=68315e3702fd6803e40003fc
+[Gateway] Routing MSE stream 68315e3703326803e40003fe to go2rtc (port 1984), path: /api/ws?src=68315e3703326803e40003fe
+[Gateway] Routing MSE stream 68315e3702d06803e40003fb to go2rtc (port 1984), path: /api/ws?src=68315e3702d06803e40003fb
+[Gateway] Routing MSE stream 68315e3703a36803e4000401 to go2rtc (port 1984), path: /api/ws?src=68315e3703a36803e4000401
+[Gateway] Routing MSE stream 68315e3703866803e4000400 to go2rtc (port 1984), path: /api/ws?src=68315e3703866803e4000400
+[Gateway] Routing MSE stream 69047ecf0361dd03e46b58bd to go2rtc (port 1984), path: /api/ws?src=69047ecf0361dd03e46b58bd
+[Next] [go2rtc] Started successfully on port 1984
+[Gateway] Routing MSE stream 68330e970123c803e4000703 to go2rtc (port 1984), path: /api/ws?src=68330e970123c803e4000703
+[Gateway] Routing MSE stream 68330e970123c803e4000703 to go2rtc (port 1984), path: /api/ws?src=68330e970123c803e4000703
+[Gateway] Routing MSE stream 68315e37035b6803e40003ff to go2rtc (port 1984), path: /api/ws?src=68315e37035b6803e40003ff
+[Gateway] Routing MSE stream 68315e3703c16803e4000402 to go2rtc (port 1984), path: /api/ws?src=68315e3703c16803e4000402
+[Gateway] Routing MSE stream 68315e3702fd6803e40003fc to go2rtc (port 1984), path: /api/ws?src=68315e3702fd6803e40003fc
+[Gateway] Routing MSE stream 68315e3703326803e40003fe to go2rtc (port 1984), path: /api/ws?src=68315e3703326803e40003fe
+[Gateway] Routing MSE stream 68315e3702d06803e40003fb to go2rtc (port 1984), path: /api/ws?src=68315e3702d06803e40003fb
+[Gateway] Routing MSE stream 68315e3703a36803e4000401 to go2rtc (port 1984), path: /api/ws?src=68315e3703a36803e4000401
+[Gateway] Routing MSE stream 68315e3703866803e4000400 to go2rtc (port 1984), path: /api/ws?src=68315e3703866803e4000400
+[Gateway] Routing MSE stream 69047ecf0361dd03e46b58bd to go2rtc (port 1984), path: /api/ws?src=69047ecf0361dd03e46b58bd
