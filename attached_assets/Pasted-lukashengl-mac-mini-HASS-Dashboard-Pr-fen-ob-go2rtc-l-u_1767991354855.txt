@@ -1,0 +1,29 @@
+lukashengl@mac-mini HASS-Dashboard % # Pr��fen ob go2rtc l��uft
+docker exec hass-dashboard ps aux | grep go2rtc
+
+# go2rtc API direkt abfragen
+docker exec hass-dashboard curl -v "http://127.0.0.1:1984/api/streams"
+zsh: command not found: #
+zsh: command not found: #
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0*   Trying 127.0.0.1:1984...
+* Connected to 127.0.0.1 (127.0.0.1) port 1984 (#0)
+> GET /api/streams HTTP/1.1
+> Host: 127.0.0.1:1984
+> User-Agent: curl/7.88.1
+> Accept: */*
+> 
+< HTTP/1.1 200 OK
+< Access-Control-Allow-Headers: Authorization, Content-Type
+< Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS
+< Access-Control-Allow-Origin: *
+< Content-Type: application/json
+< Date: Fri, 09 Jan 2026 20:42:27 GMT
+< Content-Length: 1082
+< 
+{ [1082 bytes data]
+100  1082  100  1082    0     0  1828k      0 --:--:-- --:--:-- --:--:-- 1056k
+* Connection #0 to host 127.0.0.1 left intact
+{"68315e3702d06803e40003fb":{"producers":[{"url":"rtspx://10.0.0.2:7441/krcq8fWsZ1bJZv36?enableSrtp"}],"consumers":null},"68315e3702fd6803e40003fc":{"producers":[{"url":"rtspx://10.0.0.2:7441/4Q9HuekgLBxZEgcD?enableSrtp"}],"consumers":null},"68315e3703326803e40003fe":{"producers":[{"url":"rtspx://10.0.0.2:7441/bV2wQfzCLHVeU4Dy?enableSrtp"}],"consumers":null},"68315e37035b6803e40003ff":{"producers":[{"url":"rtspx://10.0.0.2:7441/guJtyvP6Ku1J9l9n?enableSrtp"}],"consumers":null},"68315e3703866803e4000400":{"producers":[{"url":"rtspx://10.0.0.2:7441/SR9ykHlMjdh05ndR?enableSrtp"}],"consumers":null},"68315e3703a36803e4000401":{"producers":[{"url":"rtspx://10.0.0.2:7441/J6rdnWBNdkvU7UBz?enableSrtp"}],"consumers":null},"68315e3703c16803e4000402":{"producers":[{"url":"rtspx://10.0.0.2:7441/XtjvJbIFSReyYJR3?enableSrtp"}],"consumers":null},"68330e970123c803e4000703":{"producers":[{"url":"rtspx://10.0.0.2:7441/DUzgrnTWYAEBLv30?enableSrtp"}],"consumers":null},"69047ecf0361dd03e46b58bd":{"producers":[{"url":"rtspx://10.0.0.2:7441/XryYHBFbgkdMWb04?enableSrtp"}],"consumers":null}}
+lukashengl@mac-mini HASS-Dashboard % 
