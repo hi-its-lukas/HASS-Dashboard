@@ -155,7 +155,10 @@ function proxyHttpRequest(req: IncomingMessage, res: ServerResponse) {
 }
 
 function proxyWebSocketUpgrade(req: IncomingMessage, clientSocket: Socket, head: Buffer, targetPort: number) {
+  log(`Connecting to target port ${targetPort} for ${req.url}`)
+  
   const targetSocket = netConnect(targetPort, '127.0.0.1', () => {
+    log(`Connected to target port ${targetPort}`)
     const headers = Object.entries(req.headers)
       .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`)
       .join('\r\n')
@@ -172,12 +175,12 @@ function proxyWebSocketUpgrade(req: IncomingMessage, clientSocket: Socket, head:
   })
   
   targetSocket.on('error', (err) => {
-    console.error('[Gateway] WS proxy error:', err.message)
+    log(`WS proxy error to port ${targetPort}: ${err.message}`)
     clientSocket.destroy()
   })
   
   clientSocket.on('error', (err) => {
-    console.error('[Gateway] Client socket error:', err.message)
+    log(`Client socket error: ${err.message}`)
     targetSocket.destroy()
   })
   
@@ -221,14 +224,17 @@ async function main() {
     
     server.on('upgrade', (req, socket, head) => {
       const url = req.url || ''
+      log(`WebSocket upgrade request: ${url}`)
       
       if (url.startsWith('/ws/ha')) {
+        log(`Routing to WS Proxy (port ${WS_PROXY_PORT})`)
         proxyWebSocketUpgrade(req, socket as Socket, head, WS_PROXY_PORT)
       } else if (url.startsWith('/api/streaming/mse')) {
         const srcMatch = url.match(/[?&]src=([^&]+)/)
         const cameraId = srcMatch ? decodeURIComponent(srcMatch[1]) : ''
         if (cameraId) {
           const go2rtcUrl = `/api/ws?src=${encodeURIComponent(cameraId)}`
+          log(`Routing MSE stream ${cameraId} to go2rtc (port ${GO2RTC_PORT}), path: ${go2rtcUrl}`)
           const modifiedReq = { ...req, url: go2rtcUrl }
           proxyWebSocketUpgrade(modifiedReq as IncomingMessage, socket as Socket, head, GO2RTC_PORT)
         } else {
@@ -236,7 +242,8 @@ async function main() {
           ;(socket as Socket).destroy()
         }
       } else {
-        (socket as Socket).destroy()
+        log(`Unknown WebSocket path, destroying: ${url}`)
+        ;(socket as Socket).destroy()
       }
     })
     
