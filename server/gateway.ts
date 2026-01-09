@@ -229,9 +229,18 @@ async function main() {
       if (url.startsWith('/ws/ha')) {
         log(`Routing to WS Proxy (port ${WS_PROXY_PORT})`)
         proxyWebSocketUpgrade(req, socket as Socket, head, WS_PROXY_PORT)
-      } else if (url.startsWith('/api/streaming/mse')) {
-        const srcMatch = url.match(/[?&]src=([^&]+)/)
-        const cameraId = srcMatch ? decodeURIComponent(srcMatch[1]) : ''
+      } else if (url.startsWith('/ws/mse/') || url.startsWith('/api/streaming/mse')) {
+        // Support both /ws/mse/:cameraId and /api/streaming/mse?src=cameraId
+        let cameraId = ''
+        if (url.startsWith('/ws/mse/')) {
+          // Extract camera ID from path: /ws/mse/:cameraId
+          const pathMatch = url.match(/^\/ws\/mse\/([^?]+)/)
+          cameraId = pathMatch ? decodeURIComponent(pathMatch[1]) : ''
+        } else {
+          // Extract from query string: /api/streaming/mse?src=cameraId
+          const srcMatch = url.match(/[?&]src=([^&]+)/)
+          cameraId = srcMatch ? decodeURIComponent(srcMatch[1]) : ''
+        }
         if (cameraId) {
           const go2rtcUrl = `/api/ws?src=${encodeURIComponent(cameraId)}`
           log(`Routing MSE stream ${cameraId} to go2rtc (port ${GO2RTC_PORT}), path: ${go2rtcUrl}`)
@@ -253,7 +262,7 @@ async function main() {
       log(`Gateway ready on http://${HOSTNAME}:${PUBLIC_PORT}`)
       log(`HTTP requests → Next.js (port ${NEXT_PORT})`)
       log(`WebSocket /ws/ha → WS Proxy (port ${WS_PROXY_PORT})`)
-      log(`WebSocket /api/streaming/mse → go2rtc (port ${GO2RTC_PORT})`)
+      log(`WebSocket /ws/mse/:cameraId → go2rtc (port ${GO2RTC_PORT})`)
     })
     
     process.on('SIGTERM', shutdown)

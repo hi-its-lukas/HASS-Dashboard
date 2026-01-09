@@ -74,7 +74,8 @@ export default function WebRTCPlayer({
 
     try {
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-      const wsUrl = `${protocol}//${window.location.host}/api/streaming/mse?src=${encodeURIComponent(cameraId)}`
+      // Use /ws/mse/ path instead of /api/streaming/mse to ensure Cloudflare Tunnel forwards WebSocket upgrades
+      const wsUrl = `${protocol}//${window.location.host}/ws/mse/${encodeURIComponent(cameraId)}`
       
       console.log('[MSEPlayer] Connecting to:', wsUrl)
       
