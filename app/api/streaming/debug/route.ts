@@ -28,12 +28,23 @@ export async function GET() {
     }))
     
     let go2rtcApiStatus = 'not running'
+    let streamDetails: Record<string, unknown> = {}
+    
     if (isGo2rtcRunning()) {
       try {
         const res = await fetch(`${getGo2rtcApiUrl()}/api/streams`)
         if (res.ok) {
           const streams = await res.json()
           go2rtcApiStatus = `running, ${Object.keys(streams).length} streams configured`
+          
+          for (const [name, config] of Object.entries(streams as Record<string, { producers?: unknown[], consumers?: unknown[] }>)) {
+            streamDetails[name] = {
+              configured: true,
+              producers: config.producers?.length || 0,
+              consumers: config.consumers?.length || 0,
+              producerDetails: config.producers || []
+            }
+          }
         } else {
           go2rtcApiStatus = `running but API error: ${res.status}`
         }
@@ -47,6 +58,7 @@ export async function GET() {
       go2rtcRunning: isGo2rtcRunning(),
       go2rtcApiUrl: getGo2rtcApiUrl(),
       go2rtcApiStatus,
+      streamDetails,
       binaryInfo,
       config: {
         hasUnifiConfig: !!unifiConfig,
