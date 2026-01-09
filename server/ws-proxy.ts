@@ -6,6 +6,7 @@ import { PrismaClient } from '@prisma/client'
 import { createDecipheriv } from 'crypto'
 import { existsSync, readFileSync } from 'fs'
 import { join } from 'path'
+import { ProtectLivestreamManager, initProtectLivestreamManager, getProtectLivestreamManager } from '../lib/streaming/protect-livestream'
 
 const WS_PORT = parseInt(process.env.WS_PROXY_PORT || '6000', 10)
 const SQLITE_URL = process.env.SQLITE_URL || 'file:./data/ha-dashboard.db'
@@ -203,6 +204,103 @@ async function createHAConnection(config: { url: string; token: string }): Promi
 }
 
 const wss = new WebSocketServer({ noServer: true })
+const livestreamWss = new WebSocketServer({ noServer: true })
+
+let livestreamManager: ProtectLivestreamManager | null = null
+
+async function getUnifiProtectConfig(): Promise<{ host: string; username: string; password: string } | null> {
+  const [hostConfig, usernameConfig, passwordConfig] = await Promise.all([
+    prisma.systemConfig.findUnique({ where: { key: 'unifi_protect_host' } }),
+    prisma.systemConfig.findUnique({ where: { key: 'unifi_protect_username' } }),
+    prisma.systemConfig.findUnique({ where: { key: 'unifi_protect_password' } })
+  ])
+  
+  if (!hostConfig || !usernameConfig || !passwordConfig) return null
+  
+  const password = passwordConfig.encrypted 
+    ? decryptToken(passwordConfig.value)
+    : passwordConfig.value
+  
+  return { 
+    host: hostConfig.value, 
+    username: usernameConfig.value, 
+    password 
+  }
+}
+
+async function ensureLivestreamManager(): Promise<ProtectLivestreamManager | null> {
+  if (livestreamManager?.isConnected()) {
+    return livestreamManager
+  }
+  
+  const config = await getUnifiProtectConfig()
+  if (!config) {
+    console.log('[WS-Proxy] UniFi Protect not configured')
+    return null
+  }
+  
+  try {
+    livestreamManager = await initProtectLivestreamManager(config.host, config.username, config.password)
+    console.log('[WS-Proxy] Livestream manager initialized')
+    return livestreamManager
+  } catch (err) {
+    console.error('[WS-Proxy] Failed to initialize livestream manager:', err)
+    return null
+  }
+}
+
+livestreamWss.on('connection', async (clientWs: WebSocket, { userId, cameraId }: { userId: string; cameraId: string }) => {
+  console.log(`[WS-Proxy] Livestream client connected: ${userId} for camera ${cameraId}`)
+  
+  const manager = await ensureLivestreamManager()
+  if (!manager) {
+    clientWs.send(JSON.stringify({ type: 'error', message: 'UniFi Protect nicht konfiguriert' }))
+    clientWs.close(4503, 'UniFi Protect not configured')
+    return
+  }
+  
+  let initSegmentSent = false
+  
+  const onData = (data: Buffer) => {
+    if (clientWs.readyState === WebSocket.OPEN) {
+      clientWs.send(data)
+    }
+  }
+  
+  const onCodec = (codec: string) => {
+    if (clientWs.readyState === WebSocket.OPEN) {
+      clientWs.send(JSON.stringify({ type: 'codec', codec }))
+    }
+  }
+  
+  try {
+    const started = await manager.startStream(cameraId, onData, onCodec)
+    
+    if (!started) {
+      clientWs.send(JSON.stringify({ type: 'error', message: 'Stream konnte nicht gestartet werden' }))
+      clientWs.close(4500, 'Stream start failed')
+      return
+    }
+    
+    clientWs.send(JSON.stringify({ type: 'stream_started', cameraId }))
+    
+  } catch (err) {
+    console.error(`[WS-Proxy] Failed to start stream for ${cameraId}:`, err)
+    clientWs.send(JSON.stringify({ type: 'error', message: 'Stream-Fehler' }))
+    clientWs.close(4500, 'Stream error')
+    return
+  }
+  
+  clientWs.on('close', () => {
+    console.log(`[WS-Proxy] Livestream client disconnected: ${userId} for camera ${cameraId}`)
+    manager.stopStream(cameraId, onData)
+  })
+  
+  clientWs.on('error', (err) => {
+    console.error(`[WS-Proxy] Livestream client error for ${userId}:`, err.message)
+    manager.stopStream(cameraId, onData)
+  })
+})
 
 wss.on('connection', async (clientWs: WebSocket, userId: string) => {
   console.log(`[WS-Proxy] Client connected: ${userId}`)
@@ -283,12 +381,6 @@ const server = createServer((req, res) => {
 server.on('upgrade', async (request, socket, head) => {
   const { pathname } = parse(request.url || '')
   
-  if (pathname !== '/ws/ha') {
-    socket.write('HTTP/1.1 404 Not Found\r\n\r\n')
-    socket.destroy()
-    return
-  }
-
   if (!validateOrigin(request)) {
     console.warn('[WS-Proxy] Origin check failed:', request.headers.origin)
     socket.write('HTTP/1.1 403 Forbidden\r\n\r\n')
@@ -312,27 +404,49 @@ server.on('upgrade', async (request, socket, head) => {
     return
   }
   
-  wss.handleUpgrade(request, socket, head, (ws) => {
-    wss.emit('connection', ws, userId)
-  })
+  // Route: /ws/ha - Home Assistant WebSocket proxy
+  if (pathname === '/ws/ha') {
+    wss.handleUpgrade(request, socket, head, (ws) => {
+      wss.emit('connection', ws, userId)
+    })
+    return
+  }
+  
+  // Route: /ws/livestream/:cameraId - UniFi Protect Livestream
+  const livestreamMatch = pathname?.match(/^\/ws\/livestream\/(.+)$/)
+  if (livestreamMatch) {
+    const cameraId = decodeURIComponent(livestreamMatch[1])
+    console.log(`[WS-Proxy] Livestream upgrade for camera: ${cameraId}`)
+    
+    livestreamWss.handleUpgrade(request, socket, head, (ws) => {
+      livestreamWss.emit('connection', ws, { userId, cameraId })
+    })
+    return
+  }
+  
+  // Unknown path
+  socket.write('HTTP/1.1 404 Not Found\r\n\r\n')
+  socket.destroy()
 })
 
 server.listen(WS_PORT, '0.0.0.0', () => {
   console.log(`[WS-Proxy] WebSocket proxy running on port ${WS_PORT}`)
 })
 
-process.on('SIGTERM', async () => {
+async function shutdown() {
   console.log('[WS-Proxy] Shutting down...')
+  
   wss.close()
+  livestreamWss.close()
   server.close()
+  
+  if (livestreamManager) {
+    await livestreamManager.disconnect()
+  }
+  
   await prisma.$disconnect()
   process.exit(0)
-})
+}
 
-process.on('SIGINT', async () => {
-  console.log('[WS-Proxy] Interrupted, shutting down...')
-  wss.close()
-  server.close()
-  await prisma.$disconnect()
-  process.exit(0)
-})
+process.on('SIGTERM', shutdown)
+process.on('SIGINT', shutdown)

@@ -1,115 +1,15 @@
 import { createServer, IncomingMessage, ServerResponse, request as httpRequest } from 'http'
 import { Socket, connect as netConnect } from 'net'
-import { spawn, ChildProcess, execSync } from 'child_process'
-import * as fs from 'fs'
-import * as path from 'path'
+import { spawn, ChildProcess } from 'child_process'
 
 const PUBLIC_PORT = parseInt(process.env.PORT || '8080', 10)
 const NEXT_PORT = 3000
 const WS_PROXY_PORT = 6000
-const GO2RTC_PORT = 1984
-const GO2RTC_RTSP_PORT = 8554
-const GO2RTC_WEBRTC_PORT = 8555
 const HOSTNAME = process.env.HOSTNAME || '0.0.0.0'
 
 let nextProcess: ChildProcess | null = null
 let wsProxyProcess: ChildProcess | null = null
-let go2rtcProcess: ChildProcess | null = null
 let shuttingDown = false
-
-// go2rtc configuration stored by Next.js API
-const GO2RTC_CONFIG_PATH = '/tmp/go2rtc.json'
-const GO2RTC_BINARY_PATH = '/usr/local/bin/go2rtc'
-
-function startGo2rtc(): void {
-  if (go2rtcProcess) {
-    log('go2rtc already running')
-    return
-  }
-  
-  if (!fs.existsSync(GO2RTC_BINARY_PATH)) {
-    log(`go2rtc binary not found at ${GO2RTC_BINARY_PATH}`)
-    return
-  }
-  
-  if (!fs.existsSync(GO2RTC_CONFIG_PATH)) {
-    log(`go2rtc config not found at ${GO2RTC_CONFIG_PATH}, will start when config is created`)
-    return
-  }
-  
-  log(`Starting go2rtc with config ${GO2RTC_CONFIG_PATH}`)
-  
-  go2rtcProcess = spawn(GO2RTC_BINARY_PATH, ['-config', GO2RTC_CONFIG_PATH], {
-    stdio: ['ignore', 'pipe', 'pipe'],
-    detached: false
-  })
-  
-  go2rtcProcess.stdout?.on('data', (data) => {
-    const output = data.toString().trim()
-    if (output) {
-      console.log(`[go2rtc] ${output}`)
-    }
-  })
-  
-  go2rtcProcess.stderr?.on('data', (data) => {
-    const output = data.toString().trim()
-    if (output) {
-      console.error(`[go2rtc ERROR] ${output}`)
-    }
-  })
-  
-  go2rtcProcess.on('exit', (code, signal) => {
-    log(`go2rtc exited with code ${code}, signal ${signal}`)
-    go2rtcProcess = null
-    
-    // Write crash log
-    const timestamp = new Date().toISOString()
-    const crashMsg = `[${timestamp}] go2rtc exited - code: ${code}, signal: ${signal}\n`
-    try {
-      fs.appendFileSync('/data/go2rtc_crash.log', crashMsg)
-    } catch (e) {
-      // Ignore
-    }
-    
-    // Auto-restart after 5 seconds if not shutting down
-    if (!shuttingDown && code !== 0) {
-      log('go2rtc crashed, restarting in 5 seconds...')
-      setTimeout(() => {
-        if (!shuttingDown) startGo2rtc()
-      }, 5000)
-    }
-  })
-  
-  go2rtcProcess.on('error', (err) => {
-    log(`go2rtc spawn error: ${err.message}`)
-    go2rtcProcess = null
-  })
-}
-
-function stopGo2rtc(): void {
-  if (go2rtcProcess) {
-    log('Stopping go2rtc...')
-    go2rtcProcess.kill('SIGTERM')
-    go2rtcProcess = null
-  }
-}
-
-function isGo2rtcRunning(): boolean {
-  return go2rtcProcess !== null && !go2rtcProcess.killed
-}
-
-// Watch for config file changes to auto-start go2rtc
-function watchGo2rtcConfig(): void {
-  const configDir = path.dirname(GO2RTC_CONFIG_PATH)
-  
-  // Check periodically for config file
-  setInterval(() => {
-    if (!go2rtcProcess && fs.existsSync(GO2RTC_CONFIG_PATH)) {
-      log('go2rtc config detected, starting go2rtc...')
-      startGo2rtc()
-    }
-  }, 2000)
-}
 
 function log(msg: string) {
   console.log(`[Gateway] ${msg}`)
@@ -253,81 +153,7 @@ function proxyHttpRequest(req: IncomingMessage, res: ServerResponse) {
   req.pipe(proxyReq)
 }
 
-// Special WebSocket proxy for go2rtc that ensures proper upgrade headers
-function proxyWebSocketToGo2rtc(req: IncomingMessage, clientSocket: Socket, head: Buffer, cameraId: string, go2rtcPath: string) {
-  log(`Connecting to go2rtc port ${GO2RTC_PORT} for camera ${cameraId}`)
-  
-  const targetSocket = netConnect(GO2RTC_PORT, '127.0.0.1', () => {
-    log(`Connected to go2rtc for camera ${cameraId}`)
-    
-    // Build proper WebSocket upgrade request for go2rtc
-    // Must include all required WebSocket headers with correct values
-    const wsKey = req.headers['sec-websocket-key'] || ''
-    const wsVersion = req.headers['sec-websocket-version'] || '13'
-    const wsProtocol = req.headers['sec-websocket-protocol'] || ''
-    const wsExtensions = req.headers['sec-websocket-extensions'] || ''
-    
-    let upgradeRequest = `GET ${go2rtcPath} HTTP/1.1\r\n`
-    upgradeRequest += `Host: 127.0.0.1:${GO2RTC_PORT}\r\n`
-    upgradeRequest += `Connection: Upgrade\r\n`
-    upgradeRequest += `Upgrade: websocket\r\n`
-    upgradeRequest += `Sec-WebSocket-Key: ${wsKey}\r\n`
-    upgradeRequest += `Sec-WebSocket-Version: ${wsVersion}\r\n`
-    
-    if (wsProtocol) {
-      upgradeRequest += `Sec-WebSocket-Protocol: ${wsProtocol}\r\n`
-    }
-    if (wsExtensions) {
-      upgradeRequest += `Sec-WebSocket-Extensions: ${wsExtensions}\r\n`
-    }
-    
-    // Add origin header if present
-    const origin = req.headers['origin']
-    if (origin) {
-      upgradeRequest += `Origin: ${origin}\r\n`
-    }
-    
-    upgradeRequest += `\r\n`
-    
-    log(`Sending WebSocket upgrade to go2rtc: GET ${go2rtcPath}`)
-    
-    targetSocket.write(upgradeRequest)
-    if (head.length > 0) {
-      targetSocket.write(head)
-    }
-    
-    targetSocket.pipe(clientSocket)
-    clientSocket.pipe(targetSocket)
-  })
-  
-  targetSocket.on('error', (err: NodeJS.ErrnoException) => {
-    log(`go2rtc proxy error: ${err.message}`)
-    if (err.code === 'ECONNREFUSED') {
-      log(`go2rtc not reachable - may not be running`)
-      try {
-        clientSocket.write('HTTP/1.1 502 Bad Gateway\r\n\r\n')
-      } catch (e) {
-        // Ignore write errors
-      }
-    }
-    clientSocket.destroy()
-  })
-  
-  clientSocket.on('error', (err) => {
-    log(`Client socket error (go2rtc): ${err.message}`)
-    targetSocket.destroy()
-  })
-  
-  clientSocket.on('close', () => {
-    targetSocket.destroy()
-  })
-  
-  targetSocket.on('close', () => {
-    clientSocket.destroy()
-  })
-}
-
-function proxyWebSocketUpgrade(req: IncomingMessage, clientSocket: Socket, head: Buffer, targetPort: number) {
+function proxyWebSocketUpgrade(req: IncomingMessage, clientSocket: Socket, head: Buffer, targetPort: number, overridePath?: string) {
   log(`Connecting to target port ${targetPort} for ${req.url}`)
   
   const targetSocket = netConnect(targetPort, '127.0.0.1', () => {
@@ -336,7 +162,8 @@ function proxyWebSocketUpgrade(req: IncomingMessage, clientSocket: Socket, head:
       .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`)
       .join('\r\n')
     
-    const upgradeRequest = `${req.method} ${req.url} HTTP/1.1\r\n${headers}\r\n\r\n`
+    const path = overridePath || req.url
+    const upgradeRequest = `${req.method} ${path} HTTP/1.1\r\n${headers}\r\n\r\n`
     
     targetSocket.write(upgradeRequest)
     if (head.length > 0) {
@@ -381,8 +208,6 @@ async function shutdown() {
   
   log('Shutting down...')
   
-  stopGo2rtc()
-  
   if (nextProcess) {
     nextProcess.kill('SIGTERM')
   }
@@ -404,51 +229,42 @@ async function main() {
     
     log('Child processes ready')
     
-    // Start watching for go2rtc config and auto-start when ready
-    watchGo2rtcConfig()
-    log('go2rtc watcher started, will auto-start when config is available')
-    
     const server = createServer(proxyHttpRequest)
     
     server.on('upgrade', (req, socket, head) => {
       const url = req.url || ''
       log(`WebSocket upgrade request: ${url}`)
       
+      // Route: /ws/ha - Home Assistant WebSocket
       if (url.startsWith('/ws/ha')) {
         log(`Routing to WS Proxy (port ${WS_PROXY_PORT})`)
         proxyWebSocketUpgrade(req, socket as Socket, head, WS_PROXY_PORT)
-      } else if (url.startsWith('/ws/mse/') || url.startsWith('/api/streaming/mse')) {
-        // Support both /ws/mse/:cameraId and /api/streaming/mse?src=cameraId
-        let cameraId = ''
-        if (url.startsWith('/ws/mse/')) {
-          // Extract camera ID from path: /ws/mse/:cameraId
-          const pathMatch = url.match(/^\/ws\/mse\/([^?]+)/)
-          cameraId = pathMatch ? decodeURIComponent(pathMatch[1]) : ''
-        } else {
-          // Extract from query string: /api/streaming/mse?src=cameraId
-          const srcMatch = url.match(/[?&]src=([^&]+)/)
-          cameraId = srcMatch ? decodeURIComponent(srcMatch[1]) : ''
-        }
+        return
+      }
+      
+      // Route: /ws/livestream/:cameraId - UniFi Protect fMP4 Livestream
+      if (url.startsWith('/ws/livestream/')) {
+        const pathMatch = url.match(/^\/ws\/livestream\/(.+?)(\?|$)/)
+        const cameraId = pathMatch ? decodeURIComponent(pathMatch[1]) : ''
         if (cameraId) {
-          const go2rtcUrl = `/api/ws?src=${encodeURIComponent(cameraId)}`
-          log(`Routing MSE stream ${cameraId} to go2rtc (port ${GO2RTC_PORT}), path: ${go2rtcUrl}`)
-          // Proxy WebSocket to go2rtc with correct URL and headers
-          proxyWebSocketToGo2rtc(req, socket as Socket, head, cameraId, go2rtcUrl)
+          log(`Routing livestream for camera ${cameraId} to WS Proxy (port ${WS_PROXY_PORT})`)
+          proxyWebSocketUpgrade(req, socket as Socket, head, WS_PROXY_PORT)
         } else {
-          log(`MSE request missing camera ID: ${url}`)
+          log(`Livestream request missing camera ID: ${url}`)
           ;(socket as Socket).destroy()
         }
-      } else {
-        log(`Unknown WebSocket path, destroying: ${url}`)
-        ;(socket as Socket).destroy()
+        return
       }
+      
+      log(`Unknown WebSocket path, destroying: ${url}`)
+      ;(socket as Socket).destroy()
     })
     
     server.listen(PUBLIC_PORT, HOSTNAME, () => {
       log(`Gateway ready on http://${HOSTNAME}:${PUBLIC_PORT}`)
       log(`HTTP requests → Next.js (port ${NEXT_PORT})`)
       log(`WebSocket /ws/ha → WS Proxy (port ${WS_PROXY_PORT})`)
-      log(`WebSocket /ws/mse/:cameraId → go2rtc (port ${GO2RTC_PORT})`)
+      log(`WebSocket /ws/livestream/:cameraId → WS Proxy (port ${WS_PROXY_PORT})`)
     })
     
     process.on('SIGTERM', shutdown)
