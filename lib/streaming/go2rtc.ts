@@ -178,7 +178,7 @@ export function buildRtspUrl(
   cameraId: string,
   username: string,
   password: string,
-  channel: number = 0,
+  channel: number = 1,
   secure: boolean = true
 ): string {
   const protocol = secure ? 'rtsps' : 'rtsp'
@@ -186,7 +186,9 @@ export function buildRtspUrl(
   const encodedUser = encodeURIComponent(username)
   const encodedPass = encodeURIComponent(password)
   
-  return `${protocol}://${encodedUser}:${encodedPass}@${nvrHost}:${port}/${cameraId}_channel_${channel}`
+  const url = `${protocol}://${encodedUser}:${encodedPass}@${nvrHost}:${port}/${cameraId}_channel_${channel}`
+  console.log(`[go2rtc] RTSP URL for ${cameraId}: ${protocol}://***:***@${nvrHost}:${port}/${cameraId}_channel_${channel}`)
+  return url
 }
 
 export { GO2RTC_PORT, GO2RTC_WEBRTC_PORT }

@@ -24,6 +24,8 @@ export async function POST(request: NextRequest) {
     }
 
     const go2rtcUrl = getGo2rtcApiUrl()
+    console.log(`[WebRTC Proxy] Forwarding SDP offer for camera: ${cameraId} to ${go2rtcUrl}`)
+    
     const response = await fetch(`${go2rtcUrl}/api/webrtc?src=${encodeURIComponent(cameraId)}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/sdp' },
@@ -33,13 +35,14 @@ export async function POST(request: NextRequest) {
     if (!response.ok) {
       const errorText = await response.text()
       console.error('[WebRTC Proxy] go2rtc error:', response.status, errorText)
-      return new NextResponse(errorText, { 
+      return new NextResponse(`WebRTC handshake failed: ${errorText}`, { 
         status: response.status,
         headers: { 'Content-Type': 'text/plain' }
       })
     }
 
     const sdpAnswer = await response.text()
+    console.log(`[WebRTC Proxy] Got SDP answer for camera: ${cameraId}, length: ${sdpAnswer.length}`)
     return new NextResponse(sdpAnswer, {
       status: 200,
       headers: { 'Content-Type': 'application/sdp' }
