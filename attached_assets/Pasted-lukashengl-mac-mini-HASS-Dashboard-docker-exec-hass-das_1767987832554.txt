@@ -1,0 +1,56 @@
+lukashengl@mac-mini HASS-Dashboard % docker exec hass-dashboard curl -v rtspx://10.0.0.2:7441/ 2>&1 | head -20
+* Protocol "rtspx" not supported or disabled in libcurl
+* Closing connection -1
+curl: (1) Protocol "rtspx" not supported or disabled in libcurl
+lukashengl@mac-mini HASS-Dashboard % docker logs hass-dashboard 2>&1 | grep -i "go2rtc\|rtsp\|error" | tail -50
+[Gateway] Sending WebSocket upgrade to go2rtc: GET /api/ws?src=68330e970123c803e4000703
+[Gateway] Routing MSE stream 68315e3703c16803e4000402 to go2rtc (port 1984), path: /api/ws?src=68315e3703c16803e4000402
+[Gateway] Connecting to go2rtc port 1984 for camera 68315e3703c16803e4000402
+[Gateway] Connected to go2rtc for camera 68315e3703c16803e4000402
+[Gateway] Sending WebSocket upgrade to go2rtc: GET /api/ws?src=68315e3703c16803e4000402
+[Gateway] Routing MSE stream 68315e3702fd6803e40003fc to go2rtc (port 1984), path: /api/ws?src=68315e3702fd6803e40003fc
+[Gateway] Connecting to go2rtc port 1984 for camera 68315e3702fd6803e40003fc
+[Gateway] Connected to go2rtc for camera 68315e3702fd6803e40003fc
+[Gateway] Sending WebSocket upgrade to go2rtc: GET /api/ws?src=68315e3702fd6803e40003fc
+[Gateway] Routing MSE stream 68315e3703326803e40003fe to go2rtc (port 1984), path: /api/ws?src=68315e3703326803e40003fe
+[Gateway] Connecting to go2rtc port 1984 for camera 68315e3703326803e40003fe
+[Gateway] Connected to go2rtc for camera 68315e3703326803e40003fe
+[Gateway] Sending WebSocket upgrade to go2rtc: GET /api/ws?src=68315e3703326803e40003fe
+[Next] [API] UniFi camera snapshot error: Error: Failed to get snapshot: 500
+[Gateway] Routing MSE stream 68330e970123c803e4000703 to go2rtc (port 1984), path: /api/ws?src=68330e970123c803e4000703
+[Gateway] Connecting to go2rtc port 1984 for camera 68330e970123c803e4000703
+[Gateway] Connected to go2rtc for camera 68330e970123c803e4000703
+[Gateway] Sending WebSocket upgrade to go2rtc: GET /api/ws?src=68330e970123c803e4000703
+[Gateway] Routing MSE stream 68315e37035b6803e40003ff to go2rtc (port 1984), path: /api/ws?src=68315e37035b6803e40003ff
+[Gateway] Connecting to go2rtc port 1984 for camera 68315e37035b6803e40003ff
+[Gateway] Connected to go2rtc for camera 68315e37035b6803e40003ff
+[Gateway] Sending WebSocket upgrade to go2rtc: GET /api/ws?src=68315e37035b6803e40003ff
+[Gateway] Routing MSE stream 68315e3703c16803e4000402 to go2rtc (port 1984), path: /api/ws?src=68315e3703c16803e4000402
+[Gateway] Connecting to go2rtc port 1984 for camera 68315e3703c16803e4000402
+[Gateway] Connected to go2rtc for camera 68315e3703c16803e4000402
+[Gateway] Sending WebSocket upgrade to go2rtc: GET /api/ws?src=68315e3703c16803e4000402
+[Gateway] Routing MSE stream 68315e3702fd6803e40003fc to go2rtc (port 1984), path: /api/ws?src=68315e3702fd6803e40003fc
+[Gateway] Connecting to go2rtc port 1984 for camera 68315e3702fd6803e40003fc
+[Gateway] Connected to go2rtc for camera 68315e3702fd6803e40003fc
+[Gateway] Sending WebSocket upgrade to go2rtc: GET /api/ws?src=68315e3702fd6803e40003fc
+[Gateway] Routing MSE stream 68315e3703326803e40003fe to go2rtc (port 1984), path: /api/ws?src=68315e3703326803e40003fe
+[Gateway] Connecting to go2rtc port 1984 for camera 68315e3703326803e40003fe
+[Gateway] Connected to go2rtc for camera 68315e3703326803e40003fe
+[Gateway] Sending WebSocket upgrade to go2rtc: GET /api/ws?src=68315e3703326803e40003fe
+[Gateway] Routing MSE stream 68315e3702d06803e40003fb to go2rtc (port 1984), path: /api/ws?src=68315e3702d06803e40003fb
+[Gateway] Connecting to go2rtc port 1984 for camera 68315e3702d06803e40003fb
+[Gateway] Connected to go2rtc for camera 68315e3702d06803e40003fb
+[Gateway] Sending WebSocket upgrade to go2rtc: GET /api/ws?src=68315e3702d06803e40003fb
+[Gateway] Routing MSE stream 68315e3703a36803e4000401 to go2rtc (port 1984), path: /api/ws?src=68315e3703a36803e4000401
+[Gateway] Connecting to go2rtc port 1984 for camera 68315e3703a36803e4000401
+[Gateway] Connected to go2rtc for camera 68315e3703a36803e4000401
+[Gateway] Sending WebSocket upgrade to go2rtc: GET /api/ws?src=68315e3703a36803e4000401
+[Gateway] Routing MSE stream 68315e3703866803e4000400 to go2rtc (port 1984), path: /api/ws?src=68315e3703866803e4000400
+[Gateway] Connecting to go2rtc port 1984 for camera 68315e3703866803e4000400
+[Gateway] Connected to go2rtc for camera 68315e3703866803e4000400
+[Gateway] Sending WebSocket upgrade to go2rtc: GET /api/ws?src=68315e3703866803e4000400
+[Gateway] Routing MSE stream 69047ecf0361dd03e46b58bd to go2rtc (port 1984), path: /api/ws?src=69047ecf0361dd03e46b58bd
+[Gateway] Connecting to go2rtc port 1984 for camera 69047ecf0361dd03e46b58bd
+[Gateway] Connected to go2rtc for camera 69047ecf0361dd03e46b58bd
+[Gateway] Sending WebSocket upgrade to go2rtc: GET /api/ws?src=69047ecf0361dd03e46b58bd
+lukashengl@mac-mini HASS-Dashboard % 
