@@ -238,10 +238,11 @@ export function buildTokenRtspUrl(
   secure: boolean = true
 ): string {
   if (secure) {
-    // UniFi Protect uses rtsps:// with ?enableSrtp parameter
-    // go2rtc uses rtspx:// notation for RTSPS
-    const url = `rtspx://${nvrHost}:7441/${rtspToken}?enableSrtp`
-    console.log(`[go2rtc] Token-based RTSP URL (secure): rtspx://${nvrHost}:7441/${rtspToken.substring(0, 4)}...?enableSrtp`)
+    // UniFi Protect RTSPS on port 7441
+    // go2rtc uses rtspx:// notation for RTSPS (TLS without cert verification)
+    // Token-based URLs don't need ?enableSrtp - the token itself enables SRTP
+    const url = `rtspx://${nvrHost}:7441/${rtspToken}`
+    console.log(`[go2rtc] Token-based RTSP URL (secure): rtspx://${nvrHost}:7441/${rtspToken.substring(0, 4)}...`)
     return url
   } else {
     const url = `rtsp://${nvrHost}:7447/${rtspToken}`
