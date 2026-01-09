@@ -215,8 +215,10 @@ export function buildRtspUrl(
   const encodedUser = encodeURIComponent(username)
   const encodedPass = encodeURIComponent(password)
   
-  const url = `${protocol}://${encodedUser}:${encodedPass}@${nvrHost}:${port}/${cameraId}_channel_${channel}`
-  console.log(`[go2rtc] RTSP URL for ${cameraId}: ${protocol}://***:***@${nvrHost}:${port}/${cameraId}_channel_${channel}`)
+  // Add #insecure to skip SSL certificate validation for RTSPS
+  const insecureFlag = secure ? '#insecure' : ''
+  const url = `${protocol}://${encodedUser}:${encodedPass}@${nvrHost}:${port}/${cameraId}_channel_${channel}${insecureFlag}`
+  console.log(`[go2rtc] RTSP URL for ${cameraId}: ${protocol}://***:***@${nvrHost}:${port}/${cameraId}_channel_${channel}${insecureFlag}`)
   return url
 }
 
