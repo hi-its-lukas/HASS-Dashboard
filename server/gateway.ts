@@ -5,6 +5,7 @@ import { spawn, ChildProcess } from 'child_process'
 const PUBLIC_PORT = parseInt(process.env.PORT || '8080', 10)
 const NEXT_PORT = 3000
 const WS_PROXY_PORT = 6000
+const GO2RTC_PORT = 1984
 const HOSTNAME = process.env.HOSTNAME || '0.0.0.0'
 
 let nextProcess: ChildProcess | null = null
@@ -223,6 +224,17 @@ async function main() {
       
       if (url.startsWith('/ws/ha')) {
         proxyWebSocketUpgrade(req, socket as Socket, head, WS_PROXY_PORT)
+      } else if (url.startsWith('/api/streaming/mse')) {
+        const srcMatch = url.match(/[?&]src=([^&]+)/)
+        const cameraId = srcMatch ? decodeURIComponent(srcMatch[1]) : ''
+        if (cameraId) {
+          const go2rtcUrl = `/api/ws?src=${encodeURIComponent(cameraId)}`
+          const modifiedReq = { ...req, url: go2rtcUrl }
+          proxyWebSocketUpgrade(modifiedReq as IncomingMessage, socket as Socket, head, GO2RTC_PORT)
+        } else {
+          log(`MSE request missing camera ID: ${url}`)
+          ;(socket as Socket).destroy()
+        }
       } else {
         (socket as Socket).destroy()
       }
@@ -232,6 +244,7 @@ async function main() {
       log(`Gateway ready on http://${HOSTNAME}:${PUBLIC_PORT}`)
       log(`HTTP requests → Next.js (port ${NEXT_PORT})`)
       log(`WebSocket /ws/ha → WS Proxy (port ${WS_PROXY_PORT})`)
+      log(`WebSocket /api/streaming/mse → go2rtc (port ${GO2RTC_PORT})`)
     })
     
     process.on('SIGTERM', shutdown)
