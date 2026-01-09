@@ -1,11 +1,12 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { getSessionFromCookie } from '@/lib/auth/session'
 import { getGlobalUnifiConfig } from '@/lib/config/global-settings'
-import { isGo2rtcRunning, getGo2rtcApiUrl } from '@/lib/streaming/go2rtc'
+import { isGo2rtcRunning, getGo2rtcApiUrl, startGo2rtc, buildRtspUrl } from '@/lib/streaming/go2rtc'
 import fs from 'fs'
 import path from 'path'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const startParam = request.nextUrl.searchParams.get('start')
   try {
     const session = await getSessionFromCookie()
     if (!session?.userId) {
@@ -13,6 +14,33 @@ export async function GET() {
     }
 
     const unifiConfig = await getGlobalUnifiConfig()
+    
+    let startResult: { success: boolean; error?: string } | null = null
+    
+    if (startParam === 'true' && unifiConfig && !isGo2rtcRunning()) {
+      const controllerUrl = new URL(unifiConfig.controllerUrl)
+      const nvrHost = controllerUrl.hostname
+      const rtspChannel = unifiConfig.rtspChannel ?? 1
+      
+      const streams = unifiConfig.cameras.map((cameraId: string) => ({
+        cameraId,
+        name: cameraId,
+        rtspUrl: buildRtspUrl(
+          nvrHost,
+          cameraId,
+          unifiConfig.rtspUsername!,
+          unifiConfig.rtspPassword!,
+          rtspChannel,
+          true
+        )
+      }))
+      
+      console.log('[Debug] Starting go2rtc with streams:', streams.map(s => ({ id: s.cameraId, url: s.rtspUrl.replace(/:[^:@]+@/, ':***@') })))
+      startResult = await startGo2rtc(streams)
+      console.log('[Debug] Start result:', startResult)
+      
+      await new Promise(resolve => setTimeout(resolve, 1000))
+    }
     
     const possiblePaths = [
       path.join(process.cwd(), 'node_modules', 'go2rtc-static', 'dist', 'go2rtc'),
