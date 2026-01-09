@@ -200,32 +200,6 @@ export default function WebRTCPlayer({
     }
   }, [streamReady, autoPlay, startStreaming])
 
-  if (status === 'error') {
-    return (
-      <div className={`flex flex-col items-center justify-center bg-black/50 ${className}`}>
-        <AlertCircle className="w-8 h-8 text-red-400 mb-2" />
-        <p className="text-red-400 text-sm text-center px-4">{error}</p>
-        <button
-          onClick={startStreaming}
-          className="mt-3 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-white text-sm transition-colors"
-        >
-          Retry
-        </button>
-      </div>
-    )
-  }
-
-  if (status === 'idle' || status === 'connecting') {
-    return (
-      <div className={`flex flex-col items-center justify-center bg-black/50 ${className}`}>
-        <Loader2 className="w-8 h-8 text-white animate-spin mb-2" />
-        <p className="text-white/70 text-sm">
-          {status === 'idle' ? 'Initializing...' : 'Connecting...'}
-        </p>
-      </div>
-    )
-  }
-
   return (
     <div className={`relative ${className}`}>
       <video
@@ -234,11 +208,37 @@ export default function WebRTCPlayer({
         playsInline
         muted
         className="w-full h-full object-cover"
+        style={{ display: status === 'connected' ? 'block' : 'none' }}
       />
-      <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 bg-green-500/80 rounded text-white text-xs">
-        <Video className="w-3 h-3" />
-        LIVE
-      </div>
+      
+      {status === 'error' && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50">
+          <AlertCircle className="w-8 h-8 text-red-400 mb-2" />
+          <p className="text-red-400 text-sm text-center px-4">{error}</p>
+          <button
+            onClick={startStreaming}
+            className="mt-3 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-white text-sm transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+      
+      {(status === 'idle' || status === 'connecting') && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50">
+          <Loader2 className="w-8 h-8 text-white animate-spin mb-2" />
+          <p className="text-white/70 text-sm">
+            {status === 'idle' ? 'Initializing...' : 'Connecting...'}
+          </p>
+        </div>
+      )}
+      
+      {status === 'connected' && (
+        <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 bg-green-500/80 rounded text-white text-xs">
+          <Video className="w-3 h-3" />
+          LIVE
+        </div>
+      )}
     </div>
   )
 }
