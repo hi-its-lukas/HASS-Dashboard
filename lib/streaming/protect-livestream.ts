@@ -19,11 +19,6 @@ export class ProtectLivestreamManager extends EventEmitter {
   private sessions: Map<string, LivestreamSession> = new Map()
   private cameras: ProtectCameraConfig[] = []
   private channel: number = 1
-  private reconnectAttempts: Map<string, number> = new Map()
-  private maxReconnectAttempts: number = 3
-  private connectPromise: Promise<boolean> | null = null
-  private lastConnectAttempt: number = 0
-  private readonly connectCooldownMs: number = 5000
 
   constructor(host: string, username: string, password: string, channel: number = 1) {
     super()
@@ -40,32 +35,10 @@ export class ProtectLivestreamManager extends EventEmitter {
 
   async connect(): Promise<boolean> {
     if (this.isLoggedIn) {
+      console.log('[ProtectLivestream] Already connected, reusing session')
       return true
     }
     
-    if (this.connectPromise) {
-      console.log('[ProtectLivestream] Waiting for existing connection attempt...')
-      return this.connectPromise
-    }
-    
-    const now = Date.now()
-    if (now - this.lastConnectAttempt < this.connectCooldownMs) {
-      console.log('[ProtectLivestream] Connection cooldown active, skipping')
-      return false
-    }
-    
-    this.lastConnectAttempt = now
-    
-    this.connectPromise = this.doConnect()
-    
-    try {
-      return await this.connectPromise
-    } finally {
-      this.connectPromise = null
-    }
-  }
-  
-  private async doConnect(): Promise<boolean> {
     try {
       console.log('[ProtectLivestream] Connecting to:', this.host)
       
@@ -103,13 +76,6 @@ export class ProtectLivestreamManager extends EventEmitter {
       }
     }
     this.sessions.clear()
-    
-    try {
-      await this.api.logout()
-    } catch (e) {
-      console.error('[ProtectLivestream] Logout error:', e)
-    }
-    
     this.isLoggedIn = false
   }
 
@@ -127,11 +93,8 @@ export class ProtectLivestreamManager extends EventEmitter {
     onCodec?: (codec: string) => void
   ): Promise<boolean> {
     if (!this.isLoggedIn) {
-      const connected = await this.connect()
-      if (!connected) {
-        console.error('[ProtectLivestream] Cannot start stream - not connected')
-        return false
-      }
+      console.error('[ProtectLivestream] Not connected - call connect() first')
+      return false
     }
 
     const camera = this.getCameraById(cameraId)
@@ -193,12 +156,6 @@ export class ProtectLivestreamManager extends EventEmitter {
       livestream.on('close', () => {
         console.log('[ProtectLivestream] Stream closed for:', camera.name)
         this.sessions.delete(cameraId)
-        this.tryReconnect(cameraId, session)
-      })
-
-      livestream.on('error', (err: Error) => {
-        console.error('[ProtectLivestream] Stream error for', camera.name, ':', err.message)
-        this.tryReconnect(cameraId, session)
       })
 
       const started = await livestream.start(cameraId, this.channel)
@@ -209,52 +166,12 @@ export class ProtectLivestreamManager extends EventEmitter {
         return false
       }
       
-      this.reconnectAttempts.delete(cameraId)
       console.log('[ProtectLivestream] Stream started for:', camera.name)
       return true
     } catch (error) {
       console.error('[ProtectLivestream] Failed to start stream:', error)
+      this.sessions.delete(cameraId)
       return false
-    }
-  }
-  
-  private async tryReconnect(cameraId: string, oldSession: LivestreamSession): Promise<void> {
-    if (oldSession.clients.size === 0) {
-      console.log('[ProtectLivestream] No clients for', cameraId, '- not reconnecting')
-      return
-    }
-    
-    const attempts = this.reconnectAttempts.get(cameraId) || 0
-    if (attempts >= this.maxReconnectAttempts) {
-      console.log('[ProtectLivestream] Max reconnect attempts reached for:', cameraId)
-      this.reconnectAttempts.delete(cameraId)
-      return
-    }
-    
-    this.reconnectAttempts.set(cameraId, attempts + 1)
-    console.log('[ProtectLivestream] Reconnecting stream for:', cameraId, 'attempt:', attempts + 1)
-    
-    await new Promise(resolve => setTimeout(resolve, 2000 * (attempts + 1)))
-    
-    try {
-      this.isLoggedIn = false
-      const connected = await this.connect()
-      if (!connected) {
-        console.error('[ProtectLivestream] Reconnect login failed for:', cameraId)
-        return
-      }
-    } catch (err) {
-      console.error('[ProtectLivestream] Reconnect login error:', err)
-      return
-    }
-    
-    const clients = Array.from(oldSession.clients)
-    const codecCallbacks = Array.from(oldSession.codecCallbacks)
-    
-    for (let i = 0; i < clients.length; i++) {
-      const client = clients[i]
-      const codecCallback = codecCallbacks[i] || codecCallbacks[0]
-      await this.startStream(cameraId, client, codecCallback)
     }
   }
 
@@ -278,7 +195,6 @@ export class ProtectLivestreamManager extends EventEmitter {
           console.error('[ProtectLivestream] Error stopping stream:', e)
         }
         this.sessions.delete(cameraId)
-        this.reconnectAttempts.delete(cameraId)
       }
     } else {
       console.log('[ProtectLivestream] Force stopping stream:', cameraId)
@@ -288,7 +204,6 @@ export class ProtectLivestreamManager extends EventEmitter {
         console.error('[ProtectLivestream] Error stopping stream:', e)
       }
       this.sessions.delete(cameraId)
-      this.reconnectAttempts.delete(cameraId)
     }
   }
 
@@ -302,6 +217,7 @@ export class ProtectLivestreamManager extends EventEmitter {
 }
 
 let manager: ProtectLivestreamManager | null = null
+let managerInitPromise: Promise<ProtectLivestreamManager> | null = null
 
 export function getProtectLivestreamManager(): ProtectLivestreamManager | null {
   return manager
@@ -313,17 +229,36 @@ export async function initProtectLivestreamManager(
   password: string,
   channel: number = 1
 ): Promise<ProtectLivestreamManager> {
-  if (manager) {
-    if (manager.isConnected()) {
-      manager.setChannel(channel)
-      return manager
-    }
-    await manager.disconnect()
+  if (manager?.isConnected()) {
+    manager.setChannel(channel)
+    return manager
   }
   
-  manager = new ProtectLivestreamManager(host, username, password, channel)
-  await manager.connect()
-  return manager
+  if (managerInitPromise) {
+    console.log('[ProtectLivestream] Waiting for existing init...')
+    return managerInitPromise
+  }
+  
+  managerInitPromise = (async () => {
+    try {
+      if (manager) {
+        await manager.disconnect()
+      }
+      
+      manager = new ProtectLivestreamManager(host, username, password, channel)
+      const connected = await manager.connect()
+      
+      if (!connected) {
+        throw new Error('Failed to connect to UniFi Protect')
+      }
+      
+      return manager
+    } finally {
+      managerInitPromise = null
+    }
+  })()
+  
+  return managerInitPromise
 }
 
 export async function shutdownProtectLivestreamManager(): Promise<void> {
