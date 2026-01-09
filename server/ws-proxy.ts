@@ -425,7 +425,36 @@ wss.on('connection', async (clientWs: WebSocket, userId: string) => {
   })
 })
 
-const server = createServer((req, res) => {
+const server = createServer(async (req, res) => {
+  const { pathname } = parse(req.url || '')
+  
+  if (pathname === '/debug/protect-test') {
+    res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' })
+    
+    try {
+      const config = await getUnifiProtectConfig()
+      if (!config) {
+        res.end(JSON.stringify({ error: 'No UniFi Protect config found', configured: false }))
+        return
+      }
+      
+      const manager = await ensureLivestreamManager()
+      res.end(JSON.stringify({
+        configured: true,
+        host: config.host.substring(0, 15) + '...',
+        hasUsername: !!config.username,
+        hasPassword: !!config.password,
+        channel: config.channel,
+        managerConnected: manager?.isConnected() ?? false,
+        cameraCount: manager?.getCameras()?.length ?? 0,
+        cameras: manager?.getCameras()?.map(c => ({ id: c.id, name: c.name, state: c.state })) ?? []
+      }))
+    } catch (err) {
+      res.end(JSON.stringify({ error: String(err) }))
+    }
+    return
+  }
+  
   res.writeHead(200, { 'Content-Type': 'text/plain' })
   res.end('HA Dashboard WebSocket Proxy\n')
 })
