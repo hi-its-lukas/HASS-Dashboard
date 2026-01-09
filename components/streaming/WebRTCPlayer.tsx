@@ -59,7 +59,7 @@ export default function WebRTCPlayer({
       const offer = await pc.createOffer()
       await pc.setLocalDescription(offer)
 
-      const response = await fetch(`${go2rtcUrl}/api/webrtc?src=${encodeURIComponent(cameraId)}`, {
+      const response = await fetch(`/api/streaming/webrtc?src=${encodeURIComponent(cameraId)}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/sdp' },
         body: offer.sdp
