@@ -21,6 +21,9 @@ export class ProtectLivestreamManager extends EventEmitter {
   private channel: number = 1
   private reconnectAttempts: Map<string, number> = new Map()
   private maxReconnectAttempts: number = 3
+  private connectPromise: Promise<boolean> | null = null
+  private lastConnectAttempt: number = 0
+  private readonly connectCooldownMs: number = 5000
 
   constructor(host: string, username: string, password: string, channel: number = 1) {
     super()
@@ -36,6 +39,33 @@ export class ProtectLivestreamManager extends EventEmitter {
   }
 
   async connect(): Promise<boolean> {
+    if (this.isLoggedIn) {
+      return true
+    }
+    
+    if (this.connectPromise) {
+      console.log('[ProtectLivestream] Waiting for existing connection attempt...')
+      return this.connectPromise
+    }
+    
+    const now = Date.now()
+    if (now - this.lastConnectAttempt < this.connectCooldownMs) {
+      console.log('[ProtectLivestream] Connection cooldown active, skipping')
+      return false
+    }
+    
+    this.lastConnectAttempt = now
+    
+    this.connectPromise = this.doConnect()
+    
+    try {
+      return await this.connectPromise
+    } finally {
+      this.connectPromise = null
+    }
+  }
+  
+  private async doConnect(): Promise<boolean> {
     try {
       console.log('[ProtectLivestream] Connecting to:', this.host)
       
