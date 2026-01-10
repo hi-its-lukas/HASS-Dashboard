@@ -253,8 +253,7 @@ export default function WebRTCPlayer({
         autoPlay
         playsInline
         muted
-        className="w-full h-full object-cover"
-        style={{ display: status === 'connected' ? 'block' : 'none' }}
+        className="w-full h-full object-cover bg-black"
       />
       
       {status === 'error' && (
