@@ -1,0 +1,104 @@
+lukashengl@mac-mini HASS-Dashboard % docker compose logs ws-proxy --tail 100
+no such service: ws-proxy
+lukashengl@mac-mini HASS-Dashboard % docker compose logs app --tail 100
+hass-dashboard  | [ProtectLivestream] Chunk #600 for Carport - size: 109260
+hass-dashboard  | [ProtectLivestream] Chunk #600 for Garagentor - size: 8823
+hass-dashboard  | [ProtectLivestream] Chunk #700 for Hoftor - size: 17296
+hass-dashboard  | [ProtectLivestream] Chunk #700 for Garten von hinten - size: 2910
+hass-dashboard  | [ProtectLivestream] Chunk #700 for Garten von oben - size: 8638
+hass-dashboard  | [ProtectLivestream] Chunk #700 for Garten von Seite - size: 6455
+hass-dashboard  | [ProtectLivestream] Chunk #600 for Haus vorne - size: 4318
+hass-dashboard  | [ProtectLivestream] Chunk #700 for Einfahrt von hinten - size: 149575
+hass-dashboard  | [ProtectLivestream] Chunk #700 for Hautüre - size: 19383
+hass-dashboard  | [ProtectLivestream] Chunk #700 for Carport - size: 2146
+hass-dashboard  | [ProtectLivestream] Chunk #700 for Garagentor - size: 2763
+hass-dashboard  | [ProtectLivestream] Chunk #800 for Hoftor - size: 15004
+hass-dashboard  | [ProtectLivestream] Chunk #800 for Garten von hinten - size: 3778
+hass-dashboard  | [ProtectLivestream] Chunk #800 for Garten von oben - size: 21260
+hass-dashboard  | [ProtectLivestream] Chunk #800 for Garten von Seite - size: 4315
+hass-dashboard  | [ProtectLivestream] Chunk #800 for Einfahrt von hinten - size: 7343
+hass-dashboard  | [ProtectLivestream] Chunk #700 for Haus vorne - size: 1992
+hass-dashboard  | [ProtectLivestream] Chunk #800 for Hautüre - size: 16902
+hass-dashboard  | [ProtectLivestream] Chunk #800 for Carport - size: 1366
+hass-dashboard  | [ProtectLivestream] Chunk #900 for Garten von hinten - size: 3467
+hass-dashboard  | [ProtectLivestream] Chunk #900 for Hoftor - size: 16920
+hass-dashboard  | [ProtectLivestream] Chunk #800 for Garagentor - size: 2312
+hass-dashboard  | [ProtectLivestream] Chunk #900 for Garten von oben - size: 15907
+hass-dashboard  | [ProtectLivestream] Chunk #900 for Garten von Seite - size: 3720
+hass-dashboard  | [ProtectLivestream] Chunk #900 for Einfahrt von hinten - size: 10952
+hass-dashboard  | [ProtectLivestream] Chunk #800 for Haus vorne - size: 2084
+hass-dashboard  | [ProtectLivestream] Chunk #900 for Hautüre - size: 10672
+hass-dashboard  | [ProtectLivestream] Chunk #1000 for Garten von hinten - size: 4190
+hass-dashboard  | [ProtectLivestream] Chunk #1000 for Hoftor - size: 18121
+hass-dashboard  | [ProtectLivestream] Chunk #900 for Garagentor - size: 2186
+hass-dashboard  | [ProtectLivestream] Chunk #900 for Carport - size: 1460
+hass-dashboard  | [ProtectLivestream] Chunk #1000 for Garten von oben - size: 16761
+hass-dashboard  | [ProtectLivestream] Chunk #1000 for Garten von Seite - size: 8805
+hass-dashboard  | [ProtectLivestream] Chunk #1000 for Einfahrt von hinten - size: 5598
+hass-dashboard  | [ProtectLivestream] Chunk #900 for Haus vorne - size: 1595
+hass-dashboard  | [ProtectLivestream] Chunk #1000 for Hautüre - size: 29432
+hass-dashboard  | [ProtectLivestream] Chunk #1100 for Garten von hinten - size: 2770
+hass-dashboard  | [ProtectLivestream] Chunk #1100 for Hoftor - size: 14227
+hass-dashboard  | [ProtectLivestream] Chunk #1100 for Garten von oben - size: 9469
+hass-dashboard  | [ProtectLivestream] Chunk #1000 for Carport - size: 1861
+hass-dashboard  | [ProtectLivestream] Chunk #1100 for Garten von Seite - size: 3850
+hass-dashboard  | [ProtectLivestream] Chunk #1100 for Einfahrt von hinten - size: 8744
+hass-dashboard  | [ProtectLivestream] Chunk #1000 for Garagentor - size: 2283
+hass-dashboard  | [ProtectLivestream] Chunk #1000 for Haus vorne - size: 2346
+hass-dashboard  | [ProtectLivestream] Chunk #1100 for Hautüre - size: 28586
+hass-dashboard  | [ProtectLivestream] Chunk #1200 for Garten von hinten - size: 3016
+hass-dashboard  | [ProtectLivestream] Chunk #1200 for Hoftor - size: 8355
+hass-dashboard  | [ProtectLivestream] Chunk #1200 for Garten von oben - size: 11559
+hass-dashboard  | [ProtectLivestream] Chunk #1200 for Garten von Seite - size: 2732
+hass-dashboard  | [ProtectLivestream] Chunk #1200 for Einfahrt von hinten - size: 8068
+hass-dashboard  | [ProtectLivestream] Chunk #1100 for Carport - size: 1562
+hass-dashboard  | [ProtectLivestream] Chunk #1100 for Garagentor - size: 2166
+hass-dashboard  | [ProtectLivestream] Chunk #1100 for Haus vorne - size: 2839
+hass-dashboard  | [ProtectLivestream] Chunk #1300 for Garten von hinten - size: 2917
+hass-dashboard  | [ProtectLivestream] Chunk #1300 for Hoftor - size: 12071
+hass-dashboard  | [ProtectLivestream] Chunk #1200 for Hautüre - size: 37909
+hass-dashboard  | [ProtectLivestream] Chunk #1300 for Garten von oben - size: 11140
+hass-dashboard  | [ProtectLivestream] Chunk #1300 for Garten von Seite - size: 2911
+hass-dashboard  | [ProtectLivestream] Chunk #1300 for Einfahrt von hinten - size: 9250
+hass-dashboard  | [ProtectLivestream] Chunk #1200 for Carport - size: 4777
+hass-dashboard  | [ProtectLivestream] Chunk #1200 for Garagentor - size: 2233
+hass-dashboard  | [ProtectLivestream] Chunk #1400 for Garten von hinten - size: 3177
+hass-dashboard  | [ProtectLivestream] Chunk #1200 for Haus vorne - size: 1767
+hass-dashboard  | [ProtectLivestream] Chunk #1400 for Hoftor - size: 12648
+hass-dashboard  | [ProtectLivestream] Chunk #1400 for Garten von oben - size: 12704
+hass-dashboard  | [ProtectLivestream] Chunk #1400 for Garten von Seite - size: 3082
+hass-dashboard  | [ProtectLivestream] Chunk #1300 for Hautüre - size: 16593
+hass-dashboard  | [ProtectLivestream] Chunk #1400 for Einfahrt von hinten - size: 7578
+hass-dashboard  | [ProtectLivestream] Chunk #1300 for Carport - size: 2294
+hass-dashboard  | [ProtectLivestream] Chunk #1300 for Garagentor - size: 2095
+hass-dashboard  | [ProtectLivestream] Chunk #1500 for Garten von hinten - size: 2651
+hass-dashboard  | [ProtectLivestream] Chunk #1500 for Hoftor - size: 17485
+hass-dashboard  | [ProtectLivestream] Chunk #1500 for Garten von oben - size: 13215
+hass-dashboard  | [ProtectLivestream] Chunk #1500 for Garten von Seite - size: 3328
+hass-dashboard  | [ProtectLivestream] Chunk #1500 for Einfahrt von hinten - size: 8206
+hass-dashboard  | [ProtectLivestream] Chunk #1300 for Haus vorne - size: 1265
+hass-dashboard  | [ProtectLivestream] Chunk #1400 for Hautüre - size: 28190
+hass-dashboard  | [ProtectLivestream] Chunk #1400 for Carport - size: 1356
+hass-dashboard  | [ProtectLivestream] Chunk #1400 for Garagentor - size: 2170
+hass-dashboard  | [ProtectLivestream] Chunk #1600 for Garten von hinten - size: 3350
+hass-dashboard  | [ProtectLivestream] Chunk #1600 for Garten von oben - size: 13507
+hass-dashboard  | [ProtectLivestream] Chunk #1600 for Hoftor - size: 8439
+hass-dashboard  | [ProtectLivestream] Chunk #1600 for Garten von Seite - size: 3190
+hass-dashboard  | [ProtectLivestream] Chunk #1600 for Einfahrt von hinten - size: 6774
+hass-dashboard  | [ProtectLivestream] Chunk #1500 for Hautüre - size: 15267
+hass-dashboard  | [ProtectLivestream] Chunk #1400 for Haus vorne - size: 2034
+hass-dashboard  | [ProtectLivestream] Chunk #1500 for Garagentor - size: 7318
+hass-dashboard  | [ProtectLivestream] Chunk #1500 for Carport - size: 1733
+hass-dashboard  | [ProtectLivestream] Chunk #1700 for Garten von hinten - size: 3123
+hass-dashboard  | [ProtectLivestream] Chunk #1700 for Garten von oben - size: 12954
+hass-dashboard  | [ProtectLivestream] Chunk #1700 for Garten von Seite - size: 2917
+hass-dashboard  | [ProtectLivestream] Chunk #1700 for Hoftor - size: 18757
+hass-dashboard  | [ProtectLivestream] Chunk #1700 for Einfahrt von hinten - size: 10646
+hass-dashboard  | [ProtectLivestream] Chunk #1600 for Hautüre - size: 98198
+hass-dashboard  | [ProtectLivestream] Chunk #1500 for Haus vorne - size: 2779
+hass-dashboard  | [ProtectLivestream] Chunk #1600 for Carport - size: 1997
+hass-dashboard  | [ProtectLivestream] Chunk #1600 for Garagentor - size: 2368
+hass-dashboard  | [ProtectLivestream] Chunk #1800 for Garten von hinten - size: 2972
+hass-dashboard  | [ProtectLivestream] Chunk #1800 for Garten von oben - size: 12829
+hass-dashboard  | [ProtectLivestream] Chunk #1800 for Garten von Seite - size: 3051
+lukashengl@mac-mini HASS-Dashboard % 
