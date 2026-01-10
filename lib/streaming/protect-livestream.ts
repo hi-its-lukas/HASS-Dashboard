@@ -6,6 +6,7 @@ interface LivestreamSession {
   channel: number
   livestream: ProtectLivestream
   clients: Set<(data: Buffer) => void>
+  waitingClients: Set<(data: Buffer) => void>
   codecCallbacks: Set<(codec: string) => void>
   lastCodec: string | null
   initSegment: Buffer | null
@@ -13,6 +14,7 @@ interface LivestreamSession {
   pendingBuffer: Buffer[]
   foundInit: boolean
   dataCount: number
+  lastKeyframeChunk: Buffer | null
 }
 
 // fMP4 box type signatures
@@ -20,6 +22,61 @@ const BOX_FTYP = 0x66747970  // 'ftyp'
 const BOX_MOOV = 0x6d6f6f76  // 'moov'
 const BOX_MOOF = 0x6d6f6f66  // 'moof'
 const BOX_MDAT = 0x6d646174  // 'mdat'
+const BOX_TRAF = 0x74726166  // 'traf'
+const BOX_TRUN = 0x7472756e  // 'trun'
+
+function hasKeyframe(buffer: Buffer): boolean {
+  let offset = 0
+  while (offset + 8 <= buffer.length) {
+    const size = buffer.readUInt32BE(offset)
+    const type = buffer.readUInt32BE(offset + 4)
+    
+    if (size < 8 || offset + size > buffer.length) break
+    
+    if (type === BOX_MOOF) {
+      let moofOffset = offset + 8
+      const moofEnd = offset + size
+      
+      while (moofOffset + 8 <= moofEnd) {
+        const boxSize = buffer.readUInt32BE(moofOffset)
+        const boxType = buffer.readUInt32BE(moofOffset + 4)
+        
+        if (boxSize < 8) break
+        
+        if (boxType === BOX_TRAF) {
+          let trafOffset = moofOffset + 8
+          const trafEnd = moofOffset + boxSize
+          
+          while (trafOffset + 8 <= trafEnd) {
+            const subBoxSize = buffer.readUInt32BE(trafOffset)
+            const subBoxType = buffer.readUInt32BE(trafOffset + 4)
+            
+            if (subBoxSize < 8) break
+            
+            if (subBoxType === BOX_TRUN) {
+              const flags = buffer.readUInt32BE(trafOffset + 8) & 0xFFFFFF
+              const firstSampleFlagsPresent = (flags & 0x000004) !== 0
+              
+              let cursor = trafOffset + 16
+              const dataOffsetPresent = (flags & 0x000001) !== 0
+              if (dataOffsetPresent) cursor += 4
+              
+              if (firstSampleFlagsPresent && cursor + 4 <= trafEnd) {
+                const firstSampleFlags = buffer.readUInt32BE(cursor)
+                const isSync = (firstSampleFlags & 0x00010000) === 0
+                if (isSync) return true
+              }
+            }
+            trafOffset += subBoxSize
+          }
+        }
+        moofOffset += boxSize
+      }
+    }
+    offset += size
+  }
+  return false
+}
 
 function findBox(buffer: Buffer, boxType: number): { offset: number, size: number } | null {
   let offset = 0
@@ -424,25 +481,32 @@ export class ProtectLivestreamManager extends EventEmitter {
         }
       }
       
-      // Send cached init segment with a small delay, then add to clients for moof data
+      // Send cached init segment with a small delay, then add to waitingClients queue
       if (existingSession.initSegment && existingSession.foundInit) {
         const initSegmentCopy = Buffer.from(existingSession.initSegment)
-        console.log('[ProtectLivestream] Scheduling cached init segment for new client - size:', initSegmentCopy.length)
+        const lastKeyframeCopy = existingSession.lastKeyframeChunk ? Buffer.from(existingSession.lastKeyframeChunk) : null
+        console.log('[ProtectLivestream] Scheduling cached init segment for new client - size:', initSegmentCopy.length, 
+          'lastKeyframe:', lastKeyframeCopy ? lastKeyframeCopy.length : 'none')
+        
         setTimeout(() => {
-          console.log('[ProtectLivestream] Sending cached init segment to new client - size:', initSegmentCopy.length)
           try {
-            // First send init segment
             onData(initSegmentCopy)
             existingSession.initSegmentSent.add(onData)
-            // THEN add to clients to receive moof data
-            existingSession.clients.add(onData)
-            console.log('[ProtectLivestream] Client now receiving live data')
+            
+            if (lastKeyframeCopy) {
+              console.log('[ProtectLivestream] Sending cached keyframe to new client - size:', lastKeyframeCopy.length)
+              onData(lastKeyframeCopy)
+              existingSession.clients.add(onData)
+              console.log('[ProtectLivestream] Client added directly with cached keyframe')
+            } else {
+              existingSession.waitingClients.add(onData)
+              console.log('[ProtectLivestream] Client added to waiting queue for next keyframe')
+            }
           } catch (e) {
             console.error('[ProtectLivestream] Error sending cached init segment:', e)
           }
-        }, 100) // 100ms delay for client to initialize SourceBuffer
+        }, 100)
       } else {
-        // No init segment yet - add to clients immediately
         existingSession.clients.add(onData)
       }
       
@@ -459,13 +523,15 @@ export class ProtectLivestreamManager extends EventEmitter {
         channel: this.channel,
         livestream,
         clients: new Set([onData]),
+        waitingClients: new Set(),
         codecCallbacks: onCodec ? new Set([onCodec]) : new Set(),
         lastCodec: null,
         initSegment: null,
         initSegmentSent: new Set(),
         pendingBuffer: [],
         foundInit: false,
-        dataCount: 0
+        dataCount: 0,
+        lastKeyframeChunk: null
       }
       this.sessions.set(cameraId, session)
       
@@ -611,9 +677,27 @@ export class ProtectLivestreamManager extends EventEmitter {
         }
         
         // Normal flow: init segment already found, just forward data
+        const isKeyframe = hasKeyframe(data)
+        
+        if (isKeyframe) {
+          session.lastKeyframeChunk = Buffer.from(data)
+          
+          if (session.waitingClients.size > 0) {
+            console.log('[ProtectLivestream] Keyframe detected! Activating', session.waitingClients.size, 'waiting clients for', camera.name)
+            for (const waitingClient of session.waitingClients) {
+              try {
+                waitingClient(data)
+                session.clients.add(waitingClient)
+              } catch (e) {
+                console.error('[ProtectLivestream] Error sending keyframe to waiting client:', e)
+              }
+            }
+            session.waitingClients.clear()
+          }
+        }
+        
         for (const client of session.clients) {
           try {
-            // Make sure client got init segment first
             if (session.initSegment && !session.initSegmentSent.has(client)) {
               client(session.initSegment)
               session.initSegmentSent.add(client)
@@ -650,14 +734,16 @@ export class ProtectLivestreamManager extends EventEmitter {
 
     if (onData) {
       session.clients.delete(onData)
+      session.waitingClients.delete(onData)
       session.initSegmentSent.delete(onData)
       if (onCodec) {
         session.codecCallbacks.delete(onCodec)
       }
       
-      console.log('[ProtectLivestream] Client removed from', cameraId, '- remaining clients:', session.clients.size)
+      const totalClients = session.clients.size + session.waitingClients.size
+      console.log('[ProtectLivestream] Client removed from', cameraId, '- remaining:', totalClients, '(active:', session.clients.size, 'waiting:', session.waitingClients.size, ')')
       
-      if (session.clients.size === 0) {
+      if (totalClients === 0) {
         // Clear any existing cleanup timeout for this camera
         const existingTimeout = this.sessionCleanupTimeouts.get(cameraId)
         if (existingTimeout) {
@@ -668,7 +754,8 @@ export class ProtectLivestreamManager extends EventEmitter {
         console.log('[ProtectLivestream] No clients, delaying cleanup for 3s:', cameraId)
         const timeout = setTimeout(() => {
           const currentSession = this.sessions.get(cameraId)
-          if (currentSession && currentSession.clients.size === 0) {
+          const currentTotal = currentSession ? currentSession.clients.size + currentSession.waitingClients.size : 0
+          if (currentSession && currentTotal === 0) {
             console.log('[ProtectLivestream] Cleanup timeout reached, stopping stream:', cameraId)
             try {
               currentSession.livestream.stop()
