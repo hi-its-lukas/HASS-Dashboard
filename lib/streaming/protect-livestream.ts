@@ -243,29 +243,29 @@ function hasMoofBox(buffer: Buffer): boolean {
 }
 
 function fixFtypForMSE(initSegment: Buffer): Buffer {
-  // UniFi sends major_brand: 'dash' which Safari/Chrome MSE doesn't like
-  // We need to change it to 'isom' or 'mp41' for browser compatibility
-  
   if (initSegment.length < 12) return initSegment
-  
-  // Verify this is an ftyp box
+
   const boxType = initSegment.readUInt32BE(4)
-  if (boxType !== 0x66747970) return initSegment // Not ftyp
-  
-  // Read current major_brand
-  const majorBrand = initSegment.subarray(8, 12).toString('ascii')
-  
+  if (boxType !== 0x66747970) return initSegment
+
+  const fixed = Buffer.from(initSegment)
+  const ftypSize = fixed.readUInt32BE(0)
+
+  const majorBrand = fixed.subarray(8, 12).toString('ascii')
   if (majorBrand === 'dash') {
-    console.log('[ProtectLivestream] Fixing ftyp major_brand from "dash" to "isom" for MSE compatibility')
-    
-    // Create a copy and modify the major_brand
-    const fixed = Buffer.from(initSegment)
+    console.log('[ProtectLivestream] Fixing ftyp major_brand from "dash" to "isom"')
     fixed.write('isom', 8, 4, 'ascii')
-    
-    return fixed
   }
-  
-  return initSegment
+
+  for (let i = 16; i + 4 <= ftypSize && i + 4 <= fixed.length; i += 4) {
+    const brand = fixed.subarray(i, i + 4).toString('ascii')
+    if (brand === 'hvc1' || brand === 'hev1') {
+      console.log('[ProtectLivestream] Replacing incompatible brand "' + brand + '" with "avc1"')
+      fixed.write('avc1', i, 4, 'ascii')
+    }
+  }
+
+  return fixed
 }
 
 function extractCodecFromInit(initSegment: Buffer): string | null {
