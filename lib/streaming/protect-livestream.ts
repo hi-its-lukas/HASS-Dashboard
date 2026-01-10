@@ -38,6 +38,41 @@ function findBox(buffer: Buffer, boxType: number): { offset: number, size: numbe
   return null
 }
 
+function dumpBoxStructure(buffer: Buffer, prefix: string = '', maxDepth: number = 3): void {
+  if (maxDepth <= 0) return
+  
+  let offset = 0
+  while (offset + 8 <= buffer.length) {
+    const size = buffer.readUInt32BE(offset)
+    const type = buffer.readUInt32BE(offset + 4)
+    const typeStr = String.fromCharCode((type >> 24) & 0xff, (type >> 16) & 0xff, (type >> 8) & 0xff, type & 0xff)
+    
+    if (size < 8 || offset + size > buffer.length) break
+    
+    console.log(prefix + typeStr + ' [' + size + ' bytes]')
+    
+    // Recursively dump container boxes
+    const containerBoxes = ['moov', 'trak', 'mdia', 'minf', 'stbl', 'mvex', 'edts']
+    if (containerBoxes.includes(typeStr) && size > 8) {
+      dumpBoxStructure(buffer.subarray(offset + 8, offset + size), prefix + '  ', maxDepth - 1)
+    }
+    
+    // For ftyp, log the brands
+    if (typeStr === 'ftyp' && size >= 16) {
+      const majorBrand = buffer.subarray(offset + 8, offset + 12).toString('ascii')
+      const minorVersion = buffer.readUInt32BE(offset + 12)
+      const compatBrands: string[] = []
+      for (let i = offset + 16; i + 4 <= offset + size; i += 4) {
+        compatBrands.push(buffer.subarray(i, i + 4).toString('ascii'))
+      }
+      console.log(prefix + '  major_brand: ' + majorBrand + ', minor: ' + minorVersion)
+      console.log(prefix + '  compatible_brands: ' + compatBrands.join(', '))
+    }
+    
+    offset += size
+  }
+}
+
 function extractInitSegment(buffer: Buffer): { init: Buffer, remaining: Buffer } | null {
   // Look for ftyp box at the start
   const ftyp = findBox(buffer, BOX_FTYP)
@@ -76,6 +111,11 @@ function extractInitSegment(buffer: Buffer): { init: Buffer, remaining: Buffer }
       const initSize = offset + size
       if (initSize <= buffer.length) {
         console.log('[ProtectLivestream] Found complete init segment: ftyp(' + ftyp.size + ') + ... + moov(' + size + ') = ' + initSize + ' bytes')
+        
+        // Dump the init segment structure for debugging
+        console.log('[ProtectLivestream] Init segment structure:')
+        dumpBoxStructure(buffer.subarray(0, initSize), '  ')
+        
         return {
           init: buffer.subarray(0, initSize),
           remaining: buffer.subarray(initSize)
