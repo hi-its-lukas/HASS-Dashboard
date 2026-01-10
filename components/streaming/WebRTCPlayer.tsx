@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { Loader2, AlertCircle, Video } from 'lucide-react'
+import { Loader2, AlertCircle } from 'lucide-react'
 
 interface WebRTCPlayerProps {
   cameraId: string
@@ -21,9 +21,10 @@ export default function WebRTCPlayer({
   const mediaSourceRef = useRef<MediaSource | null>(null)
   const sourceBufferRef = useRef<SourceBuffer | null>(null)
   const bufferQueue = useRef<ArrayBuffer[]>([])
+  const pendingCodec = useRef<string | null>(null)
+  const sourceOpenReady = useRef(false)
   const [status, setStatus] = useState<'idle' | 'connecting' | 'connected' | 'error'>('idle')
   const [error, setError] = useState<string | null>(null)
-  const initSegmentReceived = useRef(false)
 
   const cleanup = useCallback(() => {
     if (wsRef.current) {
@@ -38,39 +39,50 @@ export default function WebRTCPlayer({
     mediaSourceRef.current = null
     sourceBufferRef.current = null
     bufferQueue.current = []
-    initSegmentReceived.current = false
+    pendingCodec.current = null
+    sourceOpenReady.current = false
+  }, [])
+
+  const processQueue = useCallback(() => {
+    const sb = sourceBufferRef.current
+    if (!sb || sb.updating || bufferQueue.current.length === 0) return
+    
+    const chunk = bufferQueue.current.shift()
+    if (chunk) {
+      try {
+        sb.appendBuffer(chunk)
+      } catch (e) {
+        console.error('[LivestreamPlayer] appendBuffer error:', e)
+      }
+    }
   }, [])
 
   const appendBuffer = useCallback((data: ArrayBuffer) => {
-    const sb = sourceBufferRef.current
-    if (!sb) return
-    
     bufferQueue.current.push(data)
     
-    const processQueue = () => {
-      if (!sb || sb.updating || bufferQueue.current.length === 0) return
-      const chunk = bufferQueue.current.shift()
-      if (chunk) {
-        try {
-          sb.appendBuffer(chunk)
-        } catch (e) {
-          console.error('[LivestreamPlayer] appendBuffer error:', e)
-        }
-      }
-    }
-    
-    if (!sb.updating) {
+    const sb = sourceBufferRef.current
+    if (sb && !sb.updating) {
       processQueue()
     }
-    
-    sb.onupdateend = processQueue
-  }, [])
+  }, [processQueue])
 
-  const initializeMediaSource = useCallback((codec: string) => {
-    if (!videoRef.current || !mediaSourceRef.current) return false
+  const tryInitializeSourceBuffer = useCallback(() => {
+    const ms = mediaSourceRef.current
+    const codec = pendingCodec.current
     
-    // Format codec for MSE - unifi-protect sends "avc1.4d401f,mp4a.40.2"
-    // but MSE needs "video/mp4; codecs=\"avc1.4d401f,mp4a.40.2\""
+    if (!ms || !codec || !sourceOpenReady.current) {
+      return false
+    }
+    
+    if (ms.readyState !== 'open') {
+      console.log('[LivestreamPlayer] MediaSource not open yet, waiting...')
+      return false
+    }
+    
+    if (sourceBufferRef.current) {
+      return true
+    }
+    
     let mimeCodec = codec
     if (codec && !codec.startsWith('video/')) {
       mimeCodec = `video/mp4; codecs="${codec}"`
@@ -79,11 +91,10 @@ export default function WebRTCPlayer({
       mimeCodec = 'video/mp4; codecs="avc1.640028"'
     }
     
-    console.log('[LivestreamPlayer] Initializing with codec:', mimeCodec)
+    console.log('[LivestreamPlayer] Initializing SourceBuffer with codec:', mimeCodec)
     
     if (!MediaSource.isTypeSupported(mimeCodec)) {
       console.error('[LivestreamPlayer] Codec not supported:', mimeCodec)
-      // Try fallback without audio
       const videoOnly = `video/mp4; codecs="${codec.split(',')[0]}"`
       if (MediaSource.isTypeSupported(videoOnly)) {
         console.log('[LivestreamPlayer] Falling back to video-only:', videoOnly)
@@ -96,9 +107,26 @@ export default function WebRTCPlayer({
     }
     
     try {
-      const sb = mediaSourceRef.current.addSourceBuffer(mimeCodec)
+      const sb = ms.addSourceBuffer(mimeCodec)
       sourceBufferRef.current = sb
       sb.mode = 'segments'
+      
+      sb.addEventListener('updateend', () => {
+        processQueue()
+      })
+      
+      sb.addEventListener('error', (e) => {
+        console.error('[LivestreamPlayer] SourceBuffer error:', e)
+      })
+      
+      console.log('[LivestreamPlayer] SourceBuffer created successfully')
+      setStatus('connected')
+      
+      if (bufferQueue.current.length > 0) {
+        console.log('[LivestreamPlayer] Flushing', bufferQueue.current.length, 'queued chunks')
+        processQueue()
+      }
+      
       return true
     } catch (e) {
       console.error('[LivestreamPlayer] Failed to add source buffer:', e)
@@ -106,7 +134,7 @@ export default function WebRTCPlayer({
       setStatus('error')
       return false
     }
-  }, [])
+  }, [processQueue])
 
   const startStreaming = useCallback(async () => {
     if (!videoRef.current) return
@@ -129,10 +157,18 @@ export default function WebRTCPlayer({
       mediaSourceRef.current = mediaSource
       videoRef.current.src = URL.createObjectURL(mediaSource)
       
-      let sourceBufferReady = false
-      
       mediaSource.addEventListener('sourceopen', () => {
-        console.log('[LivestreamPlayer] MediaSource opened')
+        console.log('[LivestreamPlayer] MediaSource opened, readyState:', mediaSource.readyState)
+        sourceOpenReady.current = true
+        tryInitializeSourceBuffer()
+      })
+      
+      mediaSource.addEventListener('sourceclose', () => {
+        console.log('[LivestreamPlayer] MediaSource closed')
+      })
+      
+      mediaSource.addEventListener('sourceended', () => {
+        console.log('[LivestreamPlayer] MediaSource ended')
       })
       
       ws.onopen = () => {
@@ -149,12 +185,8 @@ export default function WebRTCPlayer({
               console.log('[LivestreamPlayer] Stream started for camera:', msg.cameraId)
             } else if (msg.type === 'codec') {
               console.log('[LivestreamPlayer] Received codec info:', msg.codec)
-              if (mediaSourceRef.current?.readyState === 'open' && !sourceBufferReady) {
-                sourceBufferReady = initializeMediaSource(msg.codec)
-                if (sourceBufferReady) {
-                  setStatus('connected')
-                }
-              }
+              pendingCodec.current = msg.codec
+              tryInitializeSourceBuffer()
             } else if (msg.type === 'error') {
               console.error('[LivestreamPlayer] Server error:', msg.message)
               setError(msg.message)
@@ -164,16 +196,7 @@ export default function WebRTCPlayer({
             console.error('[LivestreamPlayer] JSON parse error:', e)
           }
         } else if (event.data instanceof ArrayBuffer) {
-          if (!sourceBufferReady && mediaSourceRef.current?.readyState === 'open') {
-            sourceBufferReady = initializeMediaSource('video/mp4; codecs="avc1.640028"')
-            if (sourceBufferReady) {
-              setStatus('connected')
-            }
-          }
-          
-          if (sourceBufferReady) {
-            appendBuffer(event.data)
-          }
+          appendBuffer(event.data)
         }
       }
       
@@ -198,7 +221,7 @@ export default function WebRTCPlayer({
       setStatus('error')
       onError?.(errorMessage)
     }
-  }, [cameraId, onError, cleanup, appendBuffer, initializeMediaSource, status])
+  }, [cameraId, onError, cleanup, appendBuffer, tryInitializeSourceBuffer, status])
 
   useEffect(() => {
     if (autoPlay) {
@@ -239,13 +262,6 @@ export default function WebRTCPlayer({
           <p className="text-white/70 text-sm">
             {status === 'idle' ? 'Initializing...' : 'Connecting...'}
           </p>
-        </div>
-      )}
-      
-      {status === 'connected' && (
-        <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 bg-green-500/80 rounded text-white text-xs">
-          <Video className="w-3 h-3" />
-          LIVE
         </div>
       )}
     </div>
