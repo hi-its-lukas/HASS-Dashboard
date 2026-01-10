@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Video, RefreshCw, X, Maximize2, ImageOff, Settings, Play, Camera } from 'lucide-react'
@@ -17,7 +17,7 @@ interface UnifiCameraInfo {
   type: string
 }
 
-export default function CamerasPage() {
+function CamerasPageContent() {
   const searchParams = useSearchParams()
   const testCameraId = searchParams.get('test')
   
@@ -544,5 +544,17 @@ function UnifiCameraModal({
         </div>
       </motion.div>
     </div>
+  )
+}
+
+export default function CamerasPage() {
+  return (
+    <Suspense fallback={
+      <div className="p-6 flex items-center justify-center min-h-[50vh]">
+        <div className="w-8 h-8 border-2 border-accent-cyan/30 border-t-accent-cyan rounded-full animate-spin" />
+      </div>
+    }>
+      <CamerasPageContent />
+    </Suspense>
   )
 }
