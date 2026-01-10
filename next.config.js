@@ -12,6 +12,9 @@ const withPWA = require('next-pwa')({
 const nextConfig = {
   reactStrictMode: true,
   output: 'standalone',
+  experimental: {
+    serverComponentsExternalPackages: ['unifi-protect'],
+  },
 }
 
 module.exports = withPWA(nextConfig)
