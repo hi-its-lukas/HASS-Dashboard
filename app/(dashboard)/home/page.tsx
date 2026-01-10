@@ -17,13 +17,13 @@ import Link from 'next/link'
 
 type TabId = 'lights' | 'covers' | 'awnings' | 'climate' | 'vacuum' | 'locks'
 
-const TABS: { id: TabId; label: string; icon: typeof Lightbulb; color: string }[] = [
-  { id: 'lights', label: 'Licht', icon: Lightbulb, color: 'accent-yellow' },
-  { id: 'covers', label: 'Rollos', icon: Blinds, color: 'accent-purple' },
-  { id: 'awnings', label: 'Markisen', icon: Sun, color: 'amber-500' },
-  { id: 'climate', label: 'Klima', icon: Thermometer, color: 'accent-orange' },
-  { id: 'vacuum', label: 'Staubsauger', icon: Bot, color: 'accent-cyan' },
-  { id: 'locks', label: 'Schlösser', icon: Lock, color: 'purple-400' },
+const TABS: { id: TabId; label: string; icon: typeof Lightbulb; bgColor: string; textColor: string }[] = [
+  { id: 'lights', label: 'Licht', icon: Lightbulb, bgColor: 'rgba(255, 204, 0, 0.2)', textColor: '#ffcc00' },
+  { id: 'covers', label: 'Rollos', icon: Blinds, bgColor: 'rgba(168, 85, 247, 0.2)', textColor: '#a855f7' },
+  { id: 'awnings', label: 'Markisen', icon: Sun, bgColor: 'rgba(245, 158, 11, 0.2)', textColor: '#f59e0b' },
+  { id: 'climate', label: 'Klima', icon: Thermometer, bgColor: 'rgba(255, 149, 0, 0.2)', textColor: '#ff9500' },
+  { id: 'vacuum', label: 'Staubsauger', icon: Bot, bgColor: 'rgba(100, 210, 255, 0.2)', textColor: '#64d2ff' },
+  { id: 'locks', label: 'Schlösser', icon: Lock, bgColor: 'rgba(192, 132, 252, 0.2)', textColor: '#c084fc' },
 ]
 
 const COLOR_PRESETS = [
@@ -67,16 +67,11 @@ export default function HomePage() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={cn(
-                'flex items-center gap-2 px-4 py-2.5 rounded-xl whitespace-nowrap transition-all',
-                isActive
-                  ? `bg-${tab.color}/20 text-${tab.color}`
-                  : 'bg-white/5 text-text-secondary hover:bg-white/10 hover:text-white'
-              )}
-              style={isActive ? { 
-                backgroundColor: `var(--${tab.color}, rgba(255,255,255,0.1))`,
-                color: `var(--${tab.color}-text, white)`
-              } : undefined}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl whitespace-nowrap transition-all"
+              style={isActive 
+                ? { backgroundColor: tab.bgColor, color: tab.textColor }
+                : { backgroundColor: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.6)' }
+              }
             >
               <Icon className="w-4 h-4" />
               <span className="text-sm font-medium">{tab.label}</span>
