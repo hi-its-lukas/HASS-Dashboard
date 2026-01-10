@@ -38,34 +38,69 @@ function findBox(buffer: Buffer, boxType: number): { offset: number, size: numbe
   return null
 }
 
-function extractInitSegment(buffer: Buffer): Buffer | null {
+function extractInitSegment(buffer: Buffer): { init: Buffer, remaining: Buffer } | null {
   // Look for ftyp box at the start
   const ftyp = findBox(buffer, BOX_FTYP)
-  if (!ftyp || ftyp.offset !== 0) {
+  if (!ftyp) {
+    console.log('[ProtectLivestream] No ftyp found in buffer of', buffer.length, 'bytes')
     return null
   }
   
-  // Find moov box after ftyp
+  if (ftyp.offset !== 0) {
+    console.log('[ProtectLivestream] ftyp found but not at start (offset:', ftyp.offset, ')')
+    return null
+  }
+  
+  // Check if ftyp is complete
+  if (ftyp.offset + ftyp.size > buffer.length) {
+    console.log('[ProtectLivestream] ftyp incomplete - need more data (have', buffer.length, 'need', ftyp.size, ')')
+    return null
+  }
+  
+  // Scan for moov after ftyp, skipping any boxes in between
   let offset = ftyp.size
   while (offset + 8 <= buffer.length) {
     const size = buffer.readUInt32BE(offset)
     const type = buffer.readUInt32BE(offset + 4)
+    const typeStr = String.fromCharCode((type >> 24) & 0xff, (type >> 16) & 0xff, (type >> 8) & 0xff, type & 0xff)
     
-    if (size < 8) break
+    if (size < 8) {
+      console.log('[ProtectLivestream] Invalid box size at offset', offset)
+      break
+    }
+    
+    console.log('[ProtectLivestream] Found box:', typeStr, 'size:', size, 'at offset:', offset)
     
     if (type === BOX_MOOV) {
-      // Found moov - init segment is ftyp + moov
+      // Check if moov is complete
       const initSize = offset + size
       if (initSize <= buffer.length) {
-        console.log('[ProtectLivestream] Found init segment: ftyp(' + ftyp.size + ') + moov(' + size + ') = ' + initSize + ' bytes')
-        return buffer.subarray(0, initSize)
+        console.log('[ProtectLivestream] Found complete init segment: ftyp(' + ftyp.size + ') + ... + moov(' + size + ') = ' + initSize + ' bytes')
+        return {
+          init: buffer.subarray(0, initSize),
+          remaining: buffer.subarray(initSize)
+        }
+      } else {
+        console.log('[ProtectLivestream] moov incomplete - need more data (have', buffer.length, 'need', initSize, ')')
+        return null
       }
+    }
+    
+    // Skip to next box
+    if (offset + size > buffer.length) {
+      console.log('[ProtectLivestream] Box', typeStr, 'incomplete - need more data')
+      return null
     }
     
     offset += size
   }
   
+  console.log('[ProtectLivestream] moov not found yet - buffering more data')
   return null
+}
+
+function hasFtypBox(buffer: Buffer): boolean {
+  return findBox(buffer, BOX_FTYP) !== null
 }
 
 function hasMoofBox(buffer: Buffer): boolean {
@@ -268,17 +303,17 @@ export class ProtectLivestreamManager extends EventEmitter {
           const combined = Buffer.concat(session.pendingBuffer)
           
           // Try to extract init segment
-          const initSeg = extractInitSegment(combined)
-          if (initSeg) {
-            session.initSegment = initSeg
+          const result = extractInitSegment(combined)
+          if (result) {
+            session.initSegment = result.init
             session.foundInit = true
-            console.log('[ProtectLivestream] Init segment cached for', camera.name, '- size:', initSeg.length)
+            console.log('[ProtectLivestream] Init segment cached for', camera.name, '- size:', result.init.length)
             
             // Send init segment to all clients first
             for (const client of session.clients) {
               try {
                 if (!session.initSegmentSent.has(client)) {
-                  client(initSeg)
+                  client(result.init)
                   session.initSegmentSent.add(client)
                 }
               } catch (e) {
@@ -287,11 +322,10 @@ export class ProtectLivestreamManager extends EventEmitter {
             }
             
             // Send remaining data after init segment
-            const remaining = combined.subarray(initSeg.length)
-            if (remaining.length > 0) {
+            if (result.remaining.length > 0) {
               for (const client of session.clients) {
                 try {
-                  client(remaining)
+                  client(result.remaining)
                 } catch (e) {
                   console.error('[ProtectLivestream] Error sending remaining data:', e)
                 }
@@ -300,7 +334,7 @@ export class ProtectLivestreamManager extends EventEmitter {
             
             // Clear pending buffer
             session.pendingBuffer = []
-          } else if (hasMoofBox(combined)) {
+          } else if (!hasFtypBox(combined) && hasMoofBox(combined)) {
             // If we see moof without ftyp/moov, the init was not at the start
             console.log('[ProtectLivestream] WARNING: moof found without init segment for', camera.name, '- stream may not play')
             session.foundInit = true // Give up looking
