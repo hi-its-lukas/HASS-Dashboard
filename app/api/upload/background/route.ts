@@ -5,11 +5,16 @@ import prisma from '@/lib/db/client'
 import { writeFile, mkdir, unlink } from 'fs/promises'
 import { existsSync, readdirSync } from 'fs'
 import path from 'path'
+import sharp from 'sharp'
 
 export const dynamic = 'force-dynamic'
 
 const DATA_DIR = process.env.NODE_ENV === 'production' ? '/data' : './.data'
 const UPLOAD_DIR = path.join(DATA_DIR, 'backgrounds')
+
+const MAX_WIDTH = 1920
+const MAX_HEIGHT = 1080
+const QUALITY = 80
 
 export async function POST(request: NextRequest) {
   try {
@@ -49,12 +54,20 @@ export async function POST(request: NextRequest) {
       }
     }
     
-    const ext = file.name.split('.').pop() || 'jpg'
-    const filename = `${session.userId}.${ext}`
+    const filename = `${session.userId}.webp`
     const filepath = path.join(UPLOAD_DIR, filename)
     
     const buffer = Buffer.from(await file.arrayBuffer())
-    await writeFile(filepath, buffer)
+    
+    const optimizedBuffer = await sharp(buffer)
+      .resize(MAX_WIDTH, MAX_HEIGHT, { 
+        fit: 'inside', 
+        withoutEnlargement: true 
+      })
+      .webp({ quality: QUALITY })
+      .toBuffer()
+    
+    await writeFile(filepath, optimizedBuffer)
     
     const backgroundUrl = `/api/upload/background/${session.userId}`
     

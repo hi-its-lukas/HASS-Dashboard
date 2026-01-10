@@ -52,7 +52,7 @@ export async function GET(
     return new NextResponse(new Uint8Array(buffer), {
       headers: {
         'Content-Type': contentType,
-        'Cache-Control': 'private, max-age=3600',
+        'Cache-Control': 'private, max-age=86400, immutable',
       },
     })
   } catch (error) {
