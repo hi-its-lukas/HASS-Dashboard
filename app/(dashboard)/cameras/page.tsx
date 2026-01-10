@@ -181,74 +181,77 @@ function CamerasPageContent() {
               ? 'grid-cols-1' 
               : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
           }`}>
-            {displayedUnifiCameras
-              .filter(camera => !selectedUnifiCamera || camera.id === selectedUnifiCamera.id)
-              .map((camera, index) => (
-              <motion.div
-                key={`unifi-${camera.id}`}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-                layout
-              >
-                <Card className="overflow-hidden">
-                  <div 
-                    className={`relative bg-bg-secondary cursor-pointer group ${
-                      selectedUnifiCamera ? 'aspect-[16/9] max-h-[70vh]' : 'aspect-video'
-                    }`}
-                    onClick={() => setSelectedUnifiCamera(selectedUnifiCamera ? null : camera)}
-                  >
-                    {useLiveStream ? (
-                      <WebRTCPlayer
-                        cameraId={camera.id}
-                        className="w-full h-full"
-                        autoPlay={true}
-                      />
-                    ) : (
-                      <UnifiCameraFeed
-                        cameraId={camera.id}
-                        cameraName={camera.name}
-                        refreshKey={refreshKey}
-                      />
-                    )}
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center pointer-events-none">
-                      {selectedUnifiCamera ? (
-                        <X className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+            {displayedUnifiCameras.map((camera, index) => {
+              const isSelected = selectedUnifiCamera?.id === camera.id
+              const isHidden = selectedUnifiCamera && !isSelected
+              
+              return (
+                <motion.div
+                  key={`unifi-${camera.id}`}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: isHidden ? 0 : 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  className={isHidden ? 'hidden' : ''}
+                >
+                  <Card className="overflow-hidden">
+                    <div 
+                      className={`relative bg-bg-secondary cursor-pointer group ${
+                        isSelected ? 'aspect-[16/9] max-h-[70vh]' : 'aspect-video'
+                      }`}
+                      onClick={() => setSelectedUnifiCamera(isSelected ? null : camera)}
+                    >
+                      {useLiveStream ? (
+                        <WebRTCPlayer
+                          cameraId={camera.id}
+                          className="w-full h-full"
+                          autoPlay={true}
+                        />
                       ) : (
-                        <Maximize2 className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <UnifiCameraFeed
+                          cameraId={camera.id}
+                          cameraName={camera.name}
+                          refreshKey={refreshKey}
+                        />
+                      )}
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center pointer-events-none">
+                        {isSelected ? (
+                          <X className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                        ) : (
+                          <Maximize2 className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                        )}
+                      </div>
+                      {useLiveStream && (
+                        <div className="absolute top-2 left-2 px-2 py-1 bg-green-500/80 rounded text-xs text-white font-medium flex items-center gap-1">
+                          <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                          LIVE
+                        </div>
                       )}
                     </div>
-                    {useLiveStream && (
-                      <div className="absolute top-2 left-2 px-2 py-1 bg-green-500/80 rounded text-xs text-white font-medium flex items-center gap-1">
-                        <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
-                        LIVE
+                    <div className="p-3 flex justify-between items-center">
+                      <div>
+                        <p className="text-sm font-medium text-white truncate">
+                          {camera.name}
+                        </p>
+                        <p className="text-xs text-text-muted">
+                          UniFi Protect • {camera.type}
+                        </p>
                       </div>
-                    )}
-                  </div>
-                  <div className="p-3 flex justify-between items-center">
-                    <div>
-                      <p className="text-sm font-medium text-white truncate">
-                        {camera.name}
-                      </p>
-                      <p className="text-xs text-text-muted">
-                        UniFi Protect • {camera.type}
-                      </p>
+                      {isSelected && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setSelectedUnifiCamera(null)
+                          }}
+                          className="px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-white text-sm transition-colors"
+                        >
+                          Zurück
+                        </button>
+                      )}
                     </div>
-                    {selectedUnifiCamera && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setSelectedUnifiCamera(null)
-                        }}
-                        className="px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-white text-sm transition-colors"
-                      >
-                        Zurück
-                      </button>
-                    )}
-                  </div>
-                </Card>
-              </motion.div>
-            ))}
+                  </Card>
+                </motion.div>
+              )
+            })}
             
             {cameraEntities.map((entityId, index) => {
               const state = states[entityId]
