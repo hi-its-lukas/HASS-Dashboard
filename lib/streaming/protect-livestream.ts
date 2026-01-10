@@ -268,30 +268,24 @@ export class ProtectLivestreamManager extends EventEmitter {
         this.sessions.delete(cameraId)
       })
 
-      // Derive codec from camera channel config - send BEFORE starting stream
+      // Derive codec from camera channel config as FALLBACK only
+      // We will wait for the init segment to extract the real codec
       const channelConfig = camera.channels?.find(ch => ch.id === this.channel)
       const width = channelConfig?.width || 1920
       const height = channelConfig?.height || 1080
       
       // Map to MSE-compatible H.264 codec string based on resolution
       // Most UniFi cameras use Main profile
-      let codecString = 'avc1.4d401f' // H.264 Main profile, Level 3.1 (720p default)
+      let fallbackCodec = 'avc1.4d401f' // H.264 Main profile, Level 3.1 (720p default)
       if (height > 1080) {
-        codecString = 'avc1.640028' // High profile, Level 4.0 for 4K
+        fallbackCodec = 'avc1.640028' // High profile, Level 4.0 for 4K
       } else if (height > 720) {
-        codecString = 'avc1.4d4028' // Main profile, Level 4.0 for 1080p
+        fallbackCodec = 'avc1.4d4028' // Main profile, Level 4.0 for 1080p
       }
       
-      // Send codec IMMEDIATELY before stream starts
-      console.log('[ProtectLivestream] Sending derived codec for', camera.name, ':', codecString, '(', width, 'x', height, ')')
-      session.lastCodec = codecString
-      for (const callback of session.codecCallbacks) {
-        try {
-          callback(codecString)
-        } catch (e) {
-          console.error('[ProtectLivestream] Error sending codec to client:', e)
-        }
-      }
+      // DON'T send codec yet - wait for init segment extraction
+      console.log('[ProtectLivestream] Derived fallback codec for', camera.name, ':', fallbackCodec, '(', width, 'x', height, ') - waiting for init segment')
+      session.lastCodec = fallbackCodec
 
       // Start stream with useStream: true - REQUIRED for data to flow in unifi-protect 4.27+
       const started = await livestream.start(cameraId, this.channel, { 
@@ -339,18 +333,18 @@ export class ProtectLivestreamManager extends EventEmitter {
             session.foundInit = true
             console.log('[ProtectLivestream] Init segment cached for', camera.name, '- size:', result.init.length)
             
-            // Extract and update codec from init segment
+            // Extract codec from init segment - this is the FIRST time we send codec to client
             const extractedCodec = extractCodecFromInit(result.init)
-            if (extractedCodec && extractedCodec !== session.lastCodec) {
-              console.log('[ProtectLivestream] Updating codec for', camera.name, 'from', session.lastCodec, 'to', extractedCodec)
-              session.lastCodec = extractedCodec
-              // Send updated codec to all clients
-              for (const callback of session.codecCallbacks) {
-                try {
-                  callback(extractedCodec)
-                } catch (e) {
-                  console.error('[ProtectLivestream] Error sending updated codec:', e)
-                }
+            const codecToSend = extractedCodec || session.lastCodec || 'avc1.4d401f'
+            console.log('[ProtectLivestream] Sending codec for', camera.name, ':', codecToSend, extractedCodec ? '(from init segment)' : '(fallback)')
+            session.lastCodec = codecToSend
+            
+            // Send codec to all clients BEFORE sending init segment
+            for (const callback of session.codecCallbacks) {
+              try {
+                callback(codecToSend)
+              } catch (e) {
+                console.error('[ProtectLivestream] Error sending codec:', e)
               }
             }
             
