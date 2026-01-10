@@ -38,6 +38,37 @@ function findBox(buffer: Buffer, boxType: number): { offset: number, size: numbe
   return null
 }
 
+function hexDump(buffer: Buffer, maxBytes: number = 256): string {
+  const lines: string[] = []
+  const len = Math.min(buffer.length, maxBytes)
+  
+  for (let i = 0; i < len; i += 16) {
+    const hex = []
+    const ascii = []
+    for (let j = 0; j < 16; j++) {
+      if (i + j < len) {
+        hex.push(buffer[i + j].toString(16).padStart(2, '0'))
+        const c = buffer[i + j]
+        ascii.push(c >= 32 && c < 127 ? String.fromCharCode(c) : '.')
+      } else {
+        hex.push('  ')
+        ascii.push(' ')
+      }
+    }
+    lines.push(
+      i.toString(16).padStart(8, '0') + '  ' +
+      hex.slice(0, 8).join(' ') + '  ' + hex.slice(8).join(' ') + '  |' +
+      ascii.join('') + '|'
+    )
+  }
+  
+  if (buffer.length > maxBytes) {
+    lines.push(`... (${buffer.length - maxBytes} more bytes)`)
+  }
+  
+  return lines.join('\n')
+}
+
 function dumpBoxStructure(buffer: Buffer, prefix: string = '', maxDepth: number = 3): void {
   if (maxDepth <= 0) return
   
@@ -52,7 +83,7 @@ function dumpBoxStructure(buffer: Buffer, prefix: string = '', maxDepth: number 
     console.log(prefix + typeStr + ' [' + size + ' bytes]')
     
     // Recursively dump container boxes
-    const containerBoxes = ['moov', 'trak', 'mdia', 'minf', 'stbl', 'mvex', 'edts']
+    const containerBoxes = ['moov', 'trak', 'mdia', 'minf', 'stbl', 'mvex', 'edts', 'stsd']
     if (containerBoxes.includes(typeStr) && size > 8) {
       dumpBoxStructure(buffer.subarray(offset + 8, offset + size), prefix + '  ', maxDepth - 1)
     }
@@ -67,6 +98,66 @@ function dumpBoxStructure(buffer: Buffer, prefix: string = '', maxDepth: number 
       }
       console.log(prefix + '  major_brand: ' + majorBrand + ', minor: ' + minorVersion)
       console.log(prefix + '  compatible_brands: ' + compatBrands.join(', '))
+    }
+    
+    // For stsd, check for avc1 or hvc1
+    if (typeStr === 'stsd' && size > 16) {
+      const entryCount = buffer.readUInt32BE(offset + 12)
+      console.log(prefix + '  entry_count: ' + entryCount)
+      if (size > 24) {
+        const sampleEntryType = buffer.subarray(offset + 20, offset + 24).toString('ascii')
+        console.log(prefix + '  sample_entry_type: ' + sampleEntryType + ' (avc1=H.264, hvc1/hev1=HEVC)')
+      }
+    }
+    
+    offset += size
+  }
+}
+
+function dumpFullBoxStructure(buffer: Buffer, prefix: string = ''): void {
+  let offset = 0
+  while (offset + 8 <= buffer.length) {
+    const size = buffer.readUInt32BE(offset)
+    const type = buffer.readUInt32BE(offset + 4)
+    const typeStr = String.fromCharCode((type >> 24) & 0xff, (type >> 16) & 0xff, (type >> 8) & 0xff, type & 0xff)
+    
+    if (size < 8 || offset + size > buffer.length) break
+    
+    console.log(prefix + typeStr + ' [' + size + ' bytes @ offset ' + offset + ']')
+    
+    // Recursively dump ALL container boxes
+    const containerBoxes = ['moov', 'trak', 'mdia', 'minf', 'stbl', 'mvex', 'edts', 'udta', 'meta', 'dinf']
+    if (containerBoxes.includes(typeStr) && size > 8) {
+      dumpFullBoxStructure(buffer.subarray(offset + 8, offset + size), prefix + '  ')
+    }
+    
+    // For ftyp, log the brands
+    if (typeStr === 'ftyp' && size >= 16) {
+      const majorBrand = buffer.subarray(offset + 8, offset + 12).toString('ascii')
+      const minorVersion = buffer.readUInt32BE(offset + 12)
+      const compatBrands: string[] = []
+      for (let i = offset + 16; i + 4 <= offset + size; i += 4) {
+        compatBrands.push(buffer.subarray(i, i + 4).toString('ascii'))
+      }
+      console.log(prefix + '  major_brand: ' + majorBrand + ', minor: ' + minorVersion)
+      console.log(prefix + '  compatible_brands: ' + compatBrands.join(', '))
+    }
+    
+    // For stsd (Sample Description), show codec type
+    if (typeStr === 'stsd' && size > 16) {
+      // stsd is a full box with version(1) + flags(3) + entry_count(4)
+      const entryCount = buffer.readUInt32BE(offset + 12)
+      console.log(prefix + '  entry_count: ' + entryCount)
+      // First sample entry starts at offset + 16
+      if (size > 24) {
+        const entrySize = buffer.readUInt32BE(offset + 16)
+        const entryType = buffer.subarray(offset + 20, offset + 24).toString('ascii')
+        console.log(prefix + '  sample_entry: ' + entryType + ' [' + entrySize + ' bytes]')
+        console.log(prefix + '    >> ' + entryType + ' = ' + 
+          (entryType === 'avc1' ? 'H.264/AVC' : 
+           entryType === 'hvc1' || entryType === 'hev1' ? 'H.265/HEVC' : 
+           'Unknown codec'))
+      }
     }
     
     offset += size
@@ -113,8 +204,12 @@ function extractInitSegment(buffer: Buffer): { init: Buffer, remaining: Buffer }
         console.log('[ProtectLivestream] Found complete init segment: ftyp(' + ftyp.size + ') + ... + moov(' + size + ') = ' + initSize + ' bytes')
         
         // Dump the init segment structure for debugging
-        console.log('[ProtectLivestream] Init segment structure:')
-        dumpBoxStructure(buffer.subarray(0, initSize), '  ')
+        console.log('[ProtectLivestream] Init segment structure (FULL):')
+        dumpFullBoxStructure(buffer.subarray(0, initSize), '  ')
+        
+        // Hex dump first 512 bytes
+        console.log('[ProtectLivestream] Init segment HEX DUMP (first 512 bytes):')
+        console.log(hexDump(buffer.subarray(0, initSize), 512))
         
         return {
           init: buffer.subarray(0, initSize),
