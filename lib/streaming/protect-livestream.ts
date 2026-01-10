@@ -25,7 +25,7 @@ const BOX_MDAT = 0x6d646174  // 'mdat'
 const BOX_TRAF = 0x74726166  // 'traf'
 const BOX_TRUN = 0x7472756e  // 'trun'
 
-function hasKeyframe(buffer: Buffer): boolean {
+function hasKeyframe(buffer: Buffer, debug: boolean = false): boolean {
   let offset = 0
   while (offset + 8 <= buffer.length) {
     const size = buffer.readUInt32BE(offset)
@@ -54,17 +54,46 @@ function hasKeyframe(buffer: Buffer): boolean {
             if (subBoxSize < 8) break
             
             if (subBoxType === BOX_TRUN) {
-              const flags = buffer.readUInt32BE(trafOffset + 8) & 0xFFFFFF
-              const firstSampleFlagsPresent = (flags & 0x000004) !== 0
+              const trunFlags = buffer.readUInt32BE(trafOffset + 8) & 0xFFFFFF
+              const firstSampleFlagsPresent = (trunFlags & 0x000004) !== 0
+              const sampleFlagsPresent = (trunFlags & 0x000400) !== 0
+              
+              if (debug) {
+                console.log('[hasKeyframe] trun flags:', trunFlags.toString(16), 
+                  'first_sample_flags_present:', firstSampleFlagsPresent,
+                  'sample_flags_present:', sampleFlagsPresent)
+              }
               
               let cursor = trafOffset + 16
-              const dataOffsetPresent = (flags & 0x000001) !== 0
+              const dataOffsetPresent = (trunFlags & 0x000001) !== 0
               if (dataOffsetPresent) cursor += 4
               
               if (firstSampleFlagsPresent && cursor + 4 <= trafEnd) {
                 const firstSampleFlags = buffer.readUInt32BE(cursor)
                 const isSync = (firstSampleFlags & 0x00010000) === 0
+                if (debug) {
+                  console.log('[hasKeyframe] first_sample_flags:', firstSampleFlags.toString(16), 'isSync:', isSync)
+                }
                 if (isSync) return true
+              } else if (!firstSampleFlagsPresent) {
+                const tfhdBox = findBoxInContainer(buffer.subarray(moofOffset, moofOffset + boxSize), 0x74666864)
+                if (tfhdBox) {
+                  const tfhdFlags = buffer.readUInt32BE(moofOffset + tfhdBox.offset + 8) & 0xFFFFFF
+                  const defaultSampleFlagsPresent = (tfhdFlags & 0x000020) !== 0
+                  if (defaultSampleFlagsPresent) {
+                    let tfhdCursor = moofOffset + tfhdBox.offset + 12
+                    if (tfhdFlags & 0x000001) tfhdCursor += 8
+                    if (tfhdFlags & 0x000002) tfhdCursor += 4
+                    if (tfhdCursor + 4 <= moofOffset + tfhdBox.offset + tfhdBox.size) {
+                      const defaultFlags = buffer.readUInt32BE(tfhdCursor)
+                      const isSync = (defaultFlags & 0x00010000) === 0
+                      if (debug) {
+                        console.log('[hasKeyframe] default_sample_flags:', defaultFlags.toString(16), 'isSync:', isSync)
+                      }
+                      if (isSync) return true
+                    }
+                  }
+                }
               }
             }
             trafOffset += subBoxSize
@@ -76,6 +105,18 @@ function hasKeyframe(buffer: Buffer): boolean {
     offset += size
   }
   return false
+}
+
+function findBoxInContainer(buffer: Buffer, boxType: number): { offset: number, size: number } | null {
+  let offset = 0
+  while (offset + 8 <= buffer.length) {
+    const size = buffer.readUInt32BE(offset)
+    const type = buffer.readUInt32BE(offset + 4)
+    if (size < 8) break
+    if (type === boxType) return { offset, size }
+    offset += size
+  }
+  return null
 }
 
 function findBox(buffer: Buffer, boxType: number): { offset: number, size: number } | null {
@@ -677,7 +718,13 @@ export class ProtectLivestreamManager extends EventEmitter {
         }
         
         // Normal flow: init segment already found, just forward data
-        const isKeyframe = hasKeyframe(data)
+        const debugKeyframe = session.dataCount <= 30 || session.dataCount % 50 === 0
+        const isKeyframe = hasKeyframe(data, debugKeyframe)
+        
+        if (debugKeyframe) {
+          console.log('[ProtectLivestream] Chunk #' + session.dataCount + ' keyframe:', isKeyframe, 
+            'waiting:', session.waitingClients.size, 'active:', session.clients.size)
+        }
         
         if (isKeyframe) {
           session.lastKeyframeChunk = Buffer.from(data)
