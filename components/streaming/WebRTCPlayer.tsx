@@ -133,11 +133,11 @@ export default function WebRTCPlayer({
       sb.addEventListener('updateend', () => {
         processQueue()
         
-        // Try to play when we have buffered data
-        if (videoRef.current && sb.buffered.length > 0) {
+        // Try to play when we have any buffered data
+        if (videoRef.current && sb.buffered.length > 0 && videoRef.current.paused) {
           const bufferedEnd = sb.buffered.end(0)
-          if (bufferedEnd > 0.5 && videoRef.current.paused) {
-            console.log('[LivestreamPlayer] Buffered enough data, starting playback:', bufferedEnd.toFixed(2), 's')
+          if (bufferedEnd > 0.1) {
+            console.log('[LivestreamPlayer] Starting playback with buffered:', bufferedEnd.toFixed(2), 's')
             videoRef.current.play().catch(e => {
               console.log('[LivestreamPlayer] Play blocked:', e.message)
             })
