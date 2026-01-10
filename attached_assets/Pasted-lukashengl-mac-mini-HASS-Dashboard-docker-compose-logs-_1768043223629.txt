@@ -1,0 +1,73 @@
+lukashengl@mac-mini HASS-Dashboard % docker compose logs -f app 2>&1 | grep -E "codec|Extracted"
+hass-dashboard  | [ProtectLivestream] Derived fallback codec for Hautüre : avc1.640028 ( 960 x 1280 ) - waiting for init segment
+hass-dashboard  | [ProtectLivestream] Derived fallback codec for Carport : avc1.4d401f ( 1280 x 720 ) - waiting for init segment
+hass-dashboard  | [ProtectLivestream] Derived fallback codec for Haus vorne : avc1.4d401f ( 1280 x 720 ) - waiting for init segment
+hass-dashboard  | [ProtectLivestream] Derived fallback codec for Garten von Seite : avc1.4d401f ( 1280 x 720 ) - waiting for init segment
+hass-dashboard  | [ProtectLivestream] Derived fallback codec for Garten von oben : avc1.4d401f ( 1280 x 720 ) - waiting for init segment
+hass-dashboard  | [ProtectLivestream] Derived fallback codec for Garagentor : avc1.4d401f ( 1280 x 720 ) - waiting for init segment
+hass-dashboard  | [ProtectLivestream] Extracted codec from init segment: avc1.640020 (profile: 100 compat: 0 level: 32 )
+hass-dashboard  | [ProtectLivestream] Sending codec for Hautüre : avc1.640020 (from init segment)
+hass-dashboard  | [WS-Proxy] Sending codec to client for 68330e970123c803e4000703: avc1.640020
+hass-dashboard  | [ProtectLivestream] Extracted codec from init segment: avc1.4d401f (profile: 77 compat: 64 level: 31 )
+hass-dashboard  | [ProtectLivestream] Sending codec for Garten von oben : avc1.4d401f (from init segment)
+hass-dashboard  | [WS-Proxy] Sending codec to client for 68315e3703a36803e4000401: avc1.4d401f
+hass-dashboard  | [ProtectLivestream] Derived fallback codec for Hoftor : avc1.640028 ( 960 x 1280 ) - waiting for init segment
+hass-dashboard  | [ProtectLivestream] Extracted codec from init segment: avc1.4d401f (profile: 77 compat: 64 level: 31 )
+hass-dashboard  | [ProtectLivestream] Sending codec for Carport : avc1.4d401f (from init segment)
+hass-dashboard  | [WS-Proxy] Sending codec to client for 68315e3703866803e4000400: avc1.4d401f
+hass-dashboard  | [ProtectLivestream] Extracted codec from init segment: avc1.4d401f (profile: 77 compat: 64 level: 31 )
+hass-dashboard  | [ProtectLivestream] Sending codec for Garten von Seite : avc1.4d401f (from init segment)
+hass-dashboard  | [WS-Proxy] Sending codec to client for 68315e3702fd6803e40003fc: avc1.4d401f
+hass-dashboard  | [ProtectLivestream] Extracted codec from init segment: avc1.4d401f (profile: 77 compat: 64 level: 31 )
+hass-dashboard  | [ProtectLivestream] Sending codec for Haus vorne : avc1.4d401f (from init segment)
+hass-dashboard  | [WS-Proxy] Sending codec to client for 68315e3703326803e40003fe: avc1.4d401f
+hass-dashboard  | [ProtectLivestream] Extracted codec from init segment: avc1.4d401f (profile: 77 compat: 64 level: 31 )
+hass-dashboard  | [ProtectLivestream] Sending codec for Garagentor : avc1.4d401f (from init segment)
+hass-dashboard  | [WS-Proxy] Sending codec to client for 68315e37035b6803e40003ff: avc1.4d401f
+hass-dashboard  | [ProtectLivestream] Extracted codec from init segment: avc1.640020 (profile: 100 compat: 0 level: 32 )
+hass-dashboard  | [ProtectLivestream] Sending codec for Hoftor : avc1.640020 (from init segment)
+hass-dashboard  | [WS-Proxy] Sending codec to client for 69047ecf0361dd03e46b58bd: avc1.640020
+hass-dashboard  | [ProtectLivestream] Derived fallback codec for Garten von hinten : avc1.4d401f ( 1280 x 720 ) - waiting for init segment
+hass-dashboard  | [ProtectLivestream] Extracted codec from init segment: avc1.4d401f (profile: 77 compat: 64 level: 31 )
+hass-dashboard  | [ProtectLivestream] Sending codec for Garten von hinten : avc1.4d401f (from init segment)
+hass-dashboard  | [WS-Proxy] Sending codec to client for 68315e3702d06803e40003fb: avc1.4d401f
+hass-dashboard  | [ProtectLivestream] Derived fallback codec for Einfahrt von hinten : avc1.4d401f ( 1280 x 720 ) - waiting for init segment
+hass-dashboard  | [ProtectLivestream] Extracted codec from init segment: avc1.4d401f (profile: 77 compat: 64 level: 31 )
+hass-dashboard  | [ProtectLivestream] Sending codec for Einfahrt von hinten : avc1.4d401f (from init segment)
+hass-dashboard  | [WS-Proxy] Sending codec to client for 68315e3703c16803e4000402: avc1.4d401f
+hass-dashboard  | [ProtectLivestream] Derived fallback codec for Hautüre : avc1.640028 ( 960 x 1280 ) - waiting for init segment
+hass-dashboard  | [ProtectLivestream] Extracted codec from init segment: avc1.640020 (profile: 100 compat: 0 level: 32 )
+hass-dashboard  | [ProtectLivestream] Sending codec for Hautüre : avc1.640020 (from init segment)
+hass-dashboard  | [WS-Proxy] Sending codec to client for 68330e970123c803e4000703: avc1.640020
+hass-dashboard  | [ProtectLivestream] Derived fallback codec for Carport : avc1.4d401f ( 1280 x 720 ) - waiting for init segment
+hass-dashboard  | [ProtectLivestream] Extracted codec from init segment: avc1.4d401f (profile: 77 compat: 64 level: 31 )
+hass-dashboard  | [ProtectLivestream] Sending codec for Carport : avc1.4d401f (from init segment)
+hass-dashboard  | [WS-Proxy] Sending codec to client for 68315e3703866803e4000400: avc1.4d401f
+hass-dashboard  | [ProtectLivestream] Derived fallback codec for Haus vorne : avc1.4d401f ( 1280 x 720 ) - waiting for init segment
+hass-dashboard  | [ProtectLivestream] Derived fallback codec for Garten von Seite : avc1.4d401f ( 1280 x 720 ) - waiting for init segment
+hass-dashboard  | [ProtectLivestream] Extracted codec from init segment: avc1.4d401f (profile: 77 compat: 64 level: 31 )
+hass-dashboard  | [ProtectLivestream] Sending codec for Garten von Seite : avc1.4d401f (from init segment)
+hass-dashboard  | [WS-Proxy] Sending codec to client for 68315e3702fd6803e40003fc: avc1.4d401f
+hass-dashboard  | [ProtectLivestream] Derived fallback codec for Garten von oben : avc1.4d401f ( 1280 x 720 ) - waiting for init segment
+hass-dashboard  | [ProtectLivestream] Extracted codec from init segment: avc1.4d401f (profile: 77 compat: 64 level: 31 )
+hass-dashboard  | [ProtectLivestream] Sending codec for Garten von oben : avc1.4d401f (from init segment)
+hass-dashboard  | [WS-Proxy] Sending codec to client for 68315e3703a36803e4000401: avc1.4d401f
+hass-dashboard  | [ProtectLivestream] Extracted codec from init segment: avc1.4d401f (profile: 77 compat: 64 level: 31 )
+hass-dashboard  | [ProtectLivestream] Sending codec for Haus vorne : avc1.4d401f (from init segment)
+hass-dashboard  | [WS-Proxy] Sending codec to client for 68315e3703326803e40003fe: avc1.4d401f
+hass-dashboard  | [ProtectLivestream] Derived fallback codec for Garagentor : avc1.4d401f ( 1280 x 720 ) - waiting for init segment
+hass-dashboard  | [ProtectLivestream] Extracted codec from init segment: avc1.4d401f (profile: 77 compat: 64 level: 31 )
+hass-dashboard  | [ProtectLivestream] Sending codec for Garagentor : avc1.4d401f (from init segment)
+hass-dashboard  | [WS-Proxy] Sending codec to client for 68315e37035b6803e40003ff: avc1.4d401f
+hass-dashboard  | [ProtectLivestream] Derived fallback codec for Hoftor : avc1.640028 ( 960 x 1280 ) - waiting for init segment
+hass-dashboard  | [ProtectLivestream] Extracted codec from init segment: avc1.640020 (profile: 100 compat: 0 level: 32 )
+hass-dashboard  | [ProtectLivestream] Sending codec for Hoftor : avc1.640020 (from init segment)
+hass-dashboard  | [WS-Proxy] Sending codec to client for 69047ecf0361dd03e46b58bd: avc1.640020
+hass-dashboard  | [ProtectLivestream] Derived fallback codec for Garten von hinten : avc1.4d401f ( 1280 x 720 ) - waiting for init segment
+hass-dashboard  | [ProtectLivestream] Derived fallback codec for Einfahrt von hinten : avc1.4d401f ( 1280 x 720 ) - waiting for init segment
+hass-dashboard  | [ProtectLivestream] Extracted codec from init segment: avc1.4d401f (profile: 77 compat: 64 level: 31 )
+hass-dashboard  | [ProtectLivestream] Sending codec for Garten von hinten : avc1.4d401f (from init segment)
+hass-dashboard  | [WS-Proxy] Sending codec to client for 68315e3702d06803e40003fb: avc1.4d401f
+hass-dashboard  | [ProtectLivestream] Extracted codec from init segment: avc1.4d401f (profile: 77 compat: 64 level: 31 )
+hass-dashboard  | [ProtectLivestream] Sending codec for Einfahrt von hinten : avc1.4d401f (from init segment)
+hass-dashboard  | [WS-Proxy] Sending codec to client for 68315e3703c16803e4000402: avc1.4d401f

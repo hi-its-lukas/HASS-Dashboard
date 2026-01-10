@@ -44,8 +44,11 @@ export default function WebRTCPlayer({
     bufferQueue.current = []
     pendingCodec.current = null
     sourceOpenReady.current = false
+    appendedCount.current = 0
   }, [])
 
+  const appendedCount = useRef(0)
+  
   const processQueue = useCallback(() => {
     const sb = sourceBufferRef.current
     if (!sb || sb.updating || bufferQueue.current.length === 0) return
@@ -54,8 +57,21 @@ export default function WebRTCPlayer({
     if (chunk) {
       try {
         sb.appendBuffer(chunk)
+        appendedCount.current++
+        
+        // Log first 10 appends and every 50th after
+        if (appendedCount.current <= 10 || appendedCount.current % 50 === 0) {
+          const bytes = new Uint8Array(chunk)
+          const boxType = bytes.length >= 8 ? 
+            String.fromCharCode(bytes[4], bytes[5], bytes[6], bytes[7]) : 'unknown'
+          console.log('[LivestreamPlayer] appendBuffer #' + appendedCount.current + 
+            ' - size:', chunk.byteLength, 
+            '- box:', boxType,
+            '- buffered ranges:', sb.buffered.length > 0 ? 
+              `${sb.buffered.start(0).toFixed(2)}-${sb.buffered.end(0).toFixed(2)}s` : 'none')
+        }
       } catch (e) {
-        console.error('[LivestreamPlayer] appendBuffer error:', e)
+        console.error('[LivestreamPlayer] appendBuffer error:', e, '- chunk size:', chunk.byteLength)
       }
     }
   }, [])
@@ -183,6 +199,8 @@ export default function WebRTCPlayer({
         console.log('[LivestreamPlayer] WebSocket connected')
       }
       
+      let binaryChunkCount = 0
+      
       ws.onmessage = (event) => {
         if (typeof event.data === 'string') {
           try {
@@ -204,6 +222,25 @@ export default function WebRTCPlayer({
             console.error('[LivestreamPlayer] JSON parse error:', e)
           }
         } else if (event.data instanceof ArrayBuffer) {
+          binaryChunkCount++
+          const bytes = new Uint8Array(event.data)
+          
+          // Log first 10 chunks and every 100th after
+          if (binaryChunkCount <= 10 || binaryChunkCount % 100 === 0) {
+            const boxType = bytes.length >= 8 ? 
+              String.fromCharCode(bytes[4], bytes[5], bytes[6], bytes[7]) : 'unknown'
+            console.log('[LivestreamPlayer] Binary chunk #' + binaryChunkCount + 
+              ' - size:', bytes.length, 
+              '- box:', boxType,
+              '- sourceBuffer ready:', !!sourceBufferRef.current,
+              '- queue length:', bufferQueue.current.length)
+          }
+          
+          // Check if this is an init segment (starts with ftyp)
+          if (bytes.length >= 8 && bytes[4] === 0x66 && bytes[5] === 0x74 && bytes[6] === 0x79 && bytes[7] === 0x70) {
+            console.log('[LivestreamPlayer] INIT SEGMENT received! Size:', bytes.length)
+          }
+          
           appendBuffer(event.data)
         }
       }
