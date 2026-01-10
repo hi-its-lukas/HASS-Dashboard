@@ -20,10 +20,14 @@ export async function GET() {
     const session = await getSessionFromCookie()
     
     if (!session) {
+      console.log('[API] GET /settings - No session found')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
     
+    console.log('[API] GET /settings - User:', session.userId)
+    
     const globalConfig = await getGlobalLayoutConfig()
+    console.log('[API] GET /settings - Global config keys:', Object.keys(globalConfig))
     
     const userConfig = await prisma.dashboardConfig.findUnique({
       where: { userId: session.userId }

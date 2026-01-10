@@ -76,7 +76,10 @@ export function csrfProtection(request: NextRequest): Response | null {
   const result = validateOrigin(request)
   
   if (!result.valid) {
-    console.warn('[CSRF] Blocked request:', result.error, 'URL:', request.url)
+    const origin = request.headers.get('origin')
+    const host = request.headers.get('host')
+    const forwardedHost = request.headers.get('x-forwarded-host')
+    console.warn('[CSRF] Blocked:', result.error, '| Origin:', origin, '| Host:', host, '| X-Forwarded-Host:', forwardedHost, '| URL:', request.url)
     return new Response(JSON.stringify({ error: 'CSRF validation failed' }), {
       status: 403,
       headers: { 'Content-Type': 'application/json' }

@@ -57,16 +57,21 @@ export async function getGlobalLayoutConfig(): Promise<GlobalLayoutConfig> {
     })
     
     if (!record) {
+      console.log('[GlobalSettings] No global config found, returning empty')
       return {}
     }
     
     if (record.encrypted) {
       const parsed = JSON.parse(record.value)
       const decrypted = decrypt(Buffer.from(parsed.ciphertext, 'base64'), Buffer.from(parsed.nonce, 'base64'))
-      return JSON.parse(decrypted)
+      const config = JSON.parse(decrypted)
+      console.log('[GlobalSettings] Loaded encrypted config with keys:', Object.keys(config))
+      return config
     }
     
-    return JSON.parse(record.value)
+    const config = JSON.parse(record.value)
+    console.log('[GlobalSettings] Loaded config with keys:', Object.keys(config))
+    return config
   } catch (error) {
     console.error('[GlobalSettings] Failed to get global layout config:', error)
     return {}
@@ -74,6 +79,8 @@ export async function getGlobalLayoutConfig(): Promise<GlobalLayoutConfig> {
 }
 
 export async function setGlobalLayoutConfig(config: GlobalLayoutConfig): Promise<void> {
+  console.log('[GlobalSettings] Saving global config with keys:', Object.keys(config))
+  
   const value = JSON.stringify(config)
   const encrypted = encrypt(value)
   const encryptedValue = JSON.stringify({
@@ -86,6 +93,8 @@ export async function setGlobalLayoutConfig(config: GlobalLayoutConfig): Promise
     create: { key: GLOBAL_LAYOUT_KEY, value: encryptedValue, encrypted: true },
     update: { value: encryptedValue, encrypted: true }
   })
+  
+  console.log('[GlobalSettings] Global config saved successfully')
 }
 
 export async function mergeGlobalLayoutConfig(partial: Partial<GlobalLayoutConfig>): Promise<GlobalLayoutConfig> {
