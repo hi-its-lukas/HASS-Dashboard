@@ -5,6 +5,7 @@ import { MobileNav } from '@/components/nav/mobile-nav'
 import { NotificationModal } from '@/components/ui/notification-modal'
 import { NotificationCenter } from '@/components/ui/notification-center'
 import { NotificationBell } from '@/components/ui/notification-bell'
+import { ToastContainer } from '@/components/ui/toast-container'
 import { useConfigStore } from '@/lib/config/store'
 import { usePushListener } from '@/lib/push/use-push-listener'
 import { useEffect, useState } from 'react'
@@ -53,6 +54,7 @@ export default function DashboardLayout({
       <MobileNav />
       <NotificationModal />
       <NotificationCenter />
+      <ToastContainer />
       <div className="fixed bottom-20 right-4 z-30 lg:bottom-4">
         <NotificationBell />
       </div>

@@ -133,3 +133,17 @@ model PushSubscription {
 
   @@map("push_subscriptions")
 }
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  action    String
+  username  String
+  ipAddress String   @map("ip_address")
+  success   Boolean
+  reason    String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([username])
+  @@index([createdAt])
+  @@map("audit_logs")
+}

@@ -3,6 +3,7 @@ import { HAState } from './types'
 import { HAWebSocketClient, HAArea, HADevice, HAEntityRegistryEntry } from './websocket-client'
 import { mockStates, generatePowerTrendData } from './mock-data'
 import { useNotificationsStore } from '@/lib/ui/notifications-store'
+import { useToastStore } from '@/lib/ui/toast-store'
 
 interface DashboardPopupEventData extends Record<string, unknown> {
   title?: string
@@ -122,10 +123,16 @@ export const useHAStore = create<HAStore>((set, get) => ({
       })
 
       if (!response.ok) {
-        throw new Error('Service call failed')
+        const errorData = await response.json().catch(() => ({}))
+        const errorMsg = errorData.error || 'Aktion fehlgeschlagen'
+        useToastStore.getState().error(errorMsg)
+        throw new Error(errorMsg)
       }
     } catch (error) {
       console.error('[HA Store] Service call error:', error)
+      if (error instanceof Error && !error.message.includes('fehlgeschlagen')) {
+        useToastStore.getState().error('Verbindungsfehler')
+      }
       throw error
     }
   },
@@ -252,14 +259,22 @@ function scheduleWsRetry() {
 }
 
 async function startPolling() {
+  console.log('[HA Store] Starting polling fallback')
+  
   useHAStore.setState({ 
     connectionMode: 'polling',
     connecting: false
   })
   
-  if (pollInterval) return
+  if (pollInterval) {
+    console.log('[HA Store] Polling already active')
+    return
+  }
   
-  await pollStates(true)
+  // Initial poll - don't await to ensure interval gets set
+  pollStates(true).catch((e) => {
+    console.error('[HA Store] Initial poll failed:', e)
+  })
   
   pollInterval = setInterval(async () => {
     const { connectionMode } = useHAStore.getState()
@@ -273,6 +288,8 @@ async function startPolling() {
     
     await pollStates(false)
   }, POLL_INTERVAL)
+  
+  console.log('[HA Store] Polling interval set')
 }
 
 async function pollStates(includeRegistries = false) {
