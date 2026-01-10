@@ -1,0 +1,600 @@
+The "black screen" issue occurs because the second client (the modal) joins the livestream in the middle of a "Group of Pictures" (GOP).
+
+1. **The Problem:** Video compression uses **Keyframes** (complete images) and **P-frames** (changes since the last frame). When the modal opens, it receives the "Init Segment" (decoder configuration) immediately, but the live stream is likely sending P-frames at that moment. The decoder cannot understand these P-frames without the previous Keyframe, so it discards them or displays black until the *next* Keyframe arrives (which can take 2-3 seconds on UniFi cameras).
+2. **The Solution:** We must detect **Keyframes** on the server. When a new client joins an existing stream, we should send them the configuration (Init Segment) immediately but **wait** to send live media chunks until a Keyframe appears. This ensures the first chunk the player receives is always a valid starting point.
+
+Here is the corrected `protect-livestream.ts`. I have added a `hasKeyframe` detection function and a `waitingClients` queue to the session logic.
+
+**File:** `hi-its-lukas/hass-dashboard/HASS-Dashboard-d4307a0292f5566ff9b33d19354acb5f653bd698/lib/streaming/protect-livestream.ts`
+
+```typescript
+import { ProtectApi, ProtectLivestream, ProtectCameraConfig } from 'unifi-protect'
+import { EventEmitter } from 'events'
+
+interface LivestreamSession {
+  cameraId: string
+  channel: number
+  livestream: ProtectLivestream
+  clients: Set<(data: Buffer) => void>
+  // New: Clients waiting for a keyframe before joining the main feed
+  waitingClients: Set<(data: Buffer) => void>
+  codecCallbacks: Set<(codec: string) => void>
+  lastCodec: string | null
+  initSegment: Buffer | null
+  initSegmentSent: Set<(data: Buffer) => void>
+  pendingBuffer: Buffer[]
+  foundInit: boolean
+  dataCount: number
+}
+
+// fMP4 box type signatures
+const BOX_FTYP = 0x66747970  // 'ftyp'
+const BOX_MOOV = 0x6d6f6f76  // 'moov'
+const BOX_MOOF = 0x6d6f6f66  // 'moof'
+const BOX_TRAF = 0x74726166  // 'traf'
+const BOX_TRUN = 0x7472756e  // 'trun'
+
+function findBox(buffer: Buffer, boxType: number): { offset: number, size: number } | null {
+  let offset = 0
+  while (offset + 8 <= buffer.length) {
+    const size = buffer.readUInt32BE(offset)
+    const type = buffer.readUInt32BE(offset + 4)
+    
+    if (size < 8) break // Invalid box
+    
+    if (type === boxType) {
+      return { offset, size }
+    }
+    
+    offset += size
+  }
+  return null
+}
+
+// NEW: Helper to detect if a buffer contains a sync sample (Keyframe)
+function hasKeyframe(buffer: Buffer): boolean {
+  let offset = 0
+  while (offset + 8 <= buffer.length) {
+    const size = buffer.readUInt32BE(offset)
+    const type = buffer.readUInt32BE(offset + 4)
+    
+    // We are looking for moof -> traf -> trun
+    if (type === BOX_MOOF) {
+      let moofOffset = offset + 8
+      const moofEnd = offset + size
+      
+      while (moofOffset + 8 <= moofEnd) {
+        const boxSize = buffer.readUInt32BE(moofOffset)
+        const boxType = buffer.readUInt32BE(moofOffset + 4)
+        
+        if (boxType === BOX_TRAF) {
+          let trafOffset = moofOffset + 8
+          const trafEnd = moofOffset + boxSize
+          
+          while (trafOffset + 8 <= trafEnd) {
+            const subBoxSize = buffer.readUInt32BE(trafOffset)
+            const subBoxType = buffer.readUInt32BE(trafOffset + 4)
+            
+            if (subBoxType === BOX_TRUN) {
+              // Parse trun box to check for first_sample_flags or sample_flags
+              // Layout: Size(4) + Type(4) + Version(1) + Flags(3)
+              const flags = buffer.readUInt32BE(trafOffset + 8) & 0xFFFFFF
+              
+              const firstSampleFlagsPresent = (flags & 0x000004) !== 0
+              // const sampleFlagsPresent = (flags & 0x000400) !== 0
+              
+              // Skip header (12) + sample_count (4)
+              let cursor = trafOffset + 16
+              
+              const dataOffsetPresent = (flags & 0x000001) !== 0
+              if (dataOffsetPresent) cursor += 4
+              
+              if (firstSampleFlagsPresent && cursor + 4 <= trafEnd) {
+                const firstSampleFlags = buffer.readUInt32BE(cursor)
+                // Check sample_is_non_sync_sample (bit 17 typically, mask 0x010000)
+                // If 0, it IS a sync sample (Keyframe). If 1, it is NOT.
+                const isSync = (firstSampleFlags & 0x00010000) === 0
+                if (isSync) return true
+              }
+              
+              // If first_sample_flags is not present, checking individual samples 
+              // is possible but usually the first flags are enough for fragments.
+              // We assume if we found a trun with sync flag, we are good.
+            }
+            trafOffset += subBoxSize
+          }
+        }
+        moofOffset += boxSize
+      }
+    }
+    offset += size
+  }
+  return false
+}
+
+function hexDump(buffer: Buffer, maxBytes: number = 256): string {
+  const lines: string[] = []
+  const len = Math.min(buffer.length, maxBytes)
+  
+  for (let i = 0; i < len; i += 16) {
+    const hex = []
+    const ascii = []
+    for (let j = 0; j < 16; j++) {
+      if (i + j < len) {
+        hex.push(buffer[i + j].toString(16).padStart(2, '0'))
+        const c = buffer[i + j]
+        ascii.push(c >= 32 && c < 127 ? String.fromCharCode(c) : '.')
+      } else {
+        hex.push('  ')
+        ascii.push(' ')
+      }
+    }
+    lines.push(
+      i.toString(16).padStart(8, '0') + '  ' +
+      hex.slice(0, 8).join(' ') + '  ' + hex.slice(8).join(' ') + '  |' +
+      ascii.join('') + '|'
+    )
+  }
+  
+  if (buffer.length > maxBytes) {
+    lines.push(`... (${buffer.length - maxBytes} more bytes)`)
+  }
+  
+  return lines.join('\n')
+}
+
+function dumpFullBoxStructure(buffer: Buffer, prefix: string = ''): void {
+  let offset = 0
+  while (offset + 8 <= buffer.length) {
+    const size = buffer.readUInt32BE(offset)
+    const type = buffer.readUInt32BE(offset + 4)
+    const typeStr = String.fromCharCode((type >> 24) & 0xff, (type >> 16) & 0xff, (type >> 8) & 0xff, type & 0xff)
+    
+    if (size < 8 || offset + size > buffer.length) break
+    
+    console.log(prefix + typeStr + ' [' + size + ' bytes @ offset ' + offset + ']')
+    
+    const containerBoxes = ['moov', 'trak', 'mdia', 'minf', 'stbl', 'mvex', 'edts', 'udta', 'meta', 'dinf']
+    if (containerBoxes.includes(typeStr) && size > 8) {
+      dumpFullBoxStructure(buffer.subarray(offset + 8, offset + size), prefix + '  ')
+    }
+    
+    if (typeStr === 'ftyp' && size >= 16) {
+      const majorBrand = buffer.subarray(offset + 8, offset + 12).toString('ascii')
+      const minorVersion = buffer.readUInt32BE(offset + 12)
+      const compatBrands: string[] = []
+      for (let i = offset + 16; i + 4 <= offset + size; i += 4) {
+        compatBrands.push(buffer.subarray(i, i + 4).toString('ascii'))
+      }
+      console.log(prefix + '  major_brand: ' + majorBrand + ', minor: ' + minorVersion)
+      console.log(prefix + '  compatible_brands: ' + compatBrands.join(', '))
+    }
+    
+    if (typeStr === 'stsd' && size > 16) {
+      const entryCount = buffer.readUInt32BE(offset + 12)
+      console.log(prefix + '  entry_count: ' + entryCount)
+      if (size > 24) {
+        const entrySize = buffer.readUInt32BE(offset + 16)
+        const entryType = buffer.subarray(offset + 20, offset + 24).toString('ascii')
+        console.log(prefix + '  sample_entry: ' + entryType + ' [' + entrySize + ' bytes]')
+        console.log(prefix + '    >> ' + entryType + ' = ' + 
+          (entryType === 'avc1' ? 'H.264/AVC' : 
+           entryType === 'hvc1' || entryType === 'hev1' ? 'H.265/HEVC' : 
+           'Unknown codec'))
+      }
+    }
+    
+    offset += size
+  }
+}
+
+function extractInitSegment(buffer: Buffer): { init: Buffer, remaining: Buffer } | null {
+  const ftyp = findBox(buffer, BOX_FTYP)
+  if (!ftyp) return null
+  if (ftyp.offset !== 0) return null
+  if (ftyp.offset + ftyp.size > buffer.length) return null
+  
+  let offset = ftyp.size
+  while (offset + 8 <= buffer.length) {
+    const size = buffer.readUInt32BE(offset)
+    const type = buffer.readUInt32BE(offset + 4)
+    
+    if (size < 8) break
+    
+    if (type === BOX_MOOV) {
+      const initSize = offset + size
+      if (initSize <= buffer.length) {
+        console.log('[ProtectLivestream] Found complete init segment: ' + initSize + ' bytes')
+        return {
+          init: buffer.subarray(0, initSize),
+          remaining: buffer.subarray(initSize)
+        }
+      } else {
+        return null
+      }
+    }
+    
+    if (offset + size > buffer.length) return null
+    offset += size
+  }
+  return null
+}
+
+function hasFtypBox(buffer: Buffer): boolean {
+  return findBox(buffer, BOX_FTYP) !== null
+}
+
+function hasMoofBox(buffer: Buffer): boolean {
+  return findBox(buffer, BOX_MOOF) !== null
+}
+
+function fixFtypForMSE(initSegment: Buffer): Buffer {
+  if (initSegment.length < 12) return initSegment
+  const boxType = initSegment.readUInt32BE(4)
+  if (boxType !== 0x66747970) return initSegment
+
+  const fixed = Buffer.from(initSegment)
+  const ftypSize = fixed.readUInt32BE(0)
+
+  const majorBrand = fixed.subarray(8, 12).toString('ascii')
+  if (majorBrand === 'dash') {
+    fixed.write('isom', 8, 4, 'ascii')
+  }
+
+  for (let i = 16; i + 4 <= ftypSize && i + 4 <= fixed.length; i += 4) {
+    const brand = fixed.subarray(i, i + 4).toString('ascii')
+    if (brand === 'hvc1' || brand === 'hev1') {
+      fixed.write('avc1', i, 4, 'ascii')
+    }
+  }
+  return fixed
+}
+
+function extractCodecFromInit(initSegment: Buffer): string | null {
+  const codecs: string[] = []
+  
+  const avcCMarker = Buffer.from([0x61, 0x76, 0x63, 0x43]) // 'avcC'
+  const avcIdx = initSegment.indexOf(avcCMarker)
+  
+  if (avcIdx !== -1 && avcIdx + 8 <= initSegment.length) {
+    const configOffset = avcIdx + 4
+    if (configOffset + 4 <= initSegment.length) {
+      const profileIndication = initSegment[configOffset + 1]
+      const profileCompatibility = initSegment[configOffset + 2]
+      const levelIndication = initSegment[configOffset + 3]
+      
+      const videoCodec = `avc1.${profileIndication.toString(16).padStart(2, '0')}${profileCompatibility.toString(16).padStart(2, '0')}${levelIndication.toString(16).padStart(2, '0')}`
+      codecs.push(videoCodec)
+    }
+  }
+  
+  const mp4aMarker = Buffer.from([0x6d, 0x70, 0x34, 0x61]) // 'mp4a'
+  const mp4aIdx = initSegment.indexOf(mp4aMarker)
+  if (mp4aIdx !== -1) {
+    codecs.push('mp4a.40.2')
+  }
+  
+  return codecs.length > 0 ? codecs.join(', ') : null
+}
+
+export class ProtectLivestreamManager extends EventEmitter {
+  private api: ProtectApi
+  private host: string
+  private username: string
+  private password: string
+  private isLoggedIn: boolean = false
+  private sessions: Map<string, LivestreamSession> = new Map()
+  private cameras: ProtectCameraConfig[] = []
+  private channel: number = 1
+  private sessionCleanupTimeouts = new Map<string, NodeJS.Timeout>()
+
+  constructor(host: string, username: string, password: string, channel: number = 1) {
+    super()
+    this.host = host
+    this.username = username
+    this.password = password
+    this.channel = channel
+    this.api = new ProtectApi()
+  }
+  
+  setChannel(channel: number): void {
+    this.channel = channel
+  }
+
+  async connect(): Promise<boolean> {
+    if (this.isLoggedIn) return true
+    try {
+      console.log('[ProtectLivestream] Connecting to:', this.host)
+      const loginSuccess = await this.api.login(this.host, this.username, this.password)
+      if (!loginSuccess) return false
+      
+      await this.api.getBootstrap()
+      this.cameras = this.api.bootstrap?.cameras ?? []
+      this.isLoggedIn = true
+      return true
+    } catch (error) {
+      console.error('[ProtectLivestream] Connection error:', error)
+      return false
+    }
+  }
+
+  async disconnect(): Promise<void> {
+    for (const [cameraId, session] of this.sessions) {
+      try {
+        session.livestream.stop()
+      } catch (e) {
+        console.error('[ProtectLivestream] Error stopping stream:', cameraId, e)
+      }
+    }
+    this.sessions.clear()
+    this.isLoggedIn = false
+  }
+
+  getCameras(): ProtectCameraConfig[] {
+    return this.cameras
+  }
+
+  getCameraById(cameraId: string): ProtectCameraConfig | undefined {
+    return this.cameras.find(c => c.id === cameraId)
+  }
+
+  async startStream(
+    cameraId: string, 
+    onData: (data: Buffer) => void,
+    onCodec?: (codec: string) => void
+  ): Promise<boolean> {
+    if (!this.isLoggedIn) return false
+
+    const camera = this.getCameraById(cameraId)
+    if (!camera) return false
+
+    const existingSession = this.sessions.get(cameraId)
+    if (existingSession) {
+      console.log('[ProtectLivestream] Reusing existing stream for:', camera.name)
+      
+      const pendingCleanup = this.sessionCleanupTimeouts.get(cameraId)
+      if (pendingCleanup) {
+        clearTimeout(pendingCleanup)
+        this.sessionCleanupTimeouts.delete(cameraId)
+      }
+      
+      // Send codec immediately
+      if (onCodec) {
+        existingSession.codecCallbacks.add(onCodec)
+        if (existingSession.lastCodec) {
+          onCodec(existingSession.lastCodec)
+        }
+      }
+      
+      // If init segment exists, send it immediately to set up SourceBuffer
+      if (existingSession.initSegment && existingSession.foundInit) {
+        const initSegmentCopy = Buffer.from(existingSession.initSegment)
+        setTimeout(() => {
+          try {
+            onData(initSegmentCopy)
+            existingSession.initSegmentSent.add(onData)
+            
+            // KEY CHANGE: Do NOT add to main 'clients' yet.
+            // Add to 'waitingClients' to wait for the next Keyframe.
+            // This prevents black screen caused by joining mid-GOP.
+            console.log('[ProtectLivestream] Client queued waiting for Keyframe...')
+            existingSession.waitingClients.add(onData)
+          } catch (e) {
+            console.error('[ProtectLivestream] Error sending init segment:', e)
+          }
+        }, 100)
+      } else {
+        // If no init found yet, just add to normal clients
+        existingSession.clients.add(onData)
+      }
+      
+      return true
+    }
+
+    // --- Start New Stream ---
+    console.log('[ProtectLivestream] Starting new stream for:', camera.name)
+
+    try {
+      const livestream = this.api.createLivestream()
+      
+      const session: LivestreamSession = {
+        cameraId,
+        channel: this.channel,
+        livestream,
+        clients: new Set([onData]),
+        waitingClients: new Set(), // Initialize waiting list
+        codecCallbacks: onCodec ? new Set([onCodec]) : new Set(),
+        lastCodec: null,
+        initSegment: null,
+        initSegmentSent: new Set(),
+        pendingBuffer: [],
+        foundInit: false,
+        dataCount: 0
+      }
+      this.sessions.set(cameraId, session)
+      
+      livestream.on('close', () => {
+        console.log('[ProtectLivestream] Stream closed for:', camera.name)
+        this.sessions.delete(cameraId)
+      })
+
+      // Fallback codec logic...
+      const channelConfig = camera.channels?.find(ch => ch.id === this.channel)
+      const height = channelConfig?.height || 1080
+      let fallbackCodec = height > 1080 ? 'avc1.640028' : (height > 720 ? 'avc1.4d4028' : 'avc1.4d401f')
+      session.lastCodec = fallbackCodec
+
+      const started = await livestream.start(cameraId, this.channel, { 
+        useStream: true,
+        segmentLength: 100
+      })
+      
+      if (!started) {
+        this.sessions.delete(cameraId)
+        return false
+      }
+      
+      const stream = livestream.stream
+      if (!stream) {
+        this.sessions.delete(cameraId)
+        return false
+      }
+      
+      stream.on('data', (data: Buffer) => {
+        session.dataCount++
+        
+        // --- 1. Init Segment Discovery ---
+        if (!session.foundInit) {
+          session.pendingBuffer.push(data)
+          const combined = Buffer.concat(session.pendingBuffer)
+          const result = extractInitSegment(combined)
+          
+          if (result) {
+            session.initSegment = fixFtypForMSE(result.init)
+            session.foundInit = true
+            console.log('[ProtectLivestream] Init segment found for', camera.name)
+            
+            const extractedCodec = extractCodecFromInit(session.initSegment)
+            if (extractedCodec) session.lastCodec = extractedCodec
+            
+            // Broadcast codec
+            for (const callback of session.codecCallbacks) callback(session.lastCodec!)
+            
+            // Send Init + Remaining to all initial clients
+            for (const client of session.clients) {
+              if (!session.initSegmentSent.has(client)) {
+                client(session.initSegment)
+                session.initSegmentSent.add(client)
+              }
+              if (result.remaining.length > 0) client(result.remaining)
+            }
+            session.pendingBuffer = []
+          } else if (session.pendingBuffer.length > 50) {
+             // Timeout fallback
+             session.foundInit = true
+             for (const client of session.clients) client(combined)
+             session.pendingBuffer = []
+          }
+          return
+        }
+        
+        // --- 2. Keyframe Detection & Queue Processing ---
+        // Check if this chunk has a keyframe
+        if (session.waitingClients.size > 0 && hasKeyframe(data)) {
+          console.log('[ProtectLivestream] Keyframe detected! Promoting', session.waitingClients.size, 'waiting clients.')
+          for (const client of session.waitingClients) {
+            session.clients.add(client)
+          }
+          session.waitingClients.clear()
+        }
+
+        // --- 3. Broadcast to Active Clients Only ---
+        for (const client of session.clients) {
+          try {
+            // Ensure they got init segment
+            if (session.initSegment && !session.initSegmentSent.has(client)) {
+              client(session.initSegment)
+              session.initSegmentSent.add(client)
+            }
+            client(data)
+          } catch (e) {
+            console.error('[ProtectLivestream] Error sending chunk:', e)
+          }
+        }
+        
+        // Note: waitingClients do NOT receive 'data' yet. They effectively drop 
+        // P-frames until the next Keyframe arrives, preventing the black screen.
+      })
+      
+      stream.on('error', (err) => console.error('[ProtectLivestream] Stream error:', err))
+      stream.on('end', () => this.sessions.delete(cameraId))
+      
+      return true
+    } catch (error) {
+      console.error('[ProtectLivestream] Failed to start stream:', error)
+      this.sessions.delete(cameraId)
+      return false
+    }
+  }
+
+  stopStream(cameraId: string, onData?: (data: Buffer) => void, onCodec?: (codec: string) => void): void {
+    const session = this.sessions.get(cameraId)
+    if (!session) return
+
+    if (onData) {
+      session.clients.delete(onData)
+      session.waitingClients.delete(onData) // Remove from waiting list too
+      session.initSegmentSent.delete(onData)
+      if (onCodec) session.codecCallbacks.delete(onCodec)
+      
+      if (session.clients.size === 0 && session.waitingClients.size === 0) {
+        const existingTimeout = this.sessionCleanupTimeouts.get(cameraId)
+        if (existingTimeout) clearTimeout(existingTimeout)
+        
+        const timeout = setTimeout(() => {
+          const s = this.sessions.get(cameraId)
+          if (s && s.clients.size === 0 && s.waitingClients.size === 0) {
+            console.log('[ProtectLivestream] Stopping stream:', cameraId)
+            try { s.livestream.stop() } catch (e) {}
+            this.sessions.delete(cameraId)
+          }
+          this.sessionCleanupTimeouts.delete(cameraId)
+        }, 3000)
+        this.sessionCleanupTimeouts.set(cameraId, timeout)
+      }
+    } else {
+      try { session.livestream.stop() } catch (e) {}
+      this.sessions.delete(cameraId)
+    }
+  }
+
+  isConnected(): boolean { return this.isLoggedIn }
+  getActiveStreams(): string[] { return Array.from(this.sessions.keys()) }
+}
+
+let manager: ProtectLivestreamManager | null = null
+let managerInitPromise: Promise<ProtectLivestreamManager> | null = null
+
+export function getProtectLivestreamManager(): ProtectLivestreamManager | null {
+  return manager
+}
+
+export async function initProtectLivestreamManager(
+  host: string, username: string, password: string, channel: number = 1
+): Promise<ProtectLivestreamManager> {
+  if (manager?.isConnected()) {
+    manager.setChannel(channel)
+    return manager
+  }
+  if (managerInitPromise) return managerInitPromise
+  
+  managerInitPromise = (async () => {
+    try {
+      if (manager) await manager.disconnect()
+      manager = new ProtectLivestreamManager(host, username, password, channel)
+      if (!await manager.connect()) throw new Error('Failed to connect to UniFi Protect')
+      return manager
+    } finally {
+      managerInitPromise = null
+    }
+  })()
+  return managerInitPromise
+}
+
+export async function shutdownProtectLivestreamManager(): Promise<void> {
+  if (manager) {
+    await manager.disconnect()
+    manager = null
+  }
+}
+
+```
+
+This setup ensures that any new client connecting to an existing stream will:
+
+1. Receive the **Init Segment** immediately (allowing the browser to create the `<video>` SourceBuffer).
+2. Wait in `waitingClients` queue.
+3. Receive **no** P-frame data (avoiding the black screen/stall).
+4. Once a **Keyframe** arrives (detected by `hasKeyframe`), they join the main group and start playing instantly from a valid frame.
+
+This video explains how Keyframes (I-frames) work in streaming and why missing them causes playback issues [Understanding I-Frame, P-Frame and B-Frame in Video Compression](https://www.google.com/search?q=https://www.youtube.com/watch%3Fv%3DH74c3-bV9NY).
