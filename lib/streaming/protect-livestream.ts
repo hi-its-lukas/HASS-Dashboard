@@ -8,6 +8,8 @@ interface LivestreamSession {
   clients: Set<(data: Buffer) => void>
   codecCallbacks: Set<(codec: string) => void>
   lastCodec: string | null
+  initSegment: Buffer | null
+  dataCount: number
 }
 
 export class ProtectLivestreamManager extends EventEmitter {
@@ -127,10 +129,13 @@ export class ProtectLivestreamManager extends EventEmitter {
         livestream,
         clients: new Set([onData]),
         codecCallbacks: onCodec ? new Set([onCodec]) : new Set(),
-        lastCodec: null
+        lastCodec: null,
+        initSegment: null,
+        dataCount: 0
       }
       this.sessions.set(cameraId, session)
       
+      // Listen for codec info
       livestream.on('codec', (codecInfo: string) => {
         console.log('[ProtectLivestream] Codec info for', camera.name, ':', codecInfo)
         session.lastCodec = codecInfo
@@ -143,12 +148,46 @@ export class ProtectLivestreamManager extends EventEmitter {
         }
       })
 
-      livestream.on('message', (data: Buffer) => {
+      // Listen for initialization segment (ftyp + moov boxes)
+      livestream.on('initsegment', (data: Buffer) => {
+        console.log('[ProtectLivestream] Init segment received for', camera.name, '- size:', data.length)
+        session.initSegment = data
+        // Send init segment to all clients
         for (const client of session.clients) {
           try {
             client(data)
           } catch (e) {
-            console.error('[ProtectLivestream] Error sending data to client:', e)
+            console.error('[ProtectLivestream] Error sending init segment:', e)
+          }
+        }
+      })
+
+      // Listen for regular fMP4 segments (moof + mdat)
+      livestream.on('segment', (data: Buffer) => {
+        session.dataCount++
+        if (session.dataCount <= 3 || session.dataCount % 100 === 0) {
+          console.log('[ProtectLivestream] Segment #' + session.dataCount + ' for', camera.name, '- size:', data.length)
+        }
+        for (const client of session.clients) {
+          try {
+            client(data)
+          } catch (e) {
+            console.error('[ProtectLivestream] Error sending segment:', e)
+          }
+        }
+      })
+
+      // Also listen for 'message' as fallback (complete segments)
+      livestream.on('message', (data: Buffer) => {
+        session.dataCount++
+        if (session.dataCount <= 3 || session.dataCount % 100 === 0) {
+          console.log('[ProtectLivestream] Message #' + session.dataCount + ' for', camera.name, '- size:', data.length)
+        }
+        for (const client of session.clients) {
+          try {
+            client(data)
+          } catch (e) {
+            console.error('[ProtectLivestream] Error sending message:', e)
           }
         }
       })
@@ -158,6 +197,7 @@ export class ProtectLivestreamManager extends EventEmitter {
         this.sessions.delete(cameraId)
       })
 
+      // Start the stream with cameraId and channel
       const started = await livestream.start(cameraId, this.channel)
       
       if (!started) {
