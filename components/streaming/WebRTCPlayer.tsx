@@ -23,10 +23,13 @@ export default function WebRTCPlayer({
   const bufferQueue = useRef<ArrayBuffer[]>([])
   const pendingCodec = useRef<string | null>(null)
   const sourceOpenReady = useRef(false)
+  const isConnectedRef = useRef(false)
   const [status, setStatus] = useState<'idle' | 'connecting' | 'connected' | 'error'>('idle')
   const [error, setError] = useState<string | null>(null)
 
   const cleanup = useCallback(() => {
+    console.log('[LivestreamPlayer] Cleanup called')
+    isConnectedRef.current = false
     if (wsRef.current) {
       wsRef.current.close()
       wsRef.current = null
@@ -70,6 +73,8 @@ export default function WebRTCPlayer({
     const ms = mediaSourceRef.current
     const codec = pendingCodec.current
     
+    console.log('[LivestreamPlayer] tryInitializeSourceBuffer - codec:', codec, 'sourceOpenReady:', sourceOpenReady.current, 'readyState:', ms?.readyState)
+    
     if (!ms || !codec || !sourceOpenReady.current) {
       return false
     }
@@ -80,26 +85,23 @@ export default function WebRTCPlayer({
     }
     
     if (sourceBufferRef.current) {
+      console.log('[LivestreamPlayer] SourceBuffer already exists')
       return true
     }
     
-    let mimeCodec = codec
-    if (codec && !codec.startsWith('video/')) {
-      mimeCodec = `video/mp4; codecs="${codec}"`
-    }
-    if (!mimeCodec) {
-      mimeCodec = 'video/mp4; codecs="avc1.640028"'
-    }
+    // Format codec for MSE
+    let mimeCodec = `video/mp4; codecs="${codec}"`
     
-    console.log('[LivestreamPlayer] Initializing SourceBuffer with codec:', mimeCodec)
+    console.log('[LivestreamPlayer] Checking codec support:', mimeCodec)
     
     if (!MediaSource.isTypeSupported(mimeCodec)) {
-      console.error('[LivestreamPlayer] Codec not supported:', mimeCodec)
-      const videoOnly = `video/mp4; codecs="${codec.split(',')[0]}"`
-      if (MediaSource.isTypeSupported(videoOnly)) {
-        console.log('[LivestreamPlayer] Falling back to video-only:', videoOnly)
-        mimeCodec = videoOnly
-      } else {
+      console.warn('[LivestreamPlayer] Full codec not supported, trying video-only')
+      // Try video-only (remove audio codec)
+      const videoCodec = codec.split(',')[0].trim()
+      mimeCodec = `video/mp4; codecs="${videoCodec}"`
+      
+      if (!MediaSource.isTypeSupported(mimeCodec)) {
+        console.error('[LivestreamPlayer] Video codec not supported:', mimeCodec)
         setError('Video codec not supported by browser')
         setStatus('error')
         return false
@@ -107,6 +109,7 @@ export default function WebRTCPlayer({
     }
     
     try {
+      console.log('[LivestreamPlayer] Creating SourceBuffer with:', mimeCodec)
       const sb = ms.addSourceBuffer(mimeCodec)
       sourceBufferRef.current = sb
       sb.mode = 'segments'
@@ -119,9 +122,11 @@ export default function WebRTCPlayer({
         console.error('[LivestreamPlayer] SourceBuffer error:', e)
       })
       
-      console.log('[LivestreamPlayer] SourceBuffer created successfully')
+      console.log('[LivestreamPlayer] SourceBuffer created successfully!')
+      isConnectedRef.current = true
       setStatus('connected')
       
+      // Flush any queued chunks
       if (bufferQueue.current.length > 0) {
         console.log('[LivestreamPlayer] Flushing', bufferQueue.current.length, 'queued chunks')
         processQueue()
@@ -136,7 +141,10 @@ export default function WebRTCPlayer({
     }
   }, [processQueue])
 
-  const startStreaming = useCallback(async () => {
+  // Use a ref for startStreaming to avoid dependency issues
+  const startStreamingRef = useRef<() => void>()
+  
+  startStreamingRef.current = () => {
     if (!videoRef.current) return
 
     cleanup()
@@ -179,7 +187,7 @@ export default function WebRTCPlayer({
         if (typeof event.data === 'string') {
           try {
             const msg = JSON.parse(event.data)
-            console.log('[LivestreamPlayer] Received message:', msg.type)
+            console.log('[LivestreamPlayer] Received message:', msg.type, msg.codec || '')
             
             if (msg.type === 'stream_started') {
               console.log('[LivestreamPlayer] Stream started for camera:', msg.cameraId)
@@ -202,13 +210,15 @@ export default function WebRTCPlayer({
       
       ws.onerror = (e) => {
         console.error('[LivestreamPlayer] WebSocket error:', e)
-        setError('Connection error')
-        setStatus('error')
+        if (!isConnectedRef.current) {
+          setError('Connection error')
+          setStatus('error')
+        }
       }
       
       ws.onclose = (e) => {
         console.log('[LivestreamPlayer] WebSocket closed:', e.code, e.reason)
-        if (status !== 'error') {
+        if (!isConnectedRef.current) {
           setError('Stream disconnected')
           setStatus('error')
         }
@@ -221,7 +231,11 @@ export default function WebRTCPlayer({
       setStatus('error')
       onError?.(errorMessage)
     }
-  }, [cameraId, onError, cleanup, appendBuffer, tryInitializeSourceBuffer, status])
+  }
+
+  const startStreaming = useCallback(() => {
+    startStreamingRef.current?.()
+  }, [])
 
   useEffect(() => {
     if (autoPlay) {
@@ -233,7 +247,7 @@ export default function WebRTCPlayer({
   }, [autoPlay, cameraId, cleanup, startStreaming])
 
   return (
-    <div className={`relative ${className}`}>
+    <div className={`relative bg-black ${className}`}>
       <video
         ref={videoRef}
         autoPlay
