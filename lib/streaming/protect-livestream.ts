@@ -107,6 +107,36 @@ function hasMoofBox(buffer: Buffer): boolean {
   return findBox(buffer, BOX_MOOF) !== null
 }
 
+function extractCodecFromInit(initSegment: Buffer): string | null {
+  // Search for avcC box inside moov/trak/mdia/minf/stbl/stsd/avc1/avcC
+  // The avcC box contains the actual codec parameters
+  // For simplicity, search for 'avcC' marker and extract profile/level
+  const avcCMarker = Buffer.from([0x61, 0x76, 0x63, 0x43]) // 'avcC'
+  const idx = initSegment.indexOf(avcCMarker)
+  
+  if (idx === -1 || idx + 8 > initSegment.length) {
+    console.log('[ProtectLivestream] avcC box not found in init segment')
+    return null
+  }
+  
+  // avcC structure: configurationVersion(1) + AVCProfileIndication(1) + profile_compatibility(1) + AVCLevelIndication(1)
+  const configOffset = idx + 4 // Skip 'avcC' marker
+  if (configOffset + 4 > initSegment.length) {
+    return null
+  }
+  
+  const profileIndication = initSegment[configOffset + 1]
+  const profileCompatibility = initSegment[configOffset + 2]
+  const levelIndication = initSegment[configOffset + 3]
+  
+  // Format: avc1.XXYYZZ where XX=profile, YY=compatibility, ZZ=level
+  const codec = `avc1.${profileIndication.toString(16).padStart(2, '0')}${profileCompatibility.toString(16).padStart(2, '0')}${levelIndication.toString(16).padStart(2, '0')}`
+  console.log('[ProtectLivestream] Extracted codec from init segment:', codec, 
+    '(profile:', profileIndication, 'compat:', profileCompatibility, 'level:', levelIndication, ')')
+  
+  return codec
+}
+
 export class ProtectLivestreamManager extends EventEmitter {
   private api: ProtectApi
   private host: string
@@ -308,6 +338,21 @@ export class ProtectLivestreamManager extends EventEmitter {
             session.initSegment = result.init
             session.foundInit = true
             console.log('[ProtectLivestream] Init segment cached for', camera.name, '- size:', result.init.length)
+            
+            // Extract and update codec from init segment
+            const extractedCodec = extractCodecFromInit(result.init)
+            if (extractedCodec && extractedCodec !== session.lastCodec) {
+              console.log('[ProtectLivestream] Updating codec for', camera.name, 'from', session.lastCodec, 'to', extractedCodec)
+              session.lastCodec = extractedCodec
+              // Send updated codec to all clients
+              for (const callback of session.codecCallbacks) {
+                try {
+                  callback(extractedCodec)
+                } catch (e) {
+                  console.error('[ProtectLivestream] Error sending updated codec:', e)
+                }
+              }
+            }
             
             // Send init segment to all clients first
             for (const client of session.clients) {
