@@ -135,7 +135,7 @@ export class ProtectLivestreamManager extends EventEmitter {
       }
       this.sessions.set(cameraId, session)
       
-      // Listen for codec info
+      // Listen for codec info (emitted before stream data)
       livestream.on('codec', (codecInfo: string) => {
         console.log('[ProtectLivestream] Codec info for', camera.name, ':', codecInfo)
         session.lastCodec = codecInfo
@@ -148,57 +148,17 @@ export class ProtectLivestreamManager extends EventEmitter {
         }
       })
 
-      // Listen for initialization segment (ftyp + moov boxes)
-      livestream.on('initsegment', (data: Buffer) => {
-        console.log('[ProtectLivestream] Init segment received for', camera.name, '- size:', data.length)
-        session.initSegment = data
-        // Send init segment to all clients
-        for (const client of session.clients) {
-          try {
-            client(data)
-          } catch (e) {
-            console.error('[ProtectLivestream] Error sending init segment:', e)
-          }
-        }
-      })
-
-      // Listen for regular fMP4 segments (moof + mdat)
-      livestream.on('segment', (data: Buffer) => {
-        session.dataCount++
-        if (session.dataCount <= 3 || session.dataCount % 100 === 0) {
-          console.log('[ProtectLivestream] Segment #' + session.dataCount + ' for', camera.name, '- size:', data.length)
-        }
-        for (const client of session.clients) {
-          try {
-            client(data)
-          } catch (e) {
-            console.error('[ProtectLivestream] Error sending segment:', e)
-          }
-        }
-      })
-
-      // Also listen for 'message' as fallback (complete segments)
-      livestream.on('message', (data: Buffer) => {
-        session.dataCount++
-        if (session.dataCount <= 3 || session.dataCount % 100 === 0) {
-          console.log('[ProtectLivestream] Message #' + session.dataCount + ' for', camera.name, '- size:', data.length)
-        }
-        for (const client of session.clients) {
-          try {
-            client(data)
-          } catch (e) {
-            console.error('[ProtectLivestream] Error sending message:', e)
-          }
-        }
-      })
-
       livestream.on('close', () => {
         console.log('[ProtectLivestream] Stream closed for:', camera.name)
         this.sessions.delete(cameraId)
       })
 
-      // Start the stream with cameraId and channel
-      const started = await livestream.start(cameraId, this.channel)
+      // Start the stream with useStream: true to use Node.js Readable stream interface
+      // This is REQUIRED in unifi-protect v4.27+ for fMP4 data to flow
+      const started = await livestream.start(cameraId, this.channel, { 
+        useStream: true,
+        segmentLength: 100
+      })
       
       if (!started) {
         console.error('[ProtectLivestream] Failed to start stream for:', camera.name)
@@ -206,7 +166,40 @@ export class ProtectLivestreamManager extends EventEmitter {
         return false
       }
       
-      console.log('[ProtectLivestream] Stream started for:', camera.name)
+      // Get the Readable stream and consume fMP4 data from it
+      const stream = livestream.stream
+      if (!stream) {
+        console.error('[ProtectLivestream] Stream interface not available for:', camera.name)
+        this.sessions.delete(cameraId)
+        return false
+      }
+      
+      console.log('[ProtectLivestream] Stream started for:', camera.name, '- using stream interface')
+      
+      // Consume fMP4 chunks from the stream
+      stream.on('data', (data: Buffer) => {
+        session.dataCount++
+        if (session.dataCount <= 5 || session.dataCount % 100 === 0) {
+          console.log('[ProtectLivestream] Chunk #' + session.dataCount + ' for', camera.name, '- size:', data.length)
+        }
+        for (const client of session.clients) {
+          try {
+            client(data)
+          } catch (e) {
+            console.error('[ProtectLivestream] Error sending chunk:', e)
+          }
+        }
+      })
+      
+      stream.on('error', (err) => {
+        console.error('[ProtectLivestream] Stream error for', camera.name, ':', err.message)
+      })
+      
+      stream.on('end', () => {
+        console.log('[ProtectLivestream] Stream ended for:', camera.name)
+        this.sessions.delete(cameraId)
+      })
+      
       return true
     } catch (error) {
       console.error('[ProtectLivestream] Failed to start stream:', error)
