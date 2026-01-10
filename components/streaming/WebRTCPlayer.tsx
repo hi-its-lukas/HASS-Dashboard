@@ -148,6 +148,13 @@ export default function WebRTCPlayer({
         processQueue()
       }
       
+      // Ensure video starts playing
+      if (videoRef.current) {
+        videoRef.current.play().catch(e => {
+          console.log('[LivestreamPlayer] Auto-play blocked:', e.message)
+        })
+      }
+      
       return true
     } catch (e) {
       console.error('[LivestreamPlayer] Failed to add source buffer:', e)
