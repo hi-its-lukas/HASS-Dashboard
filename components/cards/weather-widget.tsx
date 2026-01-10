@@ -118,7 +118,7 @@ export function WeatherWidget({ weatherEntityId, temperatureSensorId }: WeatherW
                 <Thermometer className="w-4 h-4" />
                 <span className="text-lg font-semibold">{Math.round(indoorTemp)}{tempUnit}</span>
               </div>
-              <p className="text-text-secondary text-xs">Innen</p>
+              <p className="text-text-secondary text-xs">Außen</p>
             </div>
           )}
           <ChevronRight className="w-5 h-5 text-text-muted group-hover:text-white transition-colors" />
