@@ -69,14 +69,30 @@ export default function WebRTCPlayer({
   const initializeMediaSource = useCallback((codec: string) => {
     if (!videoRef.current || !mediaSourceRef.current) return false
     
-    const mimeCodec = codec || 'video/mp4; codecs="avc1.640028"'
+    // Format codec for MSE - unifi-protect sends "avc1.4d401f,mp4a.40.2"
+    // but MSE needs "video/mp4; codecs=\"avc1.4d401f,mp4a.40.2\""
+    let mimeCodec = codec
+    if (codec && !codec.startsWith('video/')) {
+      mimeCodec = `video/mp4; codecs="${codec}"`
+    }
+    if (!mimeCodec) {
+      mimeCodec = 'video/mp4; codecs="avc1.640028"'
+    }
+    
     console.log('[LivestreamPlayer] Initializing with codec:', mimeCodec)
     
     if (!MediaSource.isTypeSupported(mimeCodec)) {
       console.error('[LivestreamPlayer] Codec not supported:', mimeCodec)
-      setError('Video codec not supported by browser')
-      setStatus('error')
-      return false
+      // Try fallback without audio
+      const videoOnly = `video/mp4; codecs="${codec.split(',')[0]}"`
+      if (MediaSource.isTypeSupported(videoOnly)) {
+        console.log('[LivestreamPlayer] Falling back to video-only:', videoOnly)
+        mimeCodec = videoOnly
+      } else {
+        setError('Video codec not supported by browser')
+        setStatus('error')
+        return false
+      }
     }
     
     try {
