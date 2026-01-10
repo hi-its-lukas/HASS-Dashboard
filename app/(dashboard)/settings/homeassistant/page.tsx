@@ -291,6 +291,7 @@ export default function HomeAssistantSettingsPage() {
             calendars: data.layoutConfig.calendars || [],
             cameras: data.layoutConfig.cameras || [],
             energy: data.layoutConfig.energy || {},
+            vacuum: data.layoutConfig.vacuum || undefined,
             intercoms: data.layoutConfig.intercoms || [],
           }))
         }
@@ -1220,6 +1221,229 @@ export default function HomeAssistantSettingsPage() {
                             </option>
                           ))}
                         </optgroup>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <div className="border border-white/5 rounded-xl overflow-hidden">
+              <button
+                onClick={() => toggleSection('vacuum')}
+                className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <Sparkles className="w-5 h-5 text-purple-400" />
+                  <span className="text-white font-medium">Staubsauger</span>
+                </div>
+                {expandedSections.vacuum ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
+              </button>
+              {expandedSections.vacuum && (
+                <div className="p-4 space-y-4">
+                  <p className="text-sm text-gray-400">
+                    Konfiguriere deinen Saugroboter und optionale Sensoren für erweiterte Statusinformationen.
+                  </p>
+                  
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm text-gray-400 mb-1">Staubsauger-Entity</label>
+                      <select
+                        value={config.vacuum?.entityId || ''}
+                        onChange={(e) => setConfig(prev => ({
+                          ...prev,
+                          vacuum: { ...prev.vacuum, entityId: e.target.value } as VacuumConfig
+                        }))}
+                        className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                      >
+                        <option value="">-- Nicht konfiguriert --</option>
+                        {discovered?.vacuums?.map(entity => (
+                          <option key={entity.entity_id} value={entity.entity_id}>
+                            {getFriendlyName(entity)} ({entity.state})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm text-gray-400 mb-1">Batterie-Level (%)</label>
+                      <select
+                        value={config.vacuum?.batteryEntityId || ''}
+                        onChange={(e) => setConfig(prev => ({
+                          ...prev,
+                          vacuum: { ...prev.vacuum, batteryEntityId: e.target.value || undefined } as VacuumConfig
+                        }))}
+                        className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                      >
+                        <option value="">-- Automatisch (aus Vacuum-Attributen) --</option>
+                        {discovered?.sensors?.filter(s => 
+                          s.attributes?.device_class === 'battery' || 
+                          s.attributes?.unit_of_measurement === '%'
+                        ).map(sensor => (
+                          <option key={sensor.entity_id} value={sensor.entity_id}>
+                            {getFriendlyName(sensor)} ({sensor.state}%)
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm text-gray-400 mb-1">Status-Sensor</label>
+                      <select
+                        value={config.vacuum?.statusEntityId || ''}
+                        onChange={(e) => setConfig(prev => ({
+                          ...prev,
+                          vacuum: { ...prev.vacuum, statusEntityId: e.target.value || undefined } as VacuumConfig
+                        }))}
+                        className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                      >
+                        <option value="">-- Nicht konfiguriert --</option>
+                        {discovered?.sensors?.map(sensor => (
+                          <option key={sensor.entity_id} value={sensor.entity_id}>
+                            {getFriendlyName(sensor)} ({sensor.state})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm text-gray-400 mb-1">Aktueller Raum</label>
+                      <select
+                        value={config.vacuum?.currentRoomEntityId || ''}
+                        onChange={(e) => setConfig(prev => ({
+                          ...prev,
+                          vacuum: { ...prev.vacuum, currentRoomEntityId: e.target.value || undefined } as VacuumConfig
+                        }))}
+                        className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                      >
+                        <option value="">-- Nicht konfiguriert --</option>
+                        {discovered?.sensors?.map(sensor => (
+                          <option key={sensor.entity_id} value={sensor.entity_id}>
+                            {getFriendlyName(sensor)} ({sensor.state})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm text-gray-400 mb-1">Reinigungsfortschritt (%)</label>
+                      <select
+                        value={config.vacuum?.cleaningProgressEntityId || ''}
+                        onChange={(e) => setConfig(prev => ({
+                          ...prev,
+                          vacuum: { ...prev.vacuum, cleaningProgressEntityId: e.target.value || undefined } as VacuumConfig
+                        }))}
+                        className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                      >
+                        <option value="">-- Nicht konfiguriert --</option>
+                        {discovered?.sensors?.filter(s => s.attributes?.unit_of_measurement === '%').map(sensor => (
+                          <option key={sensor.entity_id} value={sensor.entity_id}>
+                            {getFriendlyName(sensor)} ({sensor.state}%)
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm text-gray-400 mb-1">Gereinigte Fläche (m²)</label>
+                      <select
+                        value={config.vacuum?.cleaningAreaEntityId || ''}
+                        onChange={(e) => setConfig(prev => ({
+                          ...prev,
+                          vacuum: { ...prev.vacuum, cleaningAreaEntityId: e.target.value || undefined } as VacuumConfig
+                        }))}
+                        className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                      >
+                        <option value="">-- Nicht konfiguriert --</option>
+                        {discovered?.sensors?.filter(s => 
+                          s.attributes?.unit_of_measurement === 'm²' || 
+                          s.entity_id.includes('area') ||
+                          s.entity_id.includes('flache')
+                        ).map(sensor => (
+                          <option key={sensor.entity_id} value={sensor.entity_id}>
+                            {getFriendlyName(sensor)} ({sensor.state})
+                          </option>
+                        ))}
+                        <optgroup label="Alle Sensoren">
+                          {discovered?.sensors?.map(sensor => (
+                            <option key={sensor.entity_id} value={sensor.entity_id}>
+                              {getFriendlyName(sensor)} ({sensor.state})
+                            </option>
+                          ))}
+                        </optgroup>
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm text-gray-400 mb-1">Reinigungszeit (min)</label>
+                      <select
+                        value={config.vacuum?.cleaningTimeEntityId || ''}
+                        onChange={(e) => setConfig(prev => ({
+                          ...prev,
+                          vacuum: { ...prev.vacuum, cleaningTimeEntityId: e.target.value || undefined } as VacuumConfig
+                        }))}
+                        className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                      >
+                        <option value="">-- Nicht konfiguriert --</option>
+                        {discovered?.sensors?.filter(s => 
+                          s.entity_id.includes('time') || 
+                          s.entity_id.includes('duration') ||
+                          s.entity_id.includes('dauer')
+                        ).map(sensor => (
+                          <option key={sensor.entity_id} value={sensor.entity_id}>
+                            {getFriendlyName(sensor)} ({sensor.state})
+                          </option>
+                        ))}
+                        <optgroup label="Alle Sensoren">
+                          {discovered?.sensors?.map(sensor => (
+                            <option key={sensor.entity_id} value={sensor.entity_id}>
+                              {getFriendlyName(sensor)} ({sensor.state})
+                            </option>
+                          ))}
+                        </optgroup>
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm text-gray-400 mb-1">Wischmop-Status (angebracht/nicht angebracht)</label>
+                      <select
+                        value={config.vacuum?.mopAttachedEntityId || ''}
+                        onChange={(e) => setConfig(prev => ({
+                          ...prev,
+                          vacuum: { ...prev.vacuum, mopAttachedEntityId: e.target.value || undefined } as VacuumConfig
+                        }))}
+                        className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                      >
+                        <option value="">-- Nicht konfiguriert --</option>
+                        {discovered?.binarySensors?.map(sensor => (
+                          <option key={sensor.entity_id} value={sensor.entity_id}>
+                            {getFriendlyName(sensor)} ({sensor.state})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm text-gray-400 mb-1">Volle Reinigung starten (Button)</label>
+                      <select
+                        value={config.vacuum?.fullCleanButtonEntityId || ''}
+                        onChange={(e) => setConfig(prev => ({
+                          ...prev,
+                          vacuum: { ...prev.vacuum, fullCleanButtonEntityId: e.target.value || undefined } as VacuumConfig
+                        }))}
+                        className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                      >
+                        <option value="">-- Vacuum-Start verwenden --</option>
+                        {discovered?.buttons?.map(entity => (
+                          <option key={entity.entity_id} value={entity.entity_id}>
+                            {getFriendlyName(entity)}
+                          </option>
+                        ))}
+                        {discovered?.scripts?.map(entity => (
+                          <option key={entity.entity_id} value={entity.entity_id}>
+                            {getFriendlyName(entity)}
+                          </option>
+                        ))}
                       </select>
                     </div>
                   </div>
