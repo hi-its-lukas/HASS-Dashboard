@@ -1,0 +1,125 @@
+Hier ist der detaillierte Audit-Bericht für das Repository **HASS-Dashboard** (`hi-its-lukas/hass-dashboard`).
+
+Basierend auf den bereitgestellten Dateien wurde eine Tiefenanalyse durchgeführt.
+
+---
+
+### **Audit Report: HASS-Dashboard**
+
+**Projekt-Typ:** Next.js Webanwendung (Dashboard für Home Assistant)
+**Technologie-Stack:** Next.js 14, TypeScript, Prisma (SQLite), WebSocket (Custom Proxy), Docker.
+
+---
+
+### **1. Sicherheit (Security Audit)**
+
+**Gesamtbewertung:** ⭐⭐⭐⭐⭐ (Exzellent für ein Hobby/Open-Source Projekt)
+
+Das Sicherheitskonzept hebt sich deutlich von vielen Standard-Dashboards ab. Die Entscheidung, den Home Assistant (HA) Token **nicht** an den Client zu senden, ist architektonisch hervorragend gelöst.
+
+* **Token-Sicherheit (Positiv):**
+* Das Dashboard agiert als "Middleware". Der `ws-proxy.ts` fängt WebSocket-Verbindungen ab und authentifiziert sie gegen die lokale SQLite-Datenbank, bevor er eine Verbindung zu Home Assistant herstellt. Der HA-Token (`ha_long_lived_token`) verlässt niemals den Server und wird in der Datenbank verschlüsselt gespeichert.
+* Es wird eine AES-256-GCM Verschlüsselung für sensible Daten (Tokens) verwendet, was Industriestandard entspricht.
+
+
+* **Authentifizierung:**
+* Die Session-IDs werden mittels `crypto.randomBytes(32)` kryptografisch sicher generiert.
+* Cookies werden mit `HttpOnly`, `Secure` (in Prod) und `SameSite=Lax` gesetzt, was XSS-Angriffe auf den Session-Token effektiv verhindert.
+* Login-Route nutzt `bcryptjs` zum Hashen von Passwörtern. Es wird sogar ein `DUMMY_HASH` verwendet, um Timing-Attacks bei ungültigen Usernamen zu verhindern.
+
+
+* **Schwachstellen / Risiken:**
+* **Encryption Key Fallback:** Wenn keine Umgebungsvariable `ENCRYPTION_KEY` gesetzt ist, sucht der Server nach einer Datei `.encryption_key` im Datenverzeichnis. Wenn Docker-Volumes falsch konfiguriert sind, könnte dieser Key exponiert werden.
+* **CSRF:** Es gibt eine eigene `csrfProtection` Implementierung in `lib/auth/csrf.ts` (impliziert durch Importe), und die Middleware prüft `Origin`/`Referer` Header für API-Calls. Dies ist solide, aber Custom-Implementierungen sind fehleranfälliger als Framework-Lösungen.
+
+
+
+**Action Items:**
+
+* [ ] **Rate Limiting:** Implementiere ein Rate Limiting auf der `/api/auth/login` Route, um Brute-Force-Attacken zu erschweren (aktuell nicht im Code sichtbar).
+* [ ] **Audit Logs:** Logge fehlgeschlagene Login-Versuche in der Datenbank, um Angriffsversuche sichtbar zu machen.
+
+---
+
+### **2. Code-Qualität & Architektur**
+
+**Gesamtbewertung:** ⭐⭐⭐⭐ (Sehr gut strukturiert)
+
+Der Code folgt modernen Next.js 14 (App Router) Patterns und nutzt TypeScript effektiv.
+
+* **Struktur & Modularität:**
+* Klare Trennung von Belangen: `app/` (UI/Routing), `lib/` (Business Logic, DB), `components/` (UI Parts).
+* Der Datenbankzugriff ist sauber über Prisma abstrahiert (`lib/db/client.ts`).
+* Die WebSocket-Logik in `server/ws-proxy.ts` ist komplex, aber notwendig. Sie mischt jedoch HA-Proxy-Logik, UniFi-Streaming und Server-Setup in einer Datei.
+
+
+* **Type Safety:**
+* TypeScript wird konsequent genutzt. Es gibt viele definierte Interfaces (z.B. `HAWebSocketClient` Typen). Das reduziert Runtime-Errors massiv.
+
+
+* **Error Handling:**
+* In den API-Routen (z.B. `app/api/admin/users/route.ts`) wird fast überall mit `try/catch` gearbeitet und saubere HTTP-Statuscodes (401, 403, 500) zurückgegeben.
+* Der WebSocket-Client (`lib/ha/websocket-client.ts`) implementiert eine robuste Reconnect-Logik mit Exponential Backoff.
+
+
+
+**Action Items:**
+
+* [ ] **Refactoring WS-Proxy:** Die Datei `server/ws-proxy.ts` ist zu groß und übernimmt zu viele Aufgaben. Die UniFi-Streaming-Logik und der HA-Proxy sollten in eigene Klassen/Dateien ausgelagert werden.
+* [ ] **Zod Validierung:** In `package.json` ist `zod` gelistet. Es sollte konsequent in *allen* API-Routen für die Validierung des `request.json()` Bodys genutzt werden, anstatt manueller `if (!body.username)` Checks.
+
+---
+
+### **3. User Experience & Usability**
+
+**Gesamtbewertung:** ⭐⭐⭐⭐ (Durchdachtes Konzept)
+
+* **User Flow:**
+* Das Rollenkonzept (Owner, Admin, Power User, Viewer, Guest) ist tief im System verankert. Dies ermöglicht granular gesteuerte Dashboards für Familienmitglieder – ein Feature, das dem Standard-HA-Dashboard oft fehlt.
+* Automatische Weiterleitung zum Login durch Middleware, wenn kein Session-Cookie existiert.
+
+
+* **Feedback & States:**
+* Der `WebRTCPlayer` zeigt Lade-Spinner (`Loader2`) und Fehlermeldungen visuell an. Das ist gutes UX-Design.
+* Es gibt spezifische Mobile-Navigationskomponenten (`mobile-nav.tsx`) und eine Sidebar, was auf ein Responsive Design hindeutet.
+
+
+
+**Action Items:**
+
+* [ ] **Setup-Wizard:** Das Setup erfordert aktuell das Ausführen von CLI-Befehlen (`npm run create-admin`). Ein initialer Setup-Screen im Browser beim ersten Start wäre benutzerfreundlicher.
+
+---
+
+### **4. Professionalität & Standards**
+
+**Gesamtbewertung:** ⭐⭐ (Gemischt - Tests fehlen)
+
+* **Dokumentation:**
+* Die `README.md` ist informativ, erklärt die Architektur und liefert klare Installationsanweisungen.
+* Kommentare im Code sind vorhanden, wo es komplex wird (z.B. im `ws-proxy.ts` oder `websocket-client.ts`).
+
+
+* **Testing (Kritisch):**
+* **Es fehlen Tests.** In der Dateiliste sind keine `*.test.ts`, `*.spec.ts` oder ein `__tests__` Ordner zu finden. Die `package.json` enthält keine Test-Skripte (kein Jest, kein Vitest, kein Playwright). Dies ist für eine Anwendung, die Sicherheitsfunktionen (Auth-Proxy) übernimmt, ein Risiko.
+
+
+* **Git-Hygiene:**
+* `.gitignore` und `.dockerignore` sind vorhanden und sinnvoll konfiguriert.
+
+
+
+**Action Items:**
+
+* [ ] **Testing Framework einführen:** Dringend Vitest oder Jest installieren. Unit-Tests für `lib/auth` und `server/ws-proxy.ts` sind essenziell.
+* [ ] **CI/CD:** Erstellen einer GitHub Action Pipeline für Linting, Type-Checking und (zukünftige) Tests.
+
+---
+
+### **Fazit & Benotung**
+
+Das Repository `HASS-Dashboard` ist ein technisch beeindruckendes Projekt. Besonders das Sicherheitskonzept (Backend-Proxy für Home Assistant) zeugt von hohem Verständnis für Web-Security. Die Code-Basis ist sauber und modern. Der größte Mangel ist das vollständige Fehlen von automatisierten Tests, was bei sicherheitskritischer Software (Auth-Proxy) riskant ist.
+
+**Gesamtnote: 8 / 10**
+
+*(Abzug hauptsächlich wegen fehlender Tests und manueller WS-Proxy-Komplexität. Security und Architektur sind jedoch auf Level 9-10).*

@@ -2,6 +2,14 @@ import { NextRequest } from 'next/server'
 
 const SAFE_METHODS = ['GET', 'HEAD', 'OPTIONS']
 
+function isDevEnvironment(): boolean {
+  return process.env.NODE_ENV !== 'production' && !!process.env.REPL_ID
+}
+
+function getForwardedHost(request: NextRequest): string | null {
+  return request.headers.get('x-forwarded-host') || request.headers.get('host')
+}
+
 export function validateOrigin(request: NextRequest): { valid: boolean; error?: string } {
   if (SAFE_METHODS.includes(request.method)) {
     return { valid: true }
@@ -38,9 +46,22 @@ export function validateOrigin(request: NextRequest): { valid: boolean; error?: 
       }
     }
     
+    // In Replit dev environment, compare origin host with forwarded host
+    if (isDevEnvironment()) {
+      const forwardedHost = getForwardedHost(request)
+      if (forwardedHost && url.host === forwardedHost) {
+        return { valid: true }
+      }
+    }
+    
     if (!appBaseUrl && allowedHosts.length === 0) {
       const requestUrl = new URL(request.url)
       if (url.host === requestUrl.host) {
+        return { valid: true }
+      }
+      // Also check forwarded host when no explicit config
+      const forwardedHost = getForwardedHost(request)
+      if (forwardedHost && url.host === forwardedHost) {
         return { valid: true }
       }
     }
