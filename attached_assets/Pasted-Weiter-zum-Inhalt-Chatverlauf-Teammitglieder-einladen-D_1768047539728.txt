@@ -1,0 +1,430 @@
+Weiter zum Inhalt
+Chatverlauf
+
+
+
+
+
+Teammitglieder einladen
+Du:
+UniFi Protect fMP4 Livestream.docx
+Dokument
+https://github.com/hi-its-lukas/HASS-Dashboard
+
+ChatGPT:
+Thanks for the detailed context and code! Before I dive in, could you clarify one thing: do you want me to focus solely on identifying the root cause of the SourceBuffer error when appending the init segment, or should I also explore and compare alternative streaming approaches (e.g. HLS, WebRTC) and suggest fallbacks or transformations (e.g. mp4box.js) for maximum compatibility?
+
+Du:
+It should work in the end. dont matter how
+ChatGPT:
+Got it. I’ll investigate why the UniFi Protect fMP4 livestream fails during the initial appendBuffer call to SourceBuffer, and explore all viable paths to get live streaming working reliably in your Home Assistant dashboard.
+
+This includes:
+
+Validating the current init segment structure for MSE compatibility
+
+Determining the correct codec (H.264 vs. HEVC)
+
+Identifying if segment transformation is necessary (e.g. using mp4box.js or mux.js)
+
+Investigating browser expectations and known incompatibilities
+
+Exploring alternatives such as HLS, WebRTC, or transcoding if MSE cannot be made to work
+
+I’ll keep you posted as soon as I have findings. Feel free to keep working while I dig into it.
+
+Research completed in 18m· 16 Quellen· 96 Suchen
+ChatGPT:
+Streaming UniFi Protect fMP4 via MSE: Troubleshooting & Solutions
+1. Validating the MP4 Initialization Segment
+Before anything else, ensure the MP4 initialization segment (init segment) is properly formed for MediaSource Extensions. An MSE-compatible init segment must contain a File Type Box (ftyp) followed by a Movie Box (moov)
+. Within the moov, certain conditions must be met, or the browser will immediately throw a SourceBuffer append error:
+Include mvex (Movie Extends Box): The moov should contain an mvex box (with trex sub-boxes for each track) to signal that movie fragments will follow
+. If an mvex is missing, browsers assume no further fragments and will error out on append
+. In practice, many fragmented MP4 streams (fMP4) include an mvex+trex in the init segment to establish default sample durations, flags, etc. Ensure your extracted init segment has this. If you manually modified or rebuilt the moov, add an appropriate mvex for each track.
+No sample entries in moov: For fragmented streaming, the moov should not list any actual media samples in its tables. In other words, the track’s stts, stsc, stco (time-to-sample, sample-to-chunk, chunk offset) boxes should have entry_count = 0
+. This indicates no pre-recorded samples in the init – all media will come in future moof fragments. If your init segment was extracted from a full MP4 (e.g. a recording) and still has those entries populated, the browser will reject it as invalid for MSE
+. Verify that you zeroed out or removed any sample listings in the init’s moov. In short, the moov should define tracks (with codec info, width/height, timescale, duration metadata, etc.) but not contain actual media data or non-zero sample tables when using fMP4 streaming.
+Use a supported ftyp brand: You already changed the major brand to isom, which is a safe choice (a generic ISO Base Media brand). This was wise – if the original ftyp major_brand was something exotic or specific (for example, a brand meant for DASH or something not broadly recognized), the browser might reject it
+. The MSE spec mandates an append error if the ftyp’s major/compatible brand isn’t supported by the user agent
+. isom (ISO Base Media) with appropriate compatible brands (e.g. iso6, avc1) is a good generic baseline that browsers accept. Double-check that the ftyp compatible_brands include at least isom or similar common ones. (Note: Some Unifi Protect streams might use mp42 or dash as major brand; swapping to isom can improve compatibility, as you did.)
+Include mandatory track metadata: Ensure each track in moov has the usual headers (tkhd track header, mdhd media header, hdlr handler, and an stsd sample description entry). In the video track’s stsd, the codec box (e.g. avc1 for H.264) must contain the codec initialization data (like the avcC box). If any of these are missing or malformed, it could invalidate the init segment. Most of this comes for free if you extracted the init from UniFi Protect’s MP4, but if you reconstructed anything, ensure these boxes’ integrity.
+In summary, an init segment for MSE should look roughly like: ftyp (with major_brand isom), then moov (with track definitions, an mvex indicating fragmentation, and no sample entries). If the first appendBuffer(initSegment) is throwing an error, scrutinize the init segment structure – a missing mvex or stray sample table entries are common culprits that will cause an immediate SourceBuffer error
+. Use an MP4 inspector or parser (e.g. mp4dump or mp4box) to verify the contents of your init segment against these requirements.
+2. Verifying Codec String and Video Format
+It’s critical that the codec information you advertise to MSE matches the actual stream format. You mentioned extracting the codec from the avcC box, yielding a string like avc1.640020. Let’s break that down: avc1. indicates H.264/AVC video with out-of-band parameter sets (SPS/PPS in the init). The following hex bytes 64 00 20 correspond to the H.264 profile and level. 0x64 is decimal 100, which is High Profile, and 0x20 is decimal 32, which corresponds to Level 3.2 (this code is commonly interpreted as High Profile, ~Level 4.0)
+. In other words, avc1.640020 suggests H.264 High Profile. If UniFi Protect is indeed streaming H.264 video (which is likely for compatibility), this codec string should be correct. The fact that MediaSource.isTypeSupported() returned true for video/mp4; codecs="avc1.640020" is a good sign – it means the browser claims to support that profile/level of H.264. However, we need to be absolutely sure the stream is H.264 and not HEVC (H.265). Newer UniFi cameras (especially with “Enhanced Video Encoding” enabled or 4K models) can stream in HEVC to save bandwidth. If the camera/NVR is using H.265, the MP4 would contain an hvc1/hev1 codec tag and an hvcC box (HEVC config) instead of avc1/avcC. In that case, avc1.640020 would not match the content and the append could fail because the decoder initialization is wrong. So, how to determine definitively? A few checks:
+Examine the MP4 sample entry: If you have the stream’s moov, see what codec FourCC is in the video stsd box. If it says avc1, it’s H.264. If it were HEVC, you’d see hvc1 or hev1 instead, accompanied by an hvcC config box. The presence of an avcC box (which you used) essentially confirms it’s H.264 AVC
+. An hvcC record is used for HEVC streams
+. So it sounds like Protect is giving you AVC, not HEVC, which is good for browser support.
+Double-check with a tool: If possible, run a quick probe on the stream. For example, using ffprobe on a saved fragment or the camera’s RTSP feed can identify the codec. If it reports Video: h264, you’re set. If it says hevc, then you’d need to adjust approach (transcode or use a different codec string and note the limited support).
+Given the info, it’s likely H.264. So the codec string avc1.640020 is probably correct. Just ensure you use the exact string that matches the SPS/PPS. (Different camera resolutions or firmware might yield a slightly different profile/level, e.g. some might be avc1.640028 for High Profile Level 4.0, etc. Use whatever your avcC actually indicates.) A mismatch here can definitely cause immediate failure. For instance, labeling something avc1.42E01E (Baseline@L3.0) when it’s actually High@L4 would confuse the decoder. In your case it seems consistent: High profile codec and likely high-tier video. Browser support considerations: All target platforms (Safari, Edge/Chromium, Android WebView) have strong support for H.264/AVC. In fact, for broad compatibility H.264 is the safe choice – many platforms do not support H.265/HEVC in MP4 at all without special extensions. Safari has some HEVC capability (e.g. Safari on macOS/iOS can play HEVC in certain cases), but Edge/Chrome won’t play HEVC MP4 unless the user has installed OS-level codecs, and Android WebView generally won’t handle HEVC either. A streaming spec from Xumo puts it plainly: “H.265 is not currently supported across all target devices, therefore H.264/AVC remains the required codec.”
+. So if your UniFi Protect was in HEVC mode, you’d either need to switch the camera to H.264 or transcode the feed. Since isTypeSupported returned true for the avc1 string, we trust it’s H.264. Just keep this in mind: ensure the camera or NVR is outputting H.264. (UniFi Protect allows enabling an RTSP stream in specific quality – often you can choose a channel that uses H.264 if the default high quality is HEVC. Using the H.264 stream will maximize compatibility
+.) In summary, your codec string is likely correct for the content. Just validate that with a quick inspection. If by some chance it’s wrong (e.g. content is actually main profile or baseline), update the string accordingly. And certainly, if it turned out to be H.265, your only options are to change the source to H.264 or expect failure on most browsers (MSE won’t magically make browsers support HEVC). Given that, stick with H.264 for Safari/Edge/WebView support.
+3. Using MP4 Processing Tools to Fix/Package the Stream
+If you continue down the MSE fMP4 route, it might be worthwhile to leverage existing tools to repackage or repair the stream instead of doing it entirely by hand. Packaging fragmented MP4 correctly is tricky – as you’ve seen, one subtle MP4 box issue can break the stream. Here are some tools/approaches to consider:
+GPAC/mp4box.js: GPAC’s MP4Box is a well-known MP4 processing library, and mp4box.js is a JavaScript library that can run in-browser or Node. It can ingest MP4 data and output fragmented segments. In a browser context, mp4box.js can take an incoming stream and ensure the MP4 fragments are compliant (it even handles on-the-fly fragmentation of unfragmented MP4 data)
+. You could use mp4box.js on the client to parse the byte stream from your server: feed it the data, and it will give you back properly formed init segments and media segments you can append to MSE. This can abstract away the low-level box handling and ensure things like tfdt timestamps, mfhd sequence numbers, etc., are set as expected. It’s an added complexity to integrate, but it might quickly solve issues if your current manual packaging is off. As a bonus, mp4box.js provides info like info.isFragmented which can tell you if an MP4 is already fragmented or not
+, helping debug what UniFi Protect delivers.
+mux.js (Video.js transmuxer): mux.js is a library used internally by hls.js and video.js to transmux streams (often MPEG-TS to fMP4 for MSE). If your source were TS or another format, mux.js could convert it to fMP4 on the fly. In your case you already have fMP4, so mux.js might not be directly needed. However, you could consider using a library like hls.js in low-latency mode by feeding it a custom playlist – this would leverage mux.js under the hood. That might be overkill here, but it’s a thought. Generally, if you had audio in ADTS or other formats, these tools would also handle packaging audio into MP4.
+Server-side fragmentation (ffmpeg/GStreamer): Although your setup is Node-based, you could use a server tool to pre-fragment the MP4 stream. For instance, FFmpeg can take an input stream and produce fragmented MP4 output (with -movflags +frag_keyframe+empty_moov to produce an init segment and segments). There are also Node libraries (like mp4frag on npm) that are designed to take an MP4 stream (often from an IP camera or NVR) and output a continuous fragmented stream suitable for MSE consumption. Using such a library could ensure the init segment is correct and relieve you from manual byte manipulation. Essentially, the library would handle the ftyp/moov and then churn out moof+mdat fragments via events or buffers.
+Validate with ISO freestanding tools: If you haven’t already, try using an MP4 validator tool on your init segment. For example, MP4Box (the command-line tool) or Bento4’s mp4info can read the init segment and highlight if any expected boxes are missing. This can quickly tell you if mvex is present, if any timing info is odd, etc. A hex editor or MPEG ISO parser can also help to see the box hierarchy. Since the append is failing at the first step, focus on the init’s validity.
+The goal with these tools is either to fix the stream on the fly or at least to debug the exact cause of the SourceBuffer error. Remember that building a correct fMP4 by hand can be “an overcomplicated pain,” as one developer put it
+. (In fact, the developer of Blue Iris’s UI3 web interface mentioned he avoided writing the fMP4 packaging himself by using a third-party library to do it
+. That library handled chopping frames into moofs and feeding MSE, illustrating how non-trivial it can be to get it perfect.) Using mp4box.js or similar means you lean on a well-tested implementation for MP4 fragmentation, which can save a lot of headache. Note: If you go with a tool like mp4box.js in the browser, it will add some buffering latency and complexity (and slightly higher CPU), but it may resolve structural issues. If performance is a concern (for example, on an Android tablet), a server-side fix might be preferable (so the client gets already-compliant fragments). Choose based on where you have more resources to spare.
+4. Browser Limitations & Known Issues with UniFi Protect fMP4
+Even with a correct init segment and codec, there are a few browser quirks and potential UniFi Protect specific issues to keep in mind:
+Safari’s MSE quirks: Safari (especially on iOS) historically had some limitations with MSE. Modern Safari does support fMP4 streaming (it’s the basis of HLS in Safari), so H.264 fMP4 should work. But ensure you test on the specific Safari versions you need – e.g., older iOS Safari versions didn’t support MSE at all, and slightly older Safari had trouble if audio and video are in a single SourceBuffer. If you include an audio track, and you see Safari issues, one workaround has been to use separate SourceBuffers for audio and video (i.e., create one SourceBuffer for video/mp4; codecs="avc1…" and another for audio/mp4; codecs="mp4a.40.2" and demux your stream). Newer Safari doesn’t usually require this (it can handle combined streams), but it’s something to note if you run into audio-related playback errors on Safari. Also, Safari on iOS might not report detailed errors – it may simply silently fail if it doesn’t like something (like an unsupported codec or profile). Since you’re using H.264, that’s fine (Safari won’t play VP9 or AV1 in MSE, for instance, but H.264 is supported).
+Chromium/Edge sequence number bug: Chrome (and Edge, since it’s Chromium-based) had a known issue in the past where if the first movie fragment (moof) had a non-zero sequence number (the mfhd box’s sequence_number not starting at 1), the stream could fail to play
+. This was a Chromium bug around handling of fragmented MP4s from certain cameras. If UniFi Protect’s fragments start at an arbitrary sequence (say, it continues a stream and first fragment you get is seq 100), older Chrome might throw a fit. Make sure, if possible, that the first mfhd you feed has sequence_number=1. If you can’t control that (e.g., if you attach mid-stream), one workaround is to set the SourceBuffer’s mode to "sequence" instead of "segments". sourceBuffer.mode = "sequence" makes MSE treat appended data as continuous sequence rather than independent segments, which can relax some ordering requirements
+. However, use mode "sequence" carefully – it will force the media timeline to follow append order and may ignore timestamps, which might not be ideal for live sync. Ideally, re-base the fragment sequence numbers if you can. (This bug may be fixed in recent Chrome, but it’s worth being aware of if you see Chrome/Edge errors despite everything looking correct.)
+Timing and continuity: Another subtlety – ensure the first media fragment (moof) you append has a decode timestamp of 0 (or very close) or that you set the media element’s currentTime appropriately. Some implementations expect the stream to start at time 0. If your first fragment’s tfdt indicates a larger timestamp (e.g., if you joined an ongoing stream 10 seconds in), you might need to adjust. Typically, you would append the init, then the first moof, and then set video.currentTime = 0 (or leave it if the tfdt was 0). If you must start at a later timestamp, setting currentTime to that start time after appending the first segment can help avoid a stall
+. Keep an eye out for any “content starts in the future” type errors or black screen until a certain point – that would hint at timeline issues.
+Android WebView (Fully Kiosk) constraints: Fully Kiosk Browser on Android uses the system’s WebView/Blink engine. Ensure the Android device’s WebView is up to date (older Android WebViews pre-Chromium 54 did not support MSE at all). Assuming a modern Android, MSE should work, but performance could be a concern on low-end hardware. H.264 decoding is usually hardware-accelerated, which is good. But the MSE buffering and parsing is done in software – on an older tablet, lots of heavy MP4 parsing (especially if using mp4box.js on the client) might cause stutters. Monitor the CPU/memory usage in Fully Kiosk. You might find that dropping resolution or frame rate helps if the WebView struggles. Also, test in the stock Chrome app on that device – if it fails there, it’ll fail in Fully Kiosk too. Some users in home automation communities have noted that the Fully Kiosk WebView can crash or show blanks if the stream is too high bitrate. So consider the network/bitrate as well for stability.
+UniFi Protect fMP4 specifics: UniFi’s fMP4 segments (if you’re pulling them via some Protect API or the RTSP-to-MP4 pipeline) might include some quirks. For example, ensure that each fragment has keyframes at reasonable intervals. A very long GOP without an IDR could cause delay in playback start (since MSE will wait for a random-access point). Protect is usually configured for relatively frequent keyframes (often every ~1-2 seconds for live view), so this likely isn’t an issue, but worth verifying. Also, if you extract the init from a recording MP4 and then try to append live fragments from an RTSP feed, there could be slight mismatches in codec headers. Make sure the SPS/PPS in your init (the avcC data) exactly match what the camera is actually sending in the live feed. If not, the decoder might error when it encounters differing sequence parameters. In practice, if you took the init from the same stream, you should be fine.
+Finally, note that any generic “SourceBuffer error” on the first append is almost always an indication of a format parsing problem (not a runtime decoding issue). This means the browser likely didn’t accept the structure of your init segment or first fragment. By fixing the MP4 format issues (as in section 1) and confirming codec alignment (section 2), you should get past that initial error. After that, if you see playback issues or stalling, then we’d debug things like buffer management, latency, etc. But first thing’s first: fix the init format so that Safari, Edge, and Chrome all acknowledge and initialize the SourceBuffer without errors.
+5. Considering Alternative Approaches (HLS, WebRTC, Transcoding)
+It’s worth stepping back to evaluate if using raw fMP4 + MSE is the best path for your use-case. Browser support for MSE is widespread, but as we see, the devil is in the details. Depending on your requirements (latency, effort, reliability across devices), one of these alternative streaming methods might serve you better:
+HLS (HTTP Live Streaming): Given that you’re effectively dealing with an H.264 stream, packaging it as HLS can be a robust solution. HLS is natively supported on Safari (both macOS and iOS) — you can simply set a video element’s src to an .m3u8 URL and Safari will play it. For Chrome/Edge/Android, you can use a library like hls.js to play the HLS stream (hls.js will internally use MSE, but it’s a well-tested library that handles all the fragmentation and appending for you). The beauty of HLS is that it’s a standard – you won’t be hand-crafting MP4 boxes; instead, you’ll rely on either the NVR or a server-side tool to produce the stream. UniFi Protect does not natively output HLS, but you can convert the RTSP feed to HLS. For example, run ffmpeg on the server: input the camera’s RTSP and output an HLS playlist with segment duration of ~1 second for low latency. Then point your web app to that playlist. The latency will typically be a bit higher than fMP4-over-websocket (HLS might introduce 2-3 seconds latency unless you fine-tune low-latency HLS), but it’s often acceptable for camera viewing. More importantly, it’s highly compatible – Safari was basically built with HLS in mind, and other browsers with hls.js handle it nicely. HLS also manages buffering and errors (it can retry segments, etc.), which can make it more resilient for long-running streams on something like Fully Kiosk. The trade-off is added complexity on the server (running a segmenter) and slight latency.
+WebRTC: If real-time latency is a priority (e.g. sub-second delay, two-way audio, etc.), WebRTC is the modern solution. UniFi Protect’s latest versions actually have introduced WebRTC streaming for live views in their own client apps (UniFi’s mobile app and some web UI portions can use P2P WebRTC). WebRTC can stream H.264 with only a few hundred milliseconds of delay and is designed for exactly this purpose (real-time comm/video). The downside is complexity: you need a signaling mechanism and possibly a TURN server for relaying if viewer and camera are not local. However, since you’re building a Next.js/React app and presumably have control of the LAN, you could incorporate a WebRTC library. There are projects (like the Home Assistant community’s WebRTC component or go2rtc server) that take an RTSP stream and turn it into a WebRTC stream with minimal fuss. For instance, go2rtc can consume the UniFi RTSP stream and serve a WebRTC stream that you can view via a simple <video> element using a provided URL (it handles signaling via WebSocket). WebRTC has the advantage of built-in support in all modern browsers (no need for MSE or special codecs beyond H.264). Safari has recently enabled H.264 (and even H.265) support in WebRTC on iOS/macOS
+, and Chrome/Edge support H.264 in WebRTC by default. This means WebRTC can actually get your stream across Safari, Edge, Android, etc., with great performance (utilizing hardware decoding and jitter buffer of the WebRTC stack). The complexity is that you’d need to either implement or use a server for the WebRTC negotiation. If you prefer not to roll your own, consider using AlexxIT’s WebRTC integration (commonly used in Home Assistant) or similar solutions – these are designed to make cameras work in kiosk dashboards via WebRTC by simply providing the RTSP URL
+. WebRTC is a bit of a paradigm shift from MSE, but it might ultimately be cleaner if low latency and broad compatibility are must-haves. No manual container wrangling – you just feed packets into a peer connection.
+Transcoding as last resort: If your source is in an incompatible format (say it was H.265 or some oddball codec), then transcoding on the server to H.264 is a viable route. This could be done with FFmpeg (software) or using hardware acceleration (QuickSync, NVENC, etc.) if available to keep CPU load low. Transcoding will add some latency and quality loss, but it ensures the stream is playable everywhere. For example, converting a 4K HEVC stream to 1080p H.264 in real-time might be needed for an older tablet to even decode it. In your case, if you stick with H.264 from the camera, you avoid transcoding altogether, which is ideal. But I mention it because sometimes people attempt to shove an unsupported codec into MSE and hit a wall – the answer there is indeed to transcode to a supported codec.
+Recommendation: Given all the factors, the most concrete path to success for cross-browser streaming is to use a more standard streaming solution rather than a raw fMP4-over-websocket. Specifically, using HLS or WebRTC will likely get you a working livestream much faster than debugging MP4 fragments. If ultra-low latency (sub-second) is not critical, I would suggest trying an HLS setup: it’s easier to implement, and libraries like hls.js will handle the MSE details for you. Safari will be a breeze with HLS, and hls.js has been tested on countless Edge/Chrome/Android scenarios. On the other hand, if you do need super low latency or just want a modern solution, invest some time into WebRTC – it has a higher upfront complexity but once running, it provides smooth, real-time playback on all your targets (including Safari, which now quietly supports WebRTC with H.264/H.265
+). Many in the smart home community have moved to WebRTC for streaming cameras because it’s optimized for exactly this scenario (one-to-few viewers, real-time). In summary: to make the UniFi Protect livestream robust across Safari, Edge, and Fully Kiosk (Android WebView), I recommend either serving it via a standard protocol like HLS (backed by a reliable segmentation of the H.264 stream), or leveraging WebRTC for real-time playback. These approaches abstract away the SourceBuffer fiddliness and take advantage of well-supported browser features for media. If you continue with the MSE fMP4 method, then ensure your init segment includes all required boxes (ftyp+moov with mvex/trex and no samples)
+, double-check the codec is H.264 and correctly signaled, and perhaps use a library to handle the fragmentation. That can work, but it’s a bit like forging your own path. In contrast, HLS/WebRTC are paved roads with far fewer potholes for this use-case. Finally, whichever route you choose, test on all target platforms early. For example, spin up Safari and load the stream, try it on the Fully Kiosk tablet, etc. This will confirm that your chosen solution indeed “just works” across the board. Many have found that an alternate approach (HLS/WebRTC) sidesteps the mysterious SourceBuffer errors and yields a stable live view, which is ultimately what you want. Good luck, and happy streaming! Sources: The MSE Byte Stream spec for MP4 (W3C) outlines required init boxes and error conditions
+. Codec profile info is derived from RFC6381 and known mappings (e.g., High Profile @ Level 4.0 as avc1.640028)
+. Browser support notes reflect W3C and vendor documentation (e.g., lack of universal HEVC support
+). Real-world insights from community experts underline the complexity of DIY MSE packaging
+. The Unified Streaming reference explains the role of hvcC vs avcC for codec setup
+. These inform the recommendations above.
+
+
+
+
+
+
+Quellen
+
+
+
+Keine Datei ausgewähltKeine Datei ausgewählt
+ChatGPT kann Fehler machen. OpenAI verwendet keine Daten aus dem Arbeitsbereich Hengl zum Trainieren seiner Modelle.
+
+Fix SourceBuffer Append Error in UniFi Protect MSE Stream
+ChatGPT
+In diesem Fall analysiere ich den Livestream von UniFi Protect fMP4 über MSE in einer browserbasierten React/Next.js-Anwendung. Schwierigkeiten treten beim ersten appendBuffer(initSegment) auf. Ich schaue mir den init segment und Codec-String an, um die Kompatibilität und Vollständigkeit sicherzustellen.
+
+Searched for appendBuffer in HASS-Dashboard repository
+ChatGPT
+Hm, okay, ich schaue mir HASS-Dashboard und GitHub an, um den Fehler zu verstehen.
+
+Ich überlege, die Suche zu schärfen und nach "unifi protect fmp4" oder "sourceBuffer" zu suchen.
+
+Ich entscheide mich für "web_with_bing" als Quelle.
+
+Searched for UniFi Protect fMP4 SourceBuffer error
+ChatGPT
+Resultat 0 erwähnt, dass WebRTC nicht funktioniert, aber MSE-Stream teilweise flüssig läuft. Detaillierte Analyse von MP4-Boxen und Codec-String-Erkennung zeigt mögliche Struktur- oder Parsing-Probleme.
+
+
+community.ui.com gelesen
+
+ChatGPT
+Ich überlege, ob die Ubiquiti-Website möglicherweise blockiert ist oder einen Login erfordert. Es besteht die Möglichkeit, dass sie Inhalte nicht direkt liefert.
+
+Searched for appendBuffer SourceBuffer error
+ChatGPT
+Ich schaue mir die möglichen Ursachen an, wie defekte Segmente, fehlerhafte Codec-Zeichenfolgen oder inkonsistente Sequenznummern bei fMP4 an.
+
+Searched for MSE init segment boxes
+ChatGPT
+Ich bin dabei, die W3C ISO BMFF Byte Stream Spezifikationen zu prüfen, die wahrscheinlich zur MSE-Spezifikation gehören.
+
+
+w3.org gelesen
+
+ChatGPT
+Ich schaue mir das Init-Segment an, stelle sicher, dass 'mvex' und 'trex' enthalten sind und keine verbotenen Inhalte wie nicht leere 'stts' vorliegen.
+
+Searched for UniFi Protect MSE mp4 fragment
+ChatGPT
+Hm, das scheint auf unifi-protect Enhanced Encoding und 4K-Reolink-Kameras hindeuten. Vielleicht auch MP4-Fragmente und MSE-Probleme.
+
+
+ipcamtalk.com gelesen
+
+ChatGPT
+Ich schaue mir die fMP4-Mochdatei an, achte auf avc1-Codecs und denke über mp4box.js zur Repaketierung nach.
+
+
+issues.chromium.org gelesen
+
+ChatGPT
+Ich schaue mir an, ob die nötigen MP4-Boxen wie ftyp, moov und mvex/trex vorhanden sind und richtig sind, besonders bei H264 oder H265.
+
+Searched for UniFi Protect MSE mp4 fragment
+ChatGPT
+Ich schaue mir mögliche Editoren für Unifi Video an, bevor ich die Unifi Protect-Datenbank durchsuchen werde.
+
+Searched for UniFi Protect live video in HASS-Dashboard repository
+ChatGPT
+Vielleicht beschreibt der "issue" oder Commit das Problem. Ein Blick in den "Fully Kiosk"-Code könnte auch solche Erwähnungen aufzeigen.
+
+Searched for Fully Kiosk WebView MSE video
+ChatGPT
+MSE mit fMP4 auf Safari, Edge und Android WebView zu nutzen, ist herausfordernd. HLS oder WebRTC bieten bessere Lösungen für eine funktionale Live-Übertragung.
+
+
+github.com gelesen
+
+ChatGPT
+Ich denke über Inkompatibilitäten oder fehlerhafte MP4-Init-Segmente nach, die das MSE-Streaming betreffen könnten. Unifi Protect verwendet möglicherweise WebRTC in der mobilen App.
+
+Searched for UniFi Protect live stream protocol
+ChatGPT
+Es scheint, dass der Benutzer RTSP über TLS erhalten möchte. Live-Streaming mit WebRTC könnte ein möglicher Ansatz sein.
+
+
+w3.org gelesen
+
+ChatGPT
+Ich schaue mir HVC1 und AV1 genauer an. Es ist wichtig, HVC1 zur gleichzeitigen Transkodierung in Call-Streams mit H.264 und AV1 zu verwenden.
+
+Searched for mp4box.js MSE fragmentation fix
+ChatGPT
+Ich schaue, wie die W3C-Medienquelle mit absolutem Offset umgehen muss. Vielleicht reicht ein Blick auf Reddit.
+
+Searched for UniFi Protect MediaSource
+ChatGPT
+Ich schaue mir Umstände an, die das Erreichen eines Ziels beeinflussen. Es ist spannend zu überlegen, wie Ressourcen und Handlungen zusammenwirken.
+
+Searched for ftyp isom MSE major_brand
+ChatGPT
+Technische Überprüfung zeigt die Notwendigkeit einer OTX/WEBP-Referenz und Unterscheidung zwischen avc1 und hvc1, möglicherweise durch ffmpeg oder andere Identifikationsmethoden.
+
+Searched for avc1.640020 H.264 profile level
+ChatGPT
+Ich schau mir die Codec-Unterstützung an, speziell AVC High Level 3.2. Es gibt Hinweise darauf, dass Safari oder eine spezielle Umgebung betroffen sein könnten.
+
+
+cconcolato.github.io gelesen
+
+ChatGPT
+Ich schaue mir an, ob H264 oder H265 durch den 'avcC'- oder 'hvcC'-Boxbezug im MP4 angezeigt wird. Allenfalls hilft ffprobe oder ein MP4-Analyzer zur weiteren Klärung.
+
+
+github.com gelesen
+
+ChatGPT
+Ich schaue mir die Verwendung von RTSP und WebRTC an, um Videofeed von Unifi-Kameras anzuzeigen.
+
+
+stackoverflow.com gelesen
+
+ChatGPT
+Ich denke darüber nach, wie man Informationen auch ohne Login erhalten könnte, vielleicht durch alternative Methoden oder eine Textexeranzeige.
+
+Searched for mp4box reencode fragmented MP4 videos
+ChatGPT
+Der Inhalt auf cloud.tencent.com spiegelt oft Stack Overflow-Inhalte auf Chinesisch wider, mit gelegentlichen Englischen Antworten.
+
+
+cloud.tencent.com gelesen
+
+ChatGPT
+Entscheidende Schritte: ffmpeg.wasm verwenden, um Fragmentierung im Browser zu lösen. MP4-Daten extrahieren und neu fragmentieren, falls init-segment fehlt oder fehlerhaft ist.
+
+Ich betrachte, warum avc1.640020 möglicherweise fälschlicherweise als Level 4.0 etikettiert werden könnte, obwohl es 3.2 sein sollte. Eventuell handelt es sich um ein Etikettierungsproblem.
+
+Searched for avcC hvcC MP4 sample entry
+ChatGPT
+Um H265 von H264 zu unterscheiden, schaue ich auf den fourcc-Code (wie 'avc1' vs. 'hev1' oder 'hvc1' als Codecin-Direktor) und überprüfe die Existenz von hvcC-Konfigurationsboxen gegenüber avcC.
+
+
+unified-streaming.com gelesen
+
+ChatGPT
+Der Snippet erklärt, dass H.265 mit 'hvcC' für HEVC-Decoder-Konfiguration arbeitet, während H.264 'avcC' verwendet.
+
+
+Mehr von unified-streaming.com gelesen
+
+ChatGPT
+Bericht über Herausforderungen und Lösungen beim Verpacken, Formatieren und Streaming von VR-Inhalten in fMP4 und JS-MP4, wobei bestehenden Techniken wie HEVC, mp4box.js und mux.js berücksichtigt werden.
+
+
+ipcamtalk.com gelesen
+
+ChatGPT
+Ich schaue mir verschiedene Ansätze an, um Livestreams plattformübergreifend mit Safari, Edge und Android WebView zu optimieren, einschließlich MSE, HLS und WebRTC.
+
+Ich schaue mir an, welche Geräte und Browser H265 nicht unterstützen, und empfehle H264 für die beste Unterstützung.
+
+
+w3.org gelesen
+
+ChatGPT
+Ich schaue auf die Canon EOS R5 und ihre 4K-Aufnahmequalität bei 60 fps, um sicherzustellen, dass sie den Anforderungen entspricht.
+
+Searched for first moof sequence number 1 MSE
+ChatGPT
+Lässt uns prüfend einen Blick auf das Problem mit der Startnummer der ersten moof/mfhd im Video werfen.
+
+
+issues.chromium.org gelesen
+
+
+stackoverflow.com gelesen
+
+ChatGPT
+Nun schaue ich mir mit ffprobe oder 'avcC' vs 'hvcC' Unterscheidungen an. Fehleranalyse mit SPS.
+
+Research completed in 18m· 16 Quellen
+
+Streaming UniFi Protect fMP4 via MSE: Troubleshooting & Solutions
+1. Validating the MP4 Initialization Segment
+Before anything else, ensure the MP4 initialization segment (init segment) is properly formed for MediaSource Extensions. An MSE-compatible init segment must contain a File Type Box (ftyp) followed by a Movie Box (moov)
+. Within the moov, certain conditions must be met, or the browser will immediately throw a SourceBuffer append error:
+Include mvex (Movie Extends Box): The moov should contain an mvex box (with trex sub-boxes for each track) to signal that movie fragments will follow
+. If an mvex is missing, browsers assume no further fragments and will error out on append
+. In practice, many fragmented MP4 streams (fMP4) include an mvex+trex in the init segment to establish default sample durations, flags, etc. Ensure your extracted init segment has this. If you manually modified or rebuilt the moov, add an appropriate mvex for each track.
+No sample entries in moov: For fragmented streaming, the moov should not list any actual media samples in its tables. In other words, the track’s stts, stsc, stco (time-to-sample, sample-to-chunk, chunk offset) boxes should have entry_count = 0
+. This indicates no pre-recorded samples in the init – all media will come in future moof fragments. If your init segment was extracted from a full MP4 (e.g. a recording) and still has those entries populated, the browser will reject it as invalid for MSE
+. Verify that you zeroed out or removed any sample listings in the init’s moov. In short, the moov should define tracks (with codec info, width/height, timescale, duration metadata, etc.) but not contain actual media data or non-zero sample tables when using fMP4 streaming.
+Use a supported ftyp brand: You already changed the major brand to isom, which is a safe choice (a generic ISO Base Media brand). This was wise – if the original ftyp major_brand was something exotic or specific (for example, a brand meant for DASH or something not broadly recognized), the browser might reject it
+. The MSE spec mandates an append error if the ftyp’s major/compatible brand isn’t supported by the user agent
+. isom (ISO Base Media) with appropriate compatible brands (e.g. iso6, avc1) is a good generic baseline that browsers accept. Double-check that the ftyp compatible_brands include at least isom or similar common ones. (Note: Some Unifi Protect streams might use mp42 or dash as major brand; swapping to isom can improve compatibility, as you did.)
+Include mandatory track metadata: Ensure each track in moov has the usual headers (tkhd track header, mdhd media header, hdlr handler, and an stsd sample description entry). In the video track’s stsd, the codec box (e.g. avc1 for H.264) must contain the codec initialization data (like the avcC box). If any of these are missing or malformed, it could invalidate the init segment. Most of this comes for free if you extracted the init from UniFi Protect’s MP4, but if you reconstructed anything, ensure these boxes’ integrity.
+In summary, an init segment for MSE should look roughly like: ftyp (with major_brand isom), then moov (with track definitions, an mvex indicating fragmentation, and no sample entries). If the first appendBuffer(initSegment) is throwing an error, scrutinize the init segment structure – a missing mvex or stray sample table entries are common culprits that will cause an immediate SourceBuffer error
+. Use an MP4 inspector or parser (e.g. mp4dump or mp4box) to verify the contents of your init segment against these requirements.
+2. Verifying Codec String and Video Format
+It’s critical that the codec information you advertise to MSE matches the actual stream format. You mentioned extracting the codec from the avcC box, yielding a string like avc1.640020. Let’s break that down: avc1. indicates H.264/AVC video with out-of-band parameter sets (SPS/PPS in the init). The following hex bytes 64 00 20 correspond to the H.264 profile and level. 0x64 is decimal 100, which is High Profile, and 0x20 is decimal 32, which corresponds to Level 3.2 (this code is commonly interpreted as High Profile, ~Level 4.0)
+. In other words, avc1.640020 suggests H.264 High Profile. If UniFi Protect is indeed streaming H.264 video (which is likely for compatibility), this codec string should be correct. The fact that MediaSource.isTypeSupported() returned true for video/mp4; codecs="avc1.640020" is a good sign – it means the browser claims to support that profile/level of H.264. However, we need to be absolutely sure the stream is H.264 and not HEVC (H.265). Newer UniFi cameras (especially with “Enhanced Video Encoding” enabled or 4K models) can stream in HEVC to save bandwidth. If the camera/NVR is using H.265, the MP4 would contain an hvc1/hev1 codec tag and an hvcC box (HEVC config) instead of avc1/avcC. In that case, avc1.640020 would not match the content and the append could fail because the decoder initialization is wrong. So, how to determine definitively? A few checks:
+Examine the MP4 sample entry: If you have the stream’s moov, see what codec FourCC is in the video stsd box. If it says avc1, it’s H.264. If it were HEVC, you’d see hvc1 or hev1 instead, accompanied by an hvcC config box. The presence of an avcC box (which you used) essentially confirms it’s H.264 AVC
+. An hvcC record is used for HEVC streams
+. So it sounds like Protect is giving you AVC, not HEVC, which is good for browser support.
+Double-check with a tool: If possible, run a quick probe on the stream. For example, using ffprobe on a saved fragment or the camera’s RTSP feed can identify the codec. If it reports Video: h264, you’re set. If it says hevc, then you’d need to adjust approach (transcode or use a different codec string and note the limited support).
+Given the info, it’s likely H.264. So the codec string avc1.640020 is probably correct. Just ensure you use the exact string that matches the SPS/PPS. (Different camera resolutions or firmware might yield a slightly different profile/level, e.g. some might be avc1.640028 for High Profile Level 4.0, etc. Use whatever your avcC actually indicates.) A mismatch here can definitely cause immediate failure. For instance, labeling something avc1.42E01E (Baseline@L3.0) when it’s actually High@L4 would confuse the decoder. In your case it seems consistent: High profile codec and likely high-tier video. Browser support considerations: All target platforms (Safari, Edge/Chromium, Android WebView) have strong support for H.264/AVC. In fact, for broad compatibility H.264 is the safe choice – many platforms do not support H.265/HEVC in MP4 at all without special extensions. Safari has some HEVC capability (e.g. Safari on macOS/iOS can play HEVC in certain cases), but Edge/Chrome won’t play HEVC MP4 unless the user has installed OS-level codecs, and Android WebView generally won’t handle HEVC either. A streaming spec from Xumo puts it plainly: “H.265 is not currently supported across all target devices, therefore H.264/AVC remains the required codec.”
+. So if your UniFi Protect was in HEVC mode, you’d either need to switch the camera to H.264 or transcode the feed. Since isTypeSupported returned true for the avc1 string, we trust it’s H.264. Just keep this in mind: ensure the camera or NVR is outputting H.264. (UniFi Protect allows enabling an RTSP stream in specific quality – often you can choose a channel that uses H.264 if the default high quality is HEVC. Using the H.264 stream will maximize compatibility
+.) In summary, your codec string is likely correct for the content. Just validate that with a quick inspection. If by some chance it’s wrong (e.g. content is actually main profile or baseline), update the string accordingly. And certainly, if it turned out to be H.265, your only options are to change the source to H.264 or expect failure on most browsers (MSE won’t magically make browsers support HEVC). Given that, stick with H.264 for Safari/Edge/WebView support.
+3. Using MP4 Processing Tools to Fix/Package the Stream
+If you continue down the MSE fMP4 route, it might be worthwhile to leverage existing tools to repackage or repair the stream instead of doing it entirely by hand. Packaging fragmented MP4 correctly is tricky – as you’ve seen, one subtle MP4 box issue can break the stream. Here are some tools/approaches to consider:
+GPAC/mp4box.js: GPAC’s MP4Box is a well-known MP4 processing library, and mp4box.js is a JavaScript library that can run in-browser or Node. It can ingest MP4 data and output fragmented segments. In a browser context, mp4box.js can take an incoming stream and ensure the MP4 fragments are compliant (it even handles on-the-fly fragmentation of unfragmented MP4 data)
+. You could use mp4box.js on the client to parse the byte stream from your server: feed it the data, and it will give you back properly formed init segments and media segments you can append to MSE. This can abstract away the low-level box handling and ensure things like tfdt timestamps, mfhd sequence numbers, etc., are set as expected. It’s an added complexity to integrate, but it might quickly solve issues if your current manual packaging is off. As a bonus, mp4box.js provides info like info.isFragmented which can tell you if an MP4 is already fragmented or not
+, helping debug what UniFi Protect delivers.
+mux.js (Video.js transmuxer): mux.js is a library used internally by hls.js and video.js to transmux streams (often MPEG-TS to fMP4 for MSE). If your source were TS or another format, mux.js could convert it to fMP4 on the fly. In your case you already have fMP4, so mux.js might not be directly needed. However, you could consider using a library like hls.js in low-latency mode by feeding it a custom playlist – this would leverage mux.js under the hood. That might be overkill here, but it’s a thought. Generally, if you had audio in ADTS or other formats, these tools would also handle packaging audio into MP4.
+Server-side fragmentation (ffmpeg/GStreamer): Although your setup is Node-based, you could use a server tool to pre-fragment the MP4 stream. For instance, FFmpeg can take an input stream and produce fragmented MP4 output (with -movflags +frag_keyframe+empty_moov to produce an init segment and segments). There are also Node libraries (like mp4frag on npm) that are designed to take an MP4 stream (often from an IP camera or NVR) and output a continuous fragmented stream suitable for MSE consumption. Using such a library could ensure the init segment is correct and relieve you from manual byte manipulation. Essentially, the library would handle the ftyp/moov and then churn out moof+mdat fragments via events or buffers.
+Validate with ISO freestanding tools: If you haven’t already, try using an MP4 validator tool on your init segment. For example, MP4Box (the command-line tool) or Bento4’s mp4info can read the init segment and highlight if any expected boxes are missing. This can quickly tell you if mvex is present, if any timing info is odd, etc. A hex editor or MPEG ISO parser can also help to see the box hierarchy. Since the append is failing at the first step, focus on the init’s validity.
+The goal with these tools is either to fix the stream on the fly or at least to debug the exact cause of the SourceBuffer error. Remember that building a correct fMP4 by hand can be “an overcomplicated pain,” as one developer put it
+. (In fact, the developer of Blue Iris’s UI3 web interface mentioned he avoided writing the fMP4 packaging himself by using a third-party library to do it
+. That library handled chopping frames into moofs and feeding MSE, illustrating how non-trivial it can be to get it perfect.) Using mp4box.js or similar means you lean on a well-tested implementation for MP4 fragmentation, which can save a lot of headache. Note: If you go with a tool like mp4box.js in the browser, it will add some buffering latency and complexity (and slightly higher CPU), but it may resolve structural issues. If performance is a concern (for example, on an Android tablet), a server-side fix might be preferable (so the client gets already-compliant fragments). Choose based on where you have more resources to spare.
+4. Browser Limitations & Known Issues with UniFi Protect fMP4
+Even with a correct init segment and codec, there are a few browser quirks and potential UniFi Protect specific issues to keep in mind:
+Safari’s MSE quirks: Safari (especially on iOS) historically had some limitations with MSE. Modern Safari does support fMP4 streaming (it’s the basis of HLS in Safari), so H.264 fMP4 should work. But ensure you test on the specific Safari versions you need – e.g., older iOS Safari versions didn’t support MSE at all, and slightly older Safari had trouble if audio and video are in a single SourceBuffer. If you include an audio track, and you see Safari issues, one workaround has been to use separate SourceBuffers for audio and video (i.e., create one SourceBuffer for video/mp4; codecs="avc1…" and another for audio/mp4; codecs="mp4a.40.2" and demux your stream). Newer Safari doesn’t usually require this (it can handle combined streams), but it’s something to note if you run into audio-related playback errors on Safari. Also, Safari on iOS might not report detailed errors – it may simply silently fail if it doesn’t like something (like an unsupported codec or profile). Since you’re using H.264, that’s fine (Safari won’t play VP9 or AV1 in MSE, for instance, but H.264 is supported).
+Chromium/Edge sequence number bug: Chrome (and Edge, since it’s Chromium-based) had a known issue in the past where if the first movie fragment (moof) had a non-zero sequence number (the mfhd box’s sequence_number not starting at 1), the stream could fail to play
+. This was a Chromium bug around handling of fragmented MP4s from certain cameras. If UniFi Protect’s fragments start at an arbitrary sequence (say, it continues a stream and first fragment you get is seq 100), older Chrome might throw a fit. Make sure, if possible, that the first mfhd you feed has sequence_number=1. If you can’t control that (e.g., if you attach mid-stream), one workaround is to set the SourceBuffer’s mode to "sequence" instead of "segments". sourceBuffer.mode = "sequence" makes MSE treat appended data as continuous sequence rather than independent segments, which can relax some ordering requirements
+. However, use mode "sequence" carefully – it will force the media timeline to follow append order and may ignore timestamps, which might not be ideal for live sync. Ideally, re-base the fragment sequence numbers if you can. (This bug may be fixed in recent Chrome, but it’s worth being aware of if you see Chrome/Edge errors despite everything looking correct.)
+Timing and continuity: Another subtlety – ensure the first media fragment (moof) you append has a decode timestamp of 0 (or very close) or that you set the media element’s currentTime appropriately. Some implementations expect the stream to start at time 0. If your first fragment’s tfdt indicates a larger timestamp (e.g., if you joined an ongoing stream 10 seconds in), you might need to adjust. Typically, you would append the init, then the first moof, and then set video.currentTime = 0 (or leave it if the tfdt was 0). If you must start at a later timestamp, setting currentTime to that start time after appending the first segment can help avoid a stall
+. Keep an eye out for any “content starts in the future” type errors or black screen until a certain point – that would hint at timeline issues.
+Android WebView (Fully Kiosk) constraints: Fully Kiosk Browser on Android uses the system’s WebView/Blink engine. Ensure the Android device’s WebView is up to date (older Android WebViews pre-Chromium 54 did not support MSE at all). Assuming a modern Android, MSE should work, but performance could be a concern on low-end hardware. H.264 decoding is usually hardware-accelerated, which is good. But the MSE buffering and parsing is done in software – on an older tablet, lots of heavy MP4 parsing (especially if using mp4box.js on the client) might cause stutters. Monitor the CPU/memory usage in Fully Kiosk. You might find that dropping resolution or frame rate helps if the WebView struggles. Also, test in the stock Chrome app on that device – if it fails there, it’ll fail in Fully Kiosk too. Some users in home automation communities have noted that the Fully Kiosk WebView can crash or show blanks if the stream is too high bitrate. So consider the network/bitrate as well for stability.
+UniFi Protect fMP4 specifics: UniFi’s fMP4 segments (if you’re pulling them via some Protect API or the RTSP-to-MP4 pipeline) might include some quirks. For example, ensure that each fragment has keyframes at reasonable intervals. A very long GOP without an IDR could cause delay in playback start (since MSE will wait for a random-access point). Protect is usually configured for relatively frequent keyframes (often every ~1-2 seconds for live view), so this likely isn’t an issue, but worth verifying. Also, if you extract the init from a recording MP4 and then try to append live fragments from an RTSP feed, there could be slight mismatches in codec headers. Make sure the SPS/PPS in your init (the avcC data) exactly match what the camera is actually sending in the live feed. If not, the decoder might error when it encounters differing sequence parameters. In practice, if you took the init from the same stream, you should be fine.
+Finally, note that any generic “SourceBuffer error” on the first append is almost always an indication of a format parsing problem (not a runtime decoding issue). This means the browser likely didn’t accept the structure of your init segment or first fragment. By fixing the MP4 format issues (as in section 1) and confirming codec alignment (section 2), you should get past that initial error. After that, if you see playback issues or stalling, then we’d debug things like buffer management, latency, etc. But first thing’s first: fix the init format so that Safari, Edge, and Chrome all acknowledge and initialize the SourceBuffer without errors.
+5. Considering Alternative Approaches (HLS, WebRTC, Transcoding)
+It’s worth stepping back to evaluate if using raw fMP4 + MSE is the best path for your use-case. Browser support for MSE is widespread, but as we see, the devil is in the details. Depending on your requirements (latency, effort, reliability across devices), one of these alternative streaming methods might serve you better:
+HLS (HTTP Live Streaming): Given that you’re effectively dealing with an H.264 stream, packaging it as HLS can be a robust solution. HLS is natively supported on Safari (both macOS and iOS) — you can simply set a video element’s src to an .m3u8 URL and Safari will play it. For Chrome/Edge/Android, you can use a library like hls.js to play the HLS stream (hls.js will internally use MSE, but it’s a well-tested library that handles all the fragmentation and appending for you). The beauty of HLS is that it’s a standard – you won’t be hand-crafting MP4 boxes; instead, you’ll rely on either the NVR or a server-side tool to produce the stream. UniFi Protect does not natively output HLS, but you can convert the RTSP feed to HLS. For example, run ffmpeg on the server: input the camera’s RTSP and output an HLS playlist with segment duration of ~1 second for low latency. Then point your web app to that playlist. The latency will typically be a bit higher than fMP4-over-websocket (HLS might introduce 2-3 seconds latency unless you fine-tune low-latency HLS), but it’s often acceptable for camera viewing. More importantly, it’s highly compatible – Safari was basically built with HLS in mind, and other browsers with hls.js handle it nicely. HLS also manages buffering and errors (it can retry segments, etc.), which can make it more resilient for long-running streams on something like Fully Kiosk. The trade-off is added complexity on the server (running a segmenter) and slight latency.
+WebRTC: If real-time latency is a priority (e.g. sub-second delay, two-way audio, etc.), WebRTC is the modern solution. UniFi Protect’s latest versions actually have introduced WebRTC streaming for live views in their own client apps (UniFi’s mobile app and some web UI portions can use P2P WebRTC). WebRTC can stream H.264 with only a few hundred milliseconds of delay and is designed for exactly this purpose (real-time comm/video). The downside is complexity: you need a signaling mechanism and possibly a TURN server for relaying if viewer and camera are not local. However, since you’re building a Next.js/React app and presumably have control of the LAN, you could incorporate a WebRTC library. There are projects (like the Home Assistant community’s WebRTC component or go2rtc server) that take an RTSP stream and turn it into a WebRTC stream with minimal fuss. For instance, go2rtc can consume the UniFi RTSP stream and serve a WebRTC stream that you can view via a simple <video> element using a provided URL (it handles signaling via WebSocket). WebRTC has the advantage of built-in support in all modern browsers (no need for MSE or special codecs beyond H.264). Safari has recently enabled H.264 (and even H.265) support in WebRTC on iOS/macOS
+, and Chrome/Edge support H.264 in WebRTC by default. This means WebRTC can actually get your stream across Safari, Edge, Android, etc., with great performance (utilizing hardware decoding and jitter buffer of the WebRTC stack). The complexity is that you’d need to either implement or use a server for the WebRTC negotiation. If you prefer not to roll your own, consider using AlexxIT’s WebRTC integration (commonly used in Home Assistant) or similar solutions – these are designed to make cameras work in kiosk dashboards via WebRTC by simply providing the RTSP URL
+. WebRTC is a bit of a paradigm shift from MSE, but it might ultimately be cleaner if low latency and broad compatibility are must-haves. No manual container wrangling – you just feed packets into a peer connection.
+Transcoding as last resort: If your source is in an incompatible format (say it was H.265 or some oddball codec), then transcoding on the server to H.264 is a viable route. This could be done with FFmpeg (software) or using hardware acceleration (QuickSync, NVENC, etc.) if available to keep CPU load low. Transcoding will add some latency and quality loss, but it ensures the stream is playable everywhere. For example, converting a 4K HEVC stream to 1080p H.264 in real-time might be needed for an older tablet to even decode it. In your case, if you stick with H.264 from the camera, you avoid transcoding altogether, which is ideal. But I mention it because sometimes people attempt to shove an unsupported codec into MSE and hit a wall – the answer there is indeed to transcode to a supported codec.
+Recommendation: Given all the factors, the most concrete path to success for cross-browser streaming is to use a more standard streaming solution rather than a raw fMP4-over-websocket. Specifically, using HLS or WebRTC will likely get you a working livestream much faster than debugging MP4 fragments. If ultra-low latency (sub-second) is not critical, I would suggest trying an HLS setup: it’s easier to implement, and libraries like hls.js will handle the MSE details for you. Safari will be a breeze with HLS, and hls.js has been tested on countless Edge/Chrome/Android scenarios. On the other hand, if you do need super low latency or just want a modern solution, invest some time into WebRTC – it has a higher upfront complexity but once running, it provides smooth, real-time playback on all your targets (including Safari, which now quietly supports WebRTC with H.264/H.265
+). Many in the smart home community have moved to WebRTC for streaming cameras because it’s optimized for exactly this scenario (one-to-few viewers, real-time). In summary: to make the UniFi Protect livestream robust across Safari, Edge, and Fully Kiosk (Android WebView), I recommend either serving it via a standard protocol like HLS (backed by a reliable segmentation of the H.264 stream), or leveraging WebRTC for real-time playback. These approaches abstract away the SourceBuffer fiddliness and take advantage of well-supported browser features for media. If you continue with the MSE fMP4 method, then ensure your init segment includes all required boxes (ftyp+moov with mvex/trex and no samples)
+, double-check the codec is H.264 and correctly signaled, and perhaps use a library to handle the fragmentation. That can work, but it’s a bit like forging your own path. In contrast, HLS/WebRTC are paved roads with far fewer potholes for this use-case. Finally, whichever route you choose, test on all target platforms early. For example, spin up Safari and load the stream, try it on the Fully Kiosk tablet, etc. This will confirm that your chosen solution indeed “just works” across the board. Many have found that an alternate approach (HLS/WebRTC) sidesteps the mysterious SourceBuffer errors and yields a stable live view, which is ultimately what you want. Good luck, and happy streaming! Sources: The MSE Byte Stream spec for MP4 (W3C) outlines required init boxes and error conditions
+. Codec profile info is derived from RFC6381 and known mappings (e.g., High Profile @ Level 4.0 as avc1.640028)
+. Browser support notes reflect W3C and vendor documentation (e.g., lack of universal HEVC support
+). Real-world insights from community experts underline the complexity of DIY MSE packaging
+. The Unified Streaming reference explains the role of hvcC vs avcC for codec setup
+. These inform the recommendations above.
+Quellenangaben
+
+ISO BMFF Byte Stream Format
+
+https://www.w3.org/TR/mse-byte-stream-format-isobmff/
+
+ISO BMFF Byte Stream Format
+
+https://www.w3.org/TR/mse-byte-stream-format-isobmff/
+
+ISO BMFF Byte Stream Format
+
+https://www.w3.org/TR/mse-byte-stream-format-isobmff/
+[PDF] Xumo HLS Specification - October 2018 | HubSpot
+
+https://cdn2.hubspot.net/hubfs/1809672/XUMO-XumoHLSSpecification-October2018-180119-2017.pdf
+
+Everything you wanted to know about the new USP software version (but were afraid to ask)
+
+https://www.unified-streaming.com/blog/everything-you-wanted-to-know-about-the-new-usp-software-version-but-were-afraid-to-ask
+https://cdn2.hubspot.net/hubfs/1809672/XUMO-XumoHLSSpecification-October2018-180119-2017.pdf
+
+knide/mp4box-player - Yarn Classic
+
+https://classic.yarnpkg.com/en/package/@knide/mp4box-player
+
+knide/mp4box-player - Yarn Classic
+
+https://classic.yarnpkg.com/en/package/@knide/mp4box-player
+
+将未分段的mp4重新编码为分段的mp4-腾讯云开发者社区-腾讯云
+
+https://cloud.tencent.com/developer/ask/sof/1093915/answer/1532927
+
+Blue Iris UI3 | Page 220 | IP Cam Talk
+
+https://ipcamtalk.com/threads/blue-iris-ui3.23528/page-220
+
+MP4 video with gaps in sequence_numbers fail to play via MSE ...
+
+https://issues.chromium.org/issues/41191877
+
+ffmpeg - FMP4 moof box sequence number ordering - Stack Overflow
+
+https://stackoverflow.com/questions/60580531/fmp4-moof-box-sequence-number-ordering
+
+ffmpeg - FMP4 moof box sequence number ordering - Stack Overflow
+
+https://stackoverflow.com/questions/60580531/fmp4-moof-box-sequence-number-ordering
+
+Blue Iris UI3 | Page 220 | IP Cam Talk
+
+https://ipcamtalk.com/threads/blue-iris-ui3.23528/page-220
+
+Blue Iris UI3 | Page 220 | IP Cam Talk
+
+https://ipcamtalk.com/threads/blue-iris-ui3.23528/page-220
+
+GitHub - AlexxIT/WebRTC: Home Assistant custom component for real-time viewing of almost any camera stream using WebRTC and other technologies.
+
+https://github.com/AlexxIT/WebRTC
+
+GitHub - AlexxIT/WebRTC: Home Assistant custom component for real-time viewing of almost any camera stream using WebRTC and other technologies.
+
+https://github.com/AlexxIT/WebRTC
+Alle Quellen
+
+w3
+cdn2.hubspot
+
+unified-streaming
+
+classic.yarnpkg
+
+cloud.tencent
+
+ipcamtalk
+
+issues.chromium
+
+stackoverflow
+
+github
