@@ -9,7 +9,67 @@ interface LivestreamSession {
   codecCallbacks: Set<(codec: string) => void>
   lastCodec: string | null
   initSegment: Buffer | null
+  initSegmentSent: Set<(data: Buffer) => void>
+  pendingBuffer: Buffer[]
+  foundInit: boolean
   dataCount: number
+}
+
+// fMP4 box type signatures
+const BOX_FTYP = 0x66747970  // 'ftyp'
+const BOX_MOOV = 0x6d6f6f76  // 'moov'
+const BOX_MOOF = 0x6d6f6f66  // 'moof'
+const BOX_MDAT = 0x6d646174  // 'mdat'
+
+function findBox(buffer: Buffer, boxType: number): { offset: number, size: number } | null {
+  let offset = 0
+  while (offset + 8 <= buffer.length) {
+    const size = buffer.readUInt32BE(offset)
+    const type = buffer.readUInt32BE(offset + 4)
+    
+    if (size < 8) break // Invalid box
+    
+    if (type === boxType) {
+      return { offset, size }
+    }
+    
+    offset += size
+  }
+  return null
+}
+
+function extractInitSegment(buffer: Buffer): Buffer | null {
+  // Look for ftyp box at the start
+  const ftyp = findBox(buffer, BOX_FTYP)
+  if (!ftyp || ftyp.offset !== 0) {
+    return null
+  }
+  
+  // Find moov box after ftyp
+  let offset = ftyp.size
+  while (offset + 8 <= buffer.length) {
+    const size = buffer.readUInt32BE(offset)
+    const type = buffer.readUInt32BE(offset + 4)
+    
+    if (size < 8) break
+    
+    if (type === BOX_MOOV) {
+      // Found moov - init segment is ftyp + moov
+      const initSize = offset + size
+      if (initSize <= buffer.length) {
+        console.log('[ProtectLivestream] Found init segment: ftyp(' + ftyp.size + ') + moov(' + size + ') = ' + initSize + ' bytes')
+        return buffer.subarray(0, initSize)
+      }
+    }
+    
+    offset += size
+  }
+  
+  return null
+}
+
+function hasMoofBox(buffer: Buffer): boolean {
+  return findBox(buffer, BOX_MOOF) !== null
 }
 
 export class ProtectLivestreamManager extends EventEmitter {
@@ -131,6 +191,9 @@ export class ProtectLivestreamManager extends EventEmitter {
         codecCallbacks: onCodec ? new Set([onCodec]) : new Set(),
         lastCodec: null,
         initSegment: null,
+        initSegmentSent: new Set(),
+        pendingBuffer: [],
+        foundInit: false,
         dataCount: 0
       }
       this.sessions.set(cameraId, session)
@@ -189,11 +252,92 @@ export class ProtectLivestreamManager extends EventEmitter {
       // Consume fMP4 chunks from the Readable stream
       stream.on('data', (data: Buffer) => {
         session.dataCount++
-        if (session.dataCount <= 5 || session.dataCount % 100 === 0) {
-          console.log('[ProtectLivestream] Chunk #' + session.dataCount + ' for', camera.name, '- size:', data.length)
+        
+        // Debug logging
+        if (session.dataCount <= 10 || session.dataCount % 100 === 0) {
+          const boxType = data.length >= 8 ? data.readUInt32BE(4).toString(16) : 'unknown'
+          console.log('[ProtectLivestream] Chunk #' + session.dataCount + ' for', camera.name, '- size:', data.length, '- first box:', boxType)
         }
+        
+        // If we haven't found init segment yet, try to extract it
+        if (!session.foundInit) {
+          // Buffer incoming data
+          session.pendingBuffer.push(data)
+          
+          // Concatenate all pending buffers
+          const combined = Buffer.concat(session.pendingBuffer)
+          
+          // Try to extract init segment
+          const initSeg = extractInitSegment(combined)
+          if (initSeg) {
+            session.initSegment = initSeg
+            session.foundInit = true
+            console.log('[ProtectLivestream] Init segment cached for', camera.name, '- size:', initSeg.length)
+            
+            // Send init segment to all clients first
+            for (const client of session.clients) {
+              try {
+                if (!session.initSegmentSent.has(client)) {
+                  client(initSeg)
+                  session.initSegmentSent.add(client)
+                }
+              } catch (e) {
+                console.error('[ProtectLivestream] Error sending init segment:', e)
+              }
+            }
+            
+            // Send remaining data after init segment
+            const remaining = combined.subarray(initSeg.length)
+            if (remaining.length > 0) {
+              for (const client of session.clients) {
+                try {
+                  client(remaining)
+                } catch (e) {
+                  console.error('[ProtectLivestream] Error sending remaining data:', e)
+                }
+              }
+            }
+            
+            // Clear pending buffer
+            session.pendingBuffer = []
+          } else if (hasMoofBox(combined)) {
+            // If we see moof without ftyp/moov, the init was not at the start
+            console.log('[ProtectLivestream] WARNING: moof found without init segment for', camera.name, '- stream may not play')
+            session.foundInit = true // Give up looking
+            
+            // Send what we have anyway
+            for (const client of session.clients) {
+              try {
+                client(combined)
+              } catch (e) {
+                console.error('[ProtectLivestream] Error sending data:', e)
+              }
+            }
+            session.pendingBuffer = []
+          } else if (session.pendingBuffer.length > 20) {
+            // Timeout - too many chunks without init
+            console.log('[ProtectLivestream] WARNING: No init segment found after 20 chunks for', camera.name)
+            session.foundInit = true
+            for (const client of session.clients) {
+              try {
+                client(combined)
+              } catch (e) {
+                console.error('[ProtectLivestream] Error sending data:', e)
+              }
+            }
+            session.pendingBuffer = []
+          }
+          return
+        }
+        
+        // Normal flow: init segment already found, just forward data
         for (const client of session.clients) {
           try {
+            // Make sure client got init segment first
+            if (session.initSegment && !session.initSegmentSent.has(client)) {
+              client(session.initSegment)
+              session.initSegmentSent.add(client)
+            }
             client(data)
           } catch (e) {
             console.error('[ProtectLivestream] Error sending chunk:', e)
