@@ -1,0 +1,52 @@
+lukashengl@mac-mini HASS-Dashboard % docker compose logs app 2>&1 | grep -E "Replacing|Fixing|HEX DUMP|Init segment" | head -50
+hass-dashboard  | [INIT] Fixing ownership of /data
+hass-dashboard  | [ProtectLivestream] Init segment structure (FULL):
+hass-dashboard  | [ProtectLivestream] Init segment HEX DUMP (first 512 bytes):
+hass-dashboard  | [ProtectLivestream] Fixing ftyp major_brand from "dash" to "isom"
+hass-dashboard  | [ProtectLivestream] Replacing incompatible brand "hvc1" with "avc1"
+hass-dashboard  | [ProtectLivestream] Init segment cached for Hautüre - size: 1181
+hass-dashboard  | [ProtectLivestream] Init segment structure (FULL):
+hass-dashboard  | [ProtectLivestream] Init segment HEX DUMP (first 512 bytes):
+hass-dashboard  | [ProtectLivestream] Fixing ftyp major_brand from "dash" to "isom"
+hass-dashboard  | [ProtectLivestream] Replacing incompatible brand "hvc1" with "avc1"
+hass-dashboard  | [ProtectLivestream] Init segment cached for Carport - size: 1183
+hass-dashboard  | [ProtectLivestream] Init segment structure (FULL):
+hass-dashboard  | [ProtectLivestream] Init segment HEX DUMP (first 512 bytes):
+hass-dashboard  | [ProtectLivestream] Fixing ftyp major_brand from "dash" to "isom"
+hass-dashboard  | [ProtectLivestream] Replacing incompatible brand "hvc1" with "avc1"
+hass-dashboard  | [ProtectLivestream] Init segment cached for Garten von Seite - size: 1183
+hass-dashboard  | [ProtectLivestream] Init segment structure (FULL):
+hass-dashboard  | [ProtectLivestream] Init segment HEX DUMP (first 512 bytes):
+hass-dashboard  | [ProtectLivestream] Fixing ftyp major_brand from "dash" to "isom"
+hass-dashboard  | [ProtectLivestream] Replacing incompatible brand "hvc1" with "avc1"
+hass-dashboard  | [ProtectLivestream] Init segment cached for Haus vorne - size: 1183
+hass-dashboard  | [ProtectLivestream] Init segment structure (FULL):
+hass-dashboard  | [ProtectLivestream] Init segment HEX DUMP (first 512 bytes):
+hass-dashboard  | [ProtectLivestream] Fixing ftyp major_brand from "dash" to "isom"
+hass-dashboard  | [ProtectLivestream] Replacing incompatible brand "hvc1" with "avc1"
+hass-dashboard  | [ProtectLivestream] Init segment cached for Garagentor - size: 1183
+hass-dashboard  | [ProtectLivestream] Init segment structure (FULL):
+hass-dashboard  | [ProtectLivestream] Init segment HEX DUMP (first 512 bytes):
+hass-dashboard  | [ProtectLivestream] Fixing ftyp major_brand from "dash" to "isom"
+hass-dashboard  | [ProtectLivestream] Replacing incompatible brand "hvc1" with "avc1"
+hass-dashboard  | [ProtectLivestream] Init segment cached for Garten von oben - size: 1183
+hass-dashboard  | [ProtectLivestream] Init segment structure (FULL):
+hass-dashboard  | [ProtectLivestream] Init segment HEX DUMP (first 512 bytes):
+hass-dashboard  | [ProtectLivestream] Fixing ftyp major_brand from "dash" to "isom"
+hass-dashboard  | [ProtectLivestream] Replacing incompatible brand "hvc1" with "avc1"
+hass-dashboard  | [ProtectLivestream] Init segment cached for Garten von hinten - size: 1183
+hass-dashboard  | [ProtectLivestream] Init segment structure (FULL):
+hass-dashboard  | [ProtectLivestream] Init segment HEX DUMP (first 512 bytes):
+hass-dashboard  | [ProtectLivestream] Fixing ftyp major_brand from "dash" to "isom"
+hass-dashboard  | [ProtectLivestream] Replacing incompatible brand "hvc1" with "avc1"
+hass-dashboard  | [ProtectLivestream] Init segment cached for Hoftor - size: 1181
+hass-dashboard  | [ProtectLivestream] Init segment structure (FULL):
+hass-dashboard  | [ProtectLivestream] Init segment HEX DUMP (first 512 bytes):
+hass-dashboard  | [ProtectLivestream] Fixing ftyp major_brand from "dash" to "isom"
+hass-dashboard  | [ProtectLivestream] Replacing incompatible brand "hvc1" with "avc1"
+hass-dashboard  | [ProtectLivestream] Init segment cached for Einfahrt von hinten - size: 1183
+hass-dashboard  | [ProtectLivestream] Init segment structure (FULL):
+hass-dashboard  | [ProtectLivestream] Init segment HEX DUMP (first 512 bytes):
+hass-dashboard  | [ProtectLivestream] Fixing ftyp major_brand from "dash" to "isom"
+hass-dashboard  | [ProtectLivestream] Replacing incompatible brand "hvc1" with "avc1"
+lukashengl@mac-mini HASS-Dashboard % 
