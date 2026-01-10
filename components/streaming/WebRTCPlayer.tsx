@@ -105,22 +105,58 @@ export default function WebRTCPlayer({
       return true
     }
     
-    // Format codec for MSE
-    let mimeCodec = `video/mp4; codecs="${codec}"`
+    // Safari requires full avc1 codec string - detect Safari/iOS
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent) || 
+                     /iPad|iPhone|iPod/.test(navigator.userAgent)
     
-    console.log('[LivestreamPlayer] Checking codec support:', mimeCodec)
+    // Normalize codec - fix bare "h264" strings for Safari
+    let normalizedCodec = codec
+    if (normalizedCodec.toLowerCase() === 'h264') {
+      normalizedCodec = 'avc1.4d0028' // Main profile, Level 4.0
+      console.log('[LivestreamPlayer] Converted h264 to:', normalizedCodec)
+    }
+    
+    // Format codec for MSE - try full codec first (with audio if present)
+    let mimeCodec = `video/mp4; codecs="${normalizedCodec}"`
+    
+    console.log('[LivestreamPlayer] Checking codec support:', mimeCodec, '(original:', codec, ', safari:', isSafari, ')')
     
     if (!MediaSource.isTypeSupported(mimeCodec)) {
       console.warn('[LivestreamPlayer] Full codec not supported, trying video-only')
-      // Try video-only (remove audio codec)
-      const videoCodec = codec.split(',')[0].trim()
+      
+      // Try video-only (remove audio codec part)
+      const videoCodec = normalizedCodec.split(',')[0].trim()
       mimeCodec = `video/mp4; codecs="${videoCodec}"`
       
       if (!MediaSource.isTypeSupported(mimeCodec)) {
-        console.error('[LivestreamPlayer] Video codec not supported:', mimeCodec)
-        setError('Video codec not supported by browser')
-        setStatus('error')
-        return false
+        console.warn('[LivestreamPlayer] Video codec not supported:', mimeCodec, '- trying fallbacks')
+        
+        // Safari fallback codecs in order of preference
+        const fallbackCodecs = [
+          'avc1.4d0028', // Main Profile Level 4.0 (1080p)
+          'avc1.4d001f', // Main Profile Level 3.1 (720p)  
+          'avc1.42001f', // Baseline Profile Level 3.1
+          'avc1.640028', // High Profile Level 4.0
+          'avc1.42e01e', // Baseline Level 3.0
+        ]
+        
+        let foundCodec = false
+        for (const fallback of fallbackCodecs) {
+          const fallbackMime = `video/mp4; codecs="${fallback}"`
+          if (MediaSource.isTypeSupported(fallbackMime)) {
+            console.log('[LivestreamPlayer] Using fallback codec:', fallback)
+            mimeCodec = fallbackMime
+            foundCodec = true
+            break
+          }
+        }
+        
+        if (!foundCodec) {
+          console.error('[LivestreamPlayer] No supported codec found')
+          setError('Video codec not supported by browser')
+          setStatus('error')
+          return false
+        }
       }
     }
     
