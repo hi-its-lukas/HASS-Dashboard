@@ -1,0 +1,8 @@
+export { default as LightsTab } from './LightsTab'
+export { default as CoversTab } from './CoversTab'
+export { default as AwningsTab } from './AwningsTab'
+export { default as ClimateTab } from './ClimateTab'
+export { default as VacuumTab } from './VacuumTab'
+export { default as LocksTab } from './LocksTab'
+export { default as EmptyState } from './EmptyState'
+export { TABS, COLOR_PRESETS, type TabId } from './constants'
