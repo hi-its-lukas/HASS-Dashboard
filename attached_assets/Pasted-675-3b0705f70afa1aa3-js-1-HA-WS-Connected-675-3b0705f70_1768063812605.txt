@@ -1,0 +1,497 @@
+675-3b0705f70afa1aa3.js:1 [HA WS] Connected
+675-3b0705f70afa1aa3.js:1 [HA WS] Authenticated
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Starting streaming for camera: 68330e970123c803e4000703
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Cleanup called
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Connecting to: wss://hoas-dashboard.familie-hengl.de/ws/livestream/68330e970123c803e4000703
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Starting streaming for camera: 68315e3703866803e4000400
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Cleanup called
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Connecting to: wss://hoas-dashboard.familie-hengl.de/ws/livestream/68315e3703866803e4000400
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Starting streaming for camera: 68315e3703326803e40003fe
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Cleanup called
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Connecting to: wss://hoas-dashboard.familie-hengl.de/ws/livestream/68315e3703326803e40003fe
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Starting streaming for camera: 68315e3702fd6803e40003fc
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Cleanup called
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Connecting to: wss://hoas-dashboard.familie-hengl.de/ws/livestream/68315e3702fd6803e40003fc
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Starting streaming for camera: 68315e3703a36803e4000401
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Cleanup called
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Connecting to: wss://hoas-dashboard.familie-hengl.de/ws/livestream/68315e3703a36803e4000401
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Starting streaming for camera: 68315e37035b6803e40003ff
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Cleanup called
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Connecting to: wss://hoas-dashboard.familie-hengl.de/ws/livestream/68315e37035b6803e40003ff
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Starting streaming for camera: 69047ecf0361dd03e46b58bd
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Cleanup called
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Connecting to: wss://hoas-dashboard.familie-hengl.de/ws/livestream/69047ecf0361dd03e46b58bd
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Starting streaming for camera: 68315e3702d06803e40003fb
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Cleanup called
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Connecting to: wss://hoas-dashboard.familie-hengl.de/ws/livestream/68315e3702d06803e40003fb
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Starting streaming for camera: 68315e3703c16803e4000402
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Cleanup called
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Connecting to: wss://hoas-dashboard.familie-hengl.de/ws/livestream/68315e3703c16803e4000402
+209.517565751a90b1e9.js:1 [LivestreamPlayer] MediaSource opened, readyState: open
+209.517565751a90b1e9.js:1 [LivestreamPlayer] tryInitializeSourceBuffer - codec: null sourceOpenReady: true readyState: open
+209.517565751a90b1e9.js:1 [LivestreamPlayer] MediaSource opened, readyState: open
+209.517565751a90b1e9.js:1 [LivestreamPlayer] tryInitializeSourceBuffer - codec: null sourceOpenReady: true readyState: open
+209.517565751a90b1e9.js:1 [LivestreamPlayer] MediaSource opened, readyState: open
+209.517565751a90b1e9.js:1 [LivestreamPlayer] tryInitializeSourceBuffer - codec: null sourceOpenReady: true readyState: open
+209.517565751a90b1e9.js:1 [LivestreamPlayer] MediaSource opened, readyState: open
+209.517565751a90b1e9.js:1 [LivestreamPlayer] tryInitializeSourceBuffer - codec: null sourceOpenReady: true readyState: open
+209.517565751a90b1e9.js:1 [LivestreamPlayer] MediaSource opened, readyState: open
+209.517565751a90b1e9.js:1 [LivestreamPlayer] tryInitializeSourceBuffer - codec: null sourceOpenReady: true readyState: open
+209.517565751a90b1e9.js:1 [LivestreamPlayer] MediaSource opened, readyState: open
+209.517565751a90b1e9.js:1 [LivestreamPlayer] tryInitializeSourceBuffer - codec: null sourceOpenReady: true readyState: open
+209.517565751a90b1e9.js:1 [LivestreamPlayer] MediaSource opened, readyState: open
+209.517565751a90b1e9.js:1 [LivestreamPlayer] tryInitializeSourceBuffer - codec: null sourceOpenReady: true readyState: open
+209.517565751a90b1e9.js:1 [LivestreamPlayer] MediaSource opened, readyState: open
+209.517565751a90b1e9.js:1 [LivestreamPlayer] tryInitializeSourceBuffer - codec: null sourceOpenReady: true readyState: open
+209.517565751a90b1e9.js:1 [LivestreamPlayer] MediaSource opened, readyState: open
+209.517565751a90b1e9.js:1 [LivestreamPlayer] tryInitializeSourceBuffer - codec: null sourceOpenReady: true readyState: open
+209.517565751a90b1e9.js:1 [LivestreamPlayer] WebSocket connected
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Received message: stream_started 
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Stream started for camera: 68330e970123c803e4000703
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Received message: codec avc1.640020, mp4a.40.2
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Received codec info: avc1.640020, mp4a.40.2
+209.517565751a90b1e9.js:1 [LivestreamPlayer] tryInitializeSourceBuffer - codec: avc1.640020, mp4a.40.2 sourceOpenReady: true readyState: open
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Checking codec support: video/mp4; codecs="avc1.640020, mp4a.40.2"
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Creating SourceBuffer with: video/mp4; codecs="avc1.640020, mp4a.40.2"
+209.517565751a90b1e9.js:1 [LivestreamPlayer] SourceBuffer created successfully!
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #1 - size: 1181 - box: ftyp - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] INIT SEGMENT received! Size: 1181
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #1 - size: 1181 - box: ftyp - buffered ranges: none
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #2 - size: 14953 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #2 - size: 14953 - box: moof - buffered ranges: none
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #3 - size: 32143 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #3 - size: 32143 - box: moof - buffered ranges: none
+209.517565751a90b1e9.js:1 [LivestreamPlayer] WebSocket connected
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Received message: stream_started 
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Stream started for camera: 68315e3703866803e4000400
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Received message: codec avc1.4d401f, mp4a.40.2
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Received codec info: avc1.4d401f, mp4a.40.2
+209.517565751a90b1e9.js:1 [LivestreamPlayer] tryInitializeSourceBuffer - codec: avc1.4d401f, mp4a.40.2 sourceOpenReady: true readyState: open
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Checking codec support: video/mp4; codecs="avc1.4d401f, mp4a.40.2"
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Creating SourceBuffer with: video/mp4; codecs="avc1.4d401f, mp4a.40.2"
+209.517565751a90b1e9.js:1 [LivestreamPlayer] SourceBuffer created successfully!
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #1 - size: 1183 - box: ftyp - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] INIT SEGMENT received! Size: 1183
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #1 - size: 1183 - box: ftyp - buffered ranges: none
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #4 - size: 42818 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #4 - size: 42818 - box: moof - buffered ranges: 0.00-0.20s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #5 - size: 16303 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #5 - size: 16303 - box: moof - buffered ranges: 0.00-0.40s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #6 - size: 15229 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #6 - size: 15229 - box: moof - buffered ranges: 0.00-0.50s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #2 - size: 54304 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #2 - size: 54304 - box: moof - buffered ranges: none
+209.517565751a90b1e9.js:1 [LivestreamPlayer] WebSocket connected
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Received message: stream_started 
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Stream started for camera: 68315e3703326803e40003fe
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Received message: codec avc1.4d401f, mp4a.40.2
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Received codec info: avc1.4d401f, mp4a.40.2
+209.517565751a90b1e9.js:1 [LivestreamPlayer] tryInitializeSourceBuffer - codec: avc1.4d401f, mp4a.40.2 sourceOpenReady: true readyState: open
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Checking codec support: video/mp4; codecs="avc1.4d401f, mp4a.40.2"
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Creating SourceBuffer with: video/mp4; codecs="avc1.4d401f, mp4a.40.2"
+209.517565751a90b1e9.js:1 [LivestreamPlayer] SourceBuffer created successfully!
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #1 - size: 1183 - box: ftyp - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] INIT SEGMENT received! Size: 1183
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #1 - size: 1183 - box: ftyp - buffered ranges: none
+209.517565751a90b1e9.js:1 [LivestreamPlayer] WebSocket connected
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Received message: stream_started 
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Stream started for camera: 68315e3702fd6803e40003fc
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #7 - size: 9184 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #7 - size: 9184 - box: moof - buffered ranges: 0.00-0.60s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #8 - size: 11952 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #8 - size: 11952 - box: moof - buffered ranges: 0.00-0.70s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #9 - size: 12075 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #9 - size: 12075 - box: moof - buffered ranges: 0.00-0.80s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Received message: codec avc1.4d401f, mp4a.40.2
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Received codec info: avc1.4d401f, mp4a.40.2
+209.517565751a90b1e9.js:1 [LivestreamPlayer] tryInitializeSourceBuffer - codec: avc1.4d401f, mp4a.40.2 sourceOpenReady: true readyState: open
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Checking codec support: video/mp4; codecs="avc1.4d401f, mp4a.40.2"
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Creating SourceBuffer with: video/mp4; codecs="avc1.4d401f, mp4a.40.2"
+209.517565751a90b1e9.js:1 [LivestreamPlayer] SourceBuffer created successfully!
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #1 - size: 1183 - box: ftyp - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] INIT SEGMENT received! Size: 1183
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #1 - size: 1183 - box: ftyp - buffered ranges: none
+209.517565751a90b1e9.js:1 [LivestreamPlayer] WebSocket connected
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #3 - size: 10324 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #3 - size: 10324 - box: moof - buffered ranges: 0.00-0.37s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Received message: stream_started 
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Stream started for camera: 68315e3703a36803e4000401
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #10 - size: 14610 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #10 - size: 14610 - box: moof - buffered ranges: 0.00-0.90s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Received message: codec avc1.4d401f, mp4a.40.2
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Received codec info: avc1.4d401f, mp4a.40.2
+209.517565751a90b1e9.js:1 [LivestreamPlayer] tryInitializeSourceBuffer - codec: avc1.4d401f, mp4a.40.2 sourceOpenReady: true readyState: open
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Checking codec support: video/mp4; codecs="avc1.4d401f, mp4a.40.2"
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Creating SourceBuffer with: video/mp4; codecs="avc1.4d401f, mp4a.40.2"
+209.517565751a90b1e9.js:1 [LivestreamPlayer] SourceBuffer created successfully!
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #1 - size: 1183 - box: ftyp - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] INIT SEGMENT received! Size: 1183
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #1 - size: 1183 - box: ftyp - buffered ranges: none
+209.517565751a90b1e9.js:1 [LivestreamPlayer] WebSocket connected
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Received message: stream_started 
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Stream started for camera: 68315e37035b6803e40003ff
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #2 - size: 56132 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #2 - size: 56132 - box: moof - buffered ranges: none
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Received message: codec avc1.4d401f, mp4a.40.2
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Received codec info: avc1.4d401f, mp4a.40.2
+209.517565751a90b1e9.js:1 [LivestreamPlayer] tryInitializeSourceBuffer - codec: avc1.4d401f, mp4a.40.2 sourceOpenReady: true readyState: open
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Checking codec support: video/mp4; codecs="avc1.4d401f, mp4a.40.2"
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Creating SourceBuffer with: video/mp4; codecs="avc1.4d401f, mp4a.40.2"
+209.517565751a90b1e9.js:1 [LivestreamPlayer] SourceBuffer created successfully!
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #1 - size: 1183 - box: ftyp - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] INIT SEGMENT received! Size: 1183
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #1 - size: 1183 - box: ftyp - buffered ranges: none
+209.517565751a90b1e9.js:1 [LivestreamPlayer] WebSocket connected
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #2 - size: 57203 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #2 - size: 57203 - box: moof - buffered ranges: none
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Received message: stream_started 
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Stream started for camera: 69047ecf0361dd03e46b58bd
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #4 - size: 9120 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #4 - size: 9120 - box: moof - buffered ranges: 0.00-0.71s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Received message: codec avc1.640020, mp4a.40.2
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Received codec info: avc1.640020, mp4a.40.2
+209.517565751a90b1e9.js:1 [LivestreamPlayer] tryInitializeSourceBuffer - codec: avc1.640020, mp4a.40.2 sourceOpenReady: true readyState: open
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Checking codec support: video/mp4; codecs="avc1.640020, mp4a.40.2"
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Creating SourceBuffer with: video/mp4; codecs="avc1.640020, mp4a.40.2"
+209.517565751a90b1e9.js:1 [LivestreamPlayer] SourceBuffer created successfully!
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #1 - size: 1181 - box: ftyp - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] INIT SEGMENT received! Size: 1181
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #1 - size: 1181 - box: ftyp - buffered ranges: none
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #2 - size: 65017 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #2 - size: 65017 - box: moof - buffered ranges: none
+209.517565751a90b1e9.js:1 [LivestreamPlayer] WebSocket connected
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Received message: stream_started 
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Stream started for camera: 68315e3702d06803e40003fb
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #2 - size: 13391 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #2 - size: 13391 - box: moof - buffered ranges: none
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #3 - size: 54492 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #3 - size: 54492 - box: moof - buffered ranges: 0.00-0.33s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #4 - size: 5268 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #4 - size: 5268 - box: moof - buffered ranges: 0.00-0.46s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Received message: codec avc1.4d401f, mp4a.40.2
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Received codec info: avc1.4d401f, mp4a.40.2
+209.517565751a90b1e9.js:1 [LivestreamPlayer] tryInitializeSourceBuffer - codec: avc1.4d401f, mp4a.40.2 sourceOpenReady: true readyState: open
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Checking codec support: video/mp4; codecs="avc1.4d401f, mp4a.40.2"
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Creating SourceBuffer with: video/mp4; codecs="avc1.4d401f, mp4a.40.2"
+209.517565751a90b1e9.js:1 [LivestreamPlayer] SourceBuffer created successfully!
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #1 - size: 1183 - box: ftyp - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] INIT SEGMENT received! Size: 1183
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #1 - size: 1183 - box: ftyp - buffered ranges: none
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #5 - size: 4658 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #5 - size: 4658 - box: moof - buffered ranges: 0.00-0.58s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #3 - size: 20050 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #3 - size: 20050 - box: moof - buffered ranges: none
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #2 - size: 63769 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #2 - size: 63769 - box: moof - buffered ranges: none
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #3 - size: 5080 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #3 - size: 5080 - box: moof - buffered ranges: 0.00-0.37s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #4 - size: 10907 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #4 - size: 10907 - box: moof - buffered ranges: 0.00-0.20s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #6 - size: 5459 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #6 - size: 5459 - box: moof - buffered ranges: 0.00-0.71s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #5 - size: 9696 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #5 - size: 9696 - box: moof - buffered ranges: 0.00-1.04s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #7 - size: 5747 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #7 - size: 5747 - box: moof - buffered ranges: 0.00-0.83s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #3 - size: 7391 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #3 - size: 7391 - box: moof - buffered ranges: 0.00-0.37s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #5 - size: 19048 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #5 - size: 19048 - box: moof - buffered ranges: 0.00-0.30s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #6 - size: 11145 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #6 - size: 11145 - box: moof - buffered ranges: 0.00-0.38s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #2 - size: 15531 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #2 - size: 15531 - box: moof - buffered ranges: none
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #3 - size: 9757 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #3 - size: 9757 - box: moof - buffered ranges: 0.00-0.35s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #8 - size: 5215 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #8 - size: 5215 - box: moof - buffered ranges: 0.00-0.96s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #4 - size: 5041 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #4 - size: 5041 - box: moof - buffered ranges: 0.00-0.71s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #7 - size: 18665 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #7 - size: 18665 - box: moof - buffered ranges: 0.00-0.49s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #6 - size: 7619 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #6 - size: 7619 - box: moof - buffered ranges: 0.00-1.37s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #4 - size: 7438 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #4 - size: 7438 - box: moof - buffered ranges: 0.00-0.71s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #8 - size: 33797 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #8 - size: 33797 - box: moof - buffered ranges: 0.00-0.60s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #7 - size: 34792 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #7 - size: 34792 - box: moof - buffered ranges: 0.00-1.71s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #3 - size: 3876 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #3 - size: 3876 - box: moof - buffered ranges: 0.00-0.37s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #9 - size: 5460 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #9 - size: 5460 - box: moof - buffered ranges: 0.00-1.08s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #10 - size: 5313 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #10 - size: 5313 - box: moof - buffered ranges: 0.00-1.21s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #4 - size: 6461 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #4 - size: 6461 - box: moof - buffered ranges: 0.00-0.69s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #9 - size: 13902 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #9 - size: 13902 - box: moof - buffered ranges: 0.00-0.79s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #8 - size: 2113 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #8 - size: 2113 - box: moof - buffered ranges: 0.00-1.81s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #5 - size: 5000 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #5 - size: 5000 - box: moof - buffered ranges: 0.00-1.04s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #10 - size: 20469 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #10 - size: 20469 - box: moof - buffered ranges: 0.00-0.90s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #9 - size: 3684 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #9 - size: 3684 - box: moof - buffered ranges: 0.00-1.94s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #5 - size: 6147 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #5 - size: 6147 - box: moof - buffered ranges: 0.00-1.04s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #10 - size: 5642 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #10 - size: 5642 - box: moof - buffered ranges: 0.00-2.06s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Starting streaming for camera: 68330e970123c803e4000703
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Cleanup called
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Connecting to: wss://hoas-dashboard.familie-hengl.de/ws/livestream/68330e970123c803e4000703
+209.517565751a90b1e9.js:1 [LivestreamPlayer] MediaSource opened, readyState: open
+209.517565751a90b1e9.js:1 [LivestreamPlayer] tryInitializeSourceBuffer - codec: null sourceOpenReady: true readyState: open
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #4 - size: 3834 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #4 - size: 3834 - box: moof - buffered ranges: 0.00-0.70s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #5 - size: 5635 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #5 - size: 5635 - box: moof - buffered ranges: 0.00-1.02s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #6 - size: 5794 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #6 - size: 5794 - box: moof - buffered ranges: 0.00-1.37s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] WebSocket connected
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #6 - size: 9377 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #6 - size: 9377 - box: moof - buffered ranges: 0.00-1.37s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #7 - size: 45503 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #7 - size: 45503 - box: moof - buffered ranges: 0.00-1.71s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Received message: stream_started 
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Stream started for camera: 68315e3703c16803e4000402
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Received message: codec avc1.4d401f, mp4a.40.2
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Received codec info: avc1.4d401f, mp4a.40.2
+209.517565751a90b1e9.js:1 [LivestreamPlayer] tryInitializeSourceBuffer - codec: avc1.4d401f, mp4a.40.2 sourceOpenReady: true readyState: open
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Checking codec support: video/mp4; codecs="avc1.4d401f, mp4a.40.2"
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Creating SourceBuffer with: video/mp4; codecs="avc1.4d401f, mp4a.40.2"
+209.517565751a90b1e9.js:1 [LivestreamPlayer] SourceBuffer created successfully!
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #1 - size: 1183 - box: ftyp - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] INIT SEGMENT received! Size: 1183
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #1 - size: 1183 - box: ftyp - buffered ranges: none
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #5 - size: 3559 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #5 - size: 3559 - box: moof - buffered ranges: 0.00-1.04s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #8 - size: 1954 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #8 - size: 1954 - box: moof - buffered ranges: 0.00-1.83s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] WebSocket connected
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Received message: codec avc1.640020, mp4a.40.2
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Received codec info: avc1.640020, mp4a.40.2
+209.517565751a90b1e9.js:1 [LivestreamPlayer] tryInitializeSourceBuffer - codec: avc1.640020, mp4a.40.2 sourceOpenReady: true readyState: open
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Checking codec support: video/mp4; codecs="avc1.640020, mp4a.40.2"
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Creating SourceBuffer with: video/mp4; codecs="avc1.640020, mp4a.40.2"
+209.517565751a90b1e9.js:1 [LivestreamPlayer] SourceBuffer created successfully!
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Received message: stream_started 
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Stream started for camera: 68330e970123c803e4000703
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #6 - size: 5172 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #6 - size: 5172 - box: moof - buffered ranges: 0.00-1.35s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #1 - size: 1181 - box: ftyp - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] INIT SEGMENT received! Size: 1181
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #1 - size: 1181 - box: ftyp - buffered ranges: none
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #2 - size: 17477 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #2 - size: 17477 - box: moof - buffered ranges: none
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #6 - size: 1854 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #6 - size: 1854 - box: moof - buffered ranges: 0.00-1.37s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #9 - size: 3886 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #9 - size: 3886 - box: moof - buffered ranges: 0.00-1.96s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #7 - size: 61349 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #7 - size: 61349 - box: moof - buffered ranges: 0.00-1.67s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #7 - size: 5852 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #7 - size: 5852 - box: moof - buffered ranges: 0.00-1.71s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #3 - size: 15138 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #3 - size: 15138 - box: moof - buffered ranges: none
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #7 - size: 14618 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #7 - size: 14618 - box: moof - buffered ranges: 0.00-1.50s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #10 - size: 5499 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #10 - size: 5499 - box: moof - buffered ranges: 0.00-2.08s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #8 - size: 3778 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #8 - size: 3778 - box: moof - buffered ranges: 0.00-1.79s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #8 - size: 51076 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #8 - size: 51076 - box: moof - buffered ranges: 0.00-2.00s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #2 - size: 46474 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #2 - size: 46474 - box: moof - buffered ranges: none
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #8 - size: 2926 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #8 - size: 2926 - box: moof - buffered ranges: 0.00-1.62s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #9 - size: 4419 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #9 - size: 4419 - box: moof - buffered ranges: 0.00-1.92s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #4 - size: 33159 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #4 - size: 33159 - box: moof - buffered ranges: none
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #9 - size: 2442 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #9 - size: 2442 - box: moof - buffered ranges: 0.00-2.12s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #9 - size: 2613 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #9 - size: 2613 - box: moof - buffered ranges: 0.00-1.75s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #5 - size: 15291 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #5 - size: 15291 - box: moof - buffered ranges: none
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #10 - size: 5304 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #10 - size: 5304 - box: moof - buffered ranges: 0.00-2.04s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #10 - size: 4978 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #10 - size: 4978 - box: moof - buffered ranges: 0.00-2.25s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #6 - size: 14624 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #6 - size: 14624 - box: moof - buffered ranges: none
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #10 - size: 2242 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #10 - size: 2242 - box: moof - buffered ranges: 0.00-1.87s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #3 - size: 8773 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #3 - size: 8773 - box: moof - buffered ranges: 0.00-0.42s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #7 - size: 14648 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #7 - size: 14648 - box: moof - buffered ranges: none
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #8 - size: 14607 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #8 - size: 14607 - box: moof - buffered ranges: none
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #9 - size: 14596 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #9 - size: 14596 - box: moof - buffered ranges: none
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #10 - size: 14732 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #10 - size: 14732 - box: moof - buffered ranges: none
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #4 - size: 4541 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #4 - size: 4541 - box: moof - buffered ranges: 0.00-0.75s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #5 - size: 4218 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #5 - size: 4218 - box: moof - buffered ranges: 0.00-1.08s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #6 - size: 5074 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #6 - size: 5074 - box: moof - buffered ranges: 0.00-1.42s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #7 - size: 43233 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #7 - size: 43233 - box: moof - buffered ranges: 0.00-1.75s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #8 - size: 1790 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #8 - size: 1790 - box: moof - buffered ranges: 0.00-1.87s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #9 - size: 2658 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #9 - size: 2658 - box: moof - buffered ranges: 0.00-2.00s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #10 - size: 4068 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #10 - size: 4068 - box: moof - buffered ranges: 0.00-2.12s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #50 - size: 15219 - box: moof - buffered ranges: 0.00-5.20s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Cleanup called
+209.517565751a90b1e9.js:1 [LivestreamPlayer] MediaSource ended
+209.517565751a90b1e9.js:1 [LivestreamPlayer] WebSocket closed: 1005 
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Starting streaming for camera: 68315e3703866803e4000400
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Cleanup called
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Connecting to: wss://hoas-dashboard.familie-hengl.de/ws/livestream/68315e3703866803e4000400
+209.517565751a90b1e9.js:1 [LivestreamPlayer] MediaSource opened, readyState: open
+209.517565751a90b1e9.js:1 [LivestreamPlayer] tryInitializeSourceBuffer - codec: null sourceOpenReady: true readyState: open
+209.517565751a90b1e9.js:1 [LivestreamPlayer] WebSocket connected
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Received message: codec avc1.4d401f, mp4a.40.2
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Received codec info: avc1.4d401f, mp4a.40.2
+209.517565751a90b1e9.js:1 [LivestreamPlayer] tryInitializeSourceBuffer - codec: avc1.4d401f, mp4a.40.2 sourceOpenReady: true readyState: open
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Checking codec support: video/mp4; codecs="avc1.4d401f, mp4a.40.2"
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Creating SourceBuffer with: video/mp4; codecs="avc1.4d401f, mp4a.40.2"
+209.517565751a90b1e9.js:1 [LivestreamPlayer] SourceBuffer created successfully!
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Received message: stream_started 
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Stream started for camera: 68315e3703866803e4000400
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #1 - size: 1183 - box: ftyp - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] INIT SEGMENT received! Size: 1183
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #1 - size: 1183 - box: ftyp - buffered ranges: none
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #2 - size: 5638 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #2 - size: 5638 - box: moof - buffered ranges: none
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #3 - size: 6706 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #3 - size: 6706 - box: moof - buffered ranges: none
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #4 - size: 5360 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #4 - size: 5360 - box: moof - buffered ranges: none
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #5 - size: 6685 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #5 - size: 6685 - box: moof - buffered ranges: none
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #6 - size: 6646 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #6 - size: 6646 - box: moof - buffered ranges: none
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #50 - size: 18554 - box: moof - buffered ranges: 0.00-6.50s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #7 - size: 5769 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #7 - size: 5769 - box: moof - buffered ranges: none
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #8 - size: 6004 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #8 - size: 6004 - box: moof - buffered ranges: none
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #50 - size: 6004 - box: moof - buffered ranges: 0.00-7.85s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #9 - size: 6506 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #9 - size: 6506 - box: moof - buffered ranges: none
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #10 - size: 6269 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #10 - size: 6269 - box: moof - buffered ranges: none
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #50 - size: 3232 - box: moof - buffered ranges: 0.00-7.44s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #50 - size: 3151 - box: moof - buffered ranges: 0.00-7.75s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #50 - size: 2386 - box: moof - buffered ranges: 0.00-7.58s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #50 - size: 2327 - box: moof - buffered ranges: 0.00-7.40s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #50 - size: 1811 - box: moof - buffered ranges: 0.00-7.23s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #50 - size: 3289 - box: moof - buffered ranges: 0.00-7.42s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #100 - size: 17453 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #100 - size: 17453 - box: moof - buffered ranges: 0.00-10.30s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Cleanup called
+209.517565751a90b1e9.js:1 [LivestreamPlayer] MediaSource ended
+209.517565751a90b1e9.js:1 [LivestreamPlayer] WebSocket closed: 1005 
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Starting streaming for camera: 68315e3702fd6803e40003fc
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Cleanup called
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Connecting to: wss://hoas-dashboard.familie-hengl.de/ws/livestream/68315e3702fd6803e40003fc
+209.517565751a90b1e9.js:1 [LivestreamPlayer] MediaSource opened, readyState: open
+209.517565751a90b1e9.js:1 [LivestreamPlayer] tryInitializeSourceBuffer - codec: null sourceOpenReady: true readyState: open
+209.517565751a90b1e9.js:1 [LivestreamPlayer] WebSocket connected
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Received message: codec avc1.4d401f, mp4a.40.2
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Received codec info: avc1.4d401f, mp4a.40.2
+209.517565751a90b1e9.js:1 [LivestreamPlayer] tryInitializeSourceBuffer - codec: avc1.4d401f, mp4a.40.2 sourceOpenReady: true readyState: open
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Checking codec support: video/mp4; codecs="avc1.4d401f, mp4a.40.2"
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Creating SourceBuffer with: video/mp4; codecs="avc1.4d401f, mp4a.40.2"
+209.517565751a90b1e9.js:1 [LivestreamPlayer] SourceBuffer created successfully!
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Received message: stream_started 
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Stream started for camera: 68315e3702fd6803e40003fc
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #1 - size: 1183 - box: ftyp - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] INIT SEGMENT received! Size: 1183
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #1 - size: 1183 - box: ftyp - buffered ranges: none
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #2 - size: 4544 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #2 - size: 4544 - box: moof - buffered ranges: none
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #3 - size: 3214 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #3 - size: 3214 - box: moof - buffered ranges: none
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #4 - size: 3268 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #4 - size: 3268 - box: moof - buffered ranges: none
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #5 - size: 3692 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #5 - size: 3692 - box: moof - buffered ranges: none
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #6 - size: 3417 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #6 - size: 3417 - box: moof - buffered ranges: none
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #7 - size: 3739 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #7 - size: 3739 - box: moof - buffered ranges: none
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #8 - size: 3754 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #8 - size: 3754 - box: moof - buffered ranges: none
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #100 - size: 18755 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #100 - size: 18755 - box: moof - buffered ranges: 0.00-13.48s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #9 - size: 3062 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #9 - size: 3062 - box: moof - buffered ranges: none
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #100 - size: 3489 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #100 - size: 3489 - box: moof - buffered ranges: 0.00-14.87s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #10 - size: 3890 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #10 - size: 3890 - box: moof - buffered ranges: none
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #100 - size: 3229 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #100 - size: 3229 - box: moof - buffered ranges: 0.00-14.58s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #100 - size: 3209 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #100 - size: 3209 - box: moof - buffered ranges: 0.00-15.04s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #100 - size: 3850 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #100 - size: 3850 - box: moof - buffered ranges: 0.00-14.73s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #100 - size: 1605 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #100 - size: 1605 - box: moof - buffered ranges: 0.00-14.37s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #150 - size: 12308 - box: moof - buffered ranges: 0.00-15.51s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #100 - size: 2018 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #100 - size: 2018 - box: moof - buffered ranges: 0.00-14.63s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #100 - size: 5187 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #100 - size: 5187 - box: moof - buffered ranges: 0.00-16.69s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #50 - size: 4449 - box: moof - buffered ranges: 12.89-19.08s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Binary chunk #200 - size: 12068 - box: moof - sourceBuffer ready: true - queue length: 0
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #200 - size: 12068 - box: moof - buffered ranges: 0.00-20.81s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Cleanup called
+209.517565751a90b1e9.js:1 [LivestreamPlayer] MediaSource ended
+209.517565751a90b1e9.js:1 [LivestreamPlayer] WebSocket closed: 1005 
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #150 - size: 20833 - box: moof - buffered ranges: 0.00-19.90s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #150 - size: 4110 - box: moof - buffered ranges: 0.00-20.83s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #150 - size: 5882 - box: moof - buffered ranges: 0.00-21.00s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #150 - size: 2485 - box: moof - buffered ranges: 0.00-20.62s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #150 - size: 4343 - box: moof - buffered ranges: 0.00-21.58s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #150 - size: 6031 - box: moof - buffered ranges: 0.00-22.00s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #150 - size: 4218 - box: moof - buffered ranges: 0.00-20.87s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] appendBuffer #150 - size: 5928 - box: moof - buffered ranges: 0.00-22.92s
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Cleanup called
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Cleanup called
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Cleanup called
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Cleanup called
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Cleanup called
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Cleanup called
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Cleanup called
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Cleanup called
+209.517565751a90b1e9.js:1 [LivestreamPlayer] Cleanup called
+209.517565751a90b1e9.js:1 [LivestreamPlayer] MediaSource ended
+209.517565751a90b1e9.js:1 [LivestreamPlayer] MediaSource ended
+209.517565751a90b1e9.js:1 [LivestreamPlayer] MediaSource ended
+209.517565751a90b1e9.js:1 [LivestreamPlayer] MediaSource ended
+209.517565751a90b1e9.js:1 [LivestreamPlayer] MediaSource ended
+209.517565751a90b1e9.js:1 [LivestreamPlayer] MediaSource ended
+209.517565751a90b1e9.js:1 [LivestreamPlayer] MediaSource ended
+209.517565751a90b1e9.js:1 [LivestreamPlayer] MediaSource ended
+209.517565751a90b1e9.js:1 [LivestreamPlayer] MediaSource ended
+209.517565751a90b1e9.js:1 [LivestreamPlayer] WebSocket closed: 1005 
+209.517565751a90b1e9.js:1 [LivestreamPlayer] WebSocket closed: 1005 
+209.517565751a90b1e9.js:1 [LivestreamPlayer] WebSocket closed: 1005 
+209.517565751a90b1e9.js:1 [LivestreamPlayer] WebSocket closed: 1005 
+209.517565751a90b1e9.js:1 [LivestreamPlayer] WebSocket closed: 1005 
+209.517565751a90b1e9.js:1 [LivestreamPlayer] WebSocket closed: 1005 
+209.517565751a90b1e9.js:1 [LivestreamPlayer] WebSocket closed: 1005 
+209.517565751a90b1e9.js:1 [LivestreamPlayer] WebSocket closed: 1005 
+209.517565751a90b1e9.js:1 [LivestreamPlayer] WebSocket closed: 1005 

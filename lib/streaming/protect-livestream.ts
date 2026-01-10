@@ -405,13 +405,36 @@ export class ProtectLivestreamManager extends EventEmitter {
     const existingSession = this.sessions.get(cameraId)
     if (existingSession) {
       console.log('[ProtectLivestream] Reusing existing stream for:', camera.name, '- adding client')
+      
+      // Cancel any pending cleanup
+      const pendingCleanup = this.sessionCleanupTimeouts.get(cameraId)
+      if (pendingCleanup) {
+        console.log('[ProtectLivestream] Cancelling pending cleanup for:', camera.name)
+        clearTimeout(pendingCleanup)
+        this.sessionCleanupTimeouts.delete(cameraId)
+      }
+      
       existingSession.clients.add(onData)
       if (onCodec) {
         existingSession.codecCallbacks.add(onCodec)
+        // Send cached codec immediately
         if (existingSession.lastCodec) {
+          console.log('[ProtectLivestream] Sending cached codec to new client:', existingSession.lastCodec)
           onCodec(existingSession.lastCodec)
         }
       }
+      
+      // Send cached init segment immediately to new client
+      if (existingSession.initSegment && existingSession.foundInit) {
+        console.log('[ProtectLivestream] Sending cached init segment to new client - size:', existingSession.initSegment.length)
+        try {
+          onData(existingSession.initSegment)
+          existingSession.initSegmentSent.add(onData)
+        } catch (e) {
+          console.error('[ProtectLivestream] Error sending cached init segment:', e)
+        }
+      }
+      
       return true
     }
 
@@ -608,12 +631,15 @@ export class ProtectLivestreamManager extends EventEmitter {
     }
   }
 
+  private sessionCleanupTimeouts = new Map<string, NodeJS.Timeout>()
+  
   stopStream(cameraId: string, onData?: (data: Buffer) => void, onCodec?: (codec: string) => void): void {
     const session = this.sessions.get(cameraId)
     if (!session) return
 
     if (onData) {
       session.clients.delete(onData)
+      session.initSegmentSent.delete(onData)
       if (onCodec) {
         session.codecCallbacks.delete(onCodec)
       }
@@ -621,16 +647,39 @@ export class ProtectLivestreamManager extends EventEmitter {
       console.log('[ProtectLivestream] Client removed from', cameraId, '- remaining clients:', session.clients.size)
       
       if (session.clients.size === 0) {
-        console.log('[ProtectLivestream] No more clients, stopping stream:', cameraId)
-        try {
-          session.livestream.stop()
-        } catch (e) {
-          console.error('[ProtectLivestream] Error stopping stream:', e)
+        // Clear any existing cleanup timeout for this camera
+        const existingTimeout = this.sessionCleanupTimeouts.get(cameraId)
+        if (existingTimeout) {
+          clearTimeout(existingTimeout)
         }
-        this.sessions.delete(cameraId)
+        
+        // Delay cleanup by 3 seconds to allow modal to connect
+        console.log('[ProtectLivestream] No clients, delaying cleanup for 3s:', cameraId)
+        const timeout = setTimeout(() => {
+          const currentSession = this.sessions.get(cameraId)
+          if (currentSession && currentSession.clients.size === 0) {
+            console.log('[ProtectLivestream] Cleanup timeout reached, stopping stream:', cameraId)
+            try {
+              currentSession.livestream.stop()
+            } catch (e) {
+              console.error('[ProtectLivestream] Error stopping stream:', e)
+            }
+            this.sessions.delete(cameraId)
+          } else if (currentSession) {
+            console.log('[ProtectLivestream] New client connected before cleanup:', cameraId)
+          }
+          this.sessionCleanupTimeouts.delete(cameraId)
+        }, 3000)
+        
+        this.sessionCleanupTimeouts.set(cameraId, timeout)
       }
     } else {
       console.log('[ProtectLivestream] Force stopping stream:', cameraId)
+      const existingTimeout = this.sessionCleanupTimeouts.get(cameraId)
+      if (existingTimeout) {
+        clearTimeout(existingTimeout)
+        this.sessionCleanupTimeouts.delete(cameraId)
+      }
       try {
         session.livestream.stop()
       } catch (e) {
