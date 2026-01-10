@@ -132,6 +132,17 @@ export default function WebRTCPlayer({
       
       sb.addEventListener('updateend', () => {
         processQueue()
+        
+        // Try to play when we have buffered data
+        if (videoRef.current && sb.buffered.length > 0) {
+          const bufferedEnd = sb.buffered.end(0)
+          if (bufferedEnd > 0.5 && videoRef.current.paused) {
+            console.log('[LivestreamPlayer] Buffered enough data, starting playback:', bufferedEnd.toFixed(2), 's')
+            videoRef.current.play().catch(e => {
+              console.log('[LivestreamPlayer] Play blocked:', e.message)
+            })
+          }
+        }
       })
       
       sb.addEventListener('error', (e) => {
@@ -146,13 +157,6 @@ export default function WebRTCPlayer({
       if (bufferQueue.current.length > 0) {
         console.log('[LivestreamPlayer] Flushing', bufferQueue.current.length, 'queued chunks')
         processQueue()
-      }
-      
-      // Ensure video starts playing
-      if (videoRef.current) {
-        videoRef.current.play().catch(e => {
-          console.log('[LivestreamPlayer] Auto-play blocked:', e.message)
-        })
       }
       
       return true
