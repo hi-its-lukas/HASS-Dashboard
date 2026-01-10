@@ -424,15 +424,22 @@ export class ProtectLivestreamManager extends EventEmitter {
         }
       }
       
-      // Send cached init segment immediately to new client
+      // Send cached init segment with a small delay to allow client to create SourceBuffer
       if (existingSession.initSegment && existingSession.foundInit) {
-        console.log('[ProtectLivestream] Sending cached init segment to new client - size:', existingSession.initSegment.length)
-        try {
-          onData(existingSession.initSegment)
-          existingSession.initSegmentSent.add(onData)
-        } catch (e) {
-          console.error('[ProtectLivestream] Error sending cached init segment:', e)
-        }
+        const initSegmentCopy = Buffer.from(existingSession.initSegment)
+        console.log('[ProtectLivestream] Scheduling cached init segment for new client - size:', initSegmentCopy.length)
+        setTimeout(() => {
+          // Verify client is still connected
+          if (existingSession.clients.has(onData)) {
+            console.log('[ProtectLivestream] Sending cached init segment to new client - size:', initSegmentCopy.length)
+            try {
+              onData(initSegmentCopy)
+              existingSession.initSegmentSent.add(onData)
+            } catch (e) {
+              console.error('[ProtectLivestream] Error sending cached init segment:', e)
+            }
+          }
+        }, 100) // 100ms delay for client to initialize SourceBuffer
       }
       
       return true
