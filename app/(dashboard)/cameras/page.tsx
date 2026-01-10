@@ -176,18 +176,27 @@ function CamerasPageContent() {
               Test-Modus: Nur eine Kamera wird angezeigt
             </div>
           )}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {displayedUnifiCameras.map((camera, index) => (
+          <div className={`grid gap-4 ${
+            selectedUnifiCamera 
+              ? 'grid-cols-1' 
+              : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
+          }`}>
+            {displayedUnifiCameras
+              .filter(camera => !selectedUnifiCamera || camera.id === selectedUnifiCamera.id)
+              .map((camera, index) => (
               <motion.div
                 key={`unifi-${camera.id}`}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
+                layout
               >
                 <Card className="overflow-hidden">
                   <div 
-                    className="relative aspect-video bg-bg-secondary cursor-pointer group"
-                    onClick={() => setSelectedUnifiCamera(camera)}
+                    className={`relative bg-bg-secondary cursor-pointer group ${
+                      selectedUnifiCamera ? 'aspect-[16/9] max-h-[70vh]' : 'aspect-video'
+                    }`}
+                    onClick={() => setSelectedUnifiCamera(selectedUnifiCamera ? null : camera)}
                   >
                     {useLiveStream ? (
                       <WebRTCPlayer
@@ -203,16 +212,39 @@ function CamerasPageContent() {
                       />
                     )}
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center pointer-events-none">
-                      <Maximize2 className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                      {selectedUnifiCamera ? (
+                        <X className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                      ) : (
+                        <Maximize2 className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                      )}
                     </div>
+                    {useLiveStream && (
+                      <div className="absolute top-2 left-2 px-2 py-1 bg-green-500/80 rounded text-xs text-white font-medium flex items-center gap-1">
+                        <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                        LIVE
+                      </div>
+                    )}
                   </div>
-                  <div className="p-3">
-                    <p className="text-sm font-medium text-white truncate">
-                      {camera.name}
-                    </p>
-                    <p className="text-xs text-text-muted">
-                      UniFi Protect • {camera.type}
-                    </p>
+                  <div className="p-3 flex justify-between items-center">
+                    <div>
+                      <p className="text-sm font-medium text-white truncate">
+                        {camera.name}
+                      </p>
+                      <p className="text-xs text-text-muted">
+                        UniFi Protect • {camera.type}
+                      </p>
+                    </div>
+                    {selectedUnifiCamera && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setSelectedUnifiCamera(null)
+                        }}
+                        className="px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-white text-sm transition-colors"
+                      >
+                        Zurück
+                      </button>
+                    )}
                   </div>
                 </Card>
               </motion.div>
@@ -265,13 +297,6 @@ function CamerasPageContent() {
             })}
           </div>
           
-          {selectedUnifiCamera && (
-            <UnifiCameraModal
-              camera={selectedUnifiCamera}
-              useLiveStream={useLiveStream && liveStreamEnabled}
-              onClose={() => setSelectedUnifiCamera(null)}
-            />
-          )}
           
           {selectedCamera && (
             <CameraStreamModal
