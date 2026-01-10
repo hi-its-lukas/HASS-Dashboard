@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/card'
 import { useHAStore } from '@/lib/ha'
 import { useConfigStore } from '@/lib/config/store'
 import EmptyState from './EmptyState'
+import { cn } from '@/lib/utils'
 
 export default function LocksTab() {
   const unifiAccessDevices = useConfigStore((s) => s.unifi?.accessDevices) || []
@@ -68,13 +69,13 @@ export default function LocksTab() {
   return (
     <div className="space-y-4">
       {error && (
-        <div className="p-3 bg-red-500/20 border border-red-500/30 rounded-xl flex items-center gap-2 text-red-400">
+        <div className="p-3 bg-white/5 border border-white/10 rounded-xl flex items-center gap-2 text-white/70">
           <AlertCircle className="w-4 h-4" />
           <span className="text-sm">{error}</span>
         </div>
       )}
       {success && (
-        <div className="p-3 bg-green-500/20 border border-green-500/30 rounded-xl flex items-center gap-2 text-green-400">
+        <div className="p-3 bg-white/10 border border-white/20 rounded-xl flex items-center gap-2 text-white">
           <Unlock className="w-4 h-4" />
           <span className="text-sm">{success}</span>
         </div>
@@ -86,15 +87,15 @@ export default function LocksTab() {
             <Card key={device.id} className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center">
-                    <Lock className="w-6 h-6 text-purple-400" />
+                  <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center">
+                    <Lock className="w-6 h-6 text-white" />
                   </div>
                   <div>
                     <p className="font-medium text-white">{device.name}</p>
-                    <p className="text-xs text-text-muted">UniFi Access</p>
+                    <p className="text-xs text-white/50">UniFi Access</p>
                   </div>
                 </div>
-                <button onClick={() => handleUnifiUnlock(device)} disabled={unlocking === device.id} className="flex items-center gap-2 px-4 py-2 bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 rounded-xl disabled:opacity-50">
+                <button onClick={() => handleUnifiUnlock(device)} disabled={unlocking === device.id} className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl disabled:opacity-50 transition-colors">
                   {unlocking === device.id ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Unlock className="w-4 h-4" />}
                   <span>{unlocking === device.id ? 'Öffne...' : 'Öffnen'}</span>
                 </button>
@@ -111,15 +112,15 @@ export default function LocksTab() {
               <Card key={entityId} className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${isLocked ? 'bg-purple-500/20' : 'bg-green-500/20'}`}>
-                      {isLocked ? <Lock className="w-6 h-6 text-purple-400" /> : <Unlock className="w-6 h-6 text-green-400" />}
+                    <div className={cn('w-12 h-12 rounded-xl flex items-center justify-center', isLocked ? 'bg-white/10' : 'bg-white/20')}>
+                      {isLocked ? <Lock className="w-6 h-6 text-white" /> : <Unlock className="w-6 h-6 text-white" />}
                     </div>
                     <div>
                       <p className="font-medium text-white capitalize">{friendlyName}</p>
-                      <p className="text-xs text-text-muted">{isLocked ? 'Verriegelt' : 'Entriegelt'}</p>
+                      <p className="text-xs text-white/50">{isLocked ? 'Verriegelt' : 'Entriegelt'}</p>
                     </div>
                   </div>
-                  <button onClick={() => handleHALock(entityId, isLocked ? 'unlock' : 'lock')} disabled={unlocking === entityId} className={`flex items-center gap-2 px-4 py-2 rounded-xl disabled:opacity-50 ${isLocked ? 'bg-green-500/20 hover:bg-green-500/30 text-green-400' : 'bg-purple-500/20 hover:bg-purple-500/30 text-purple-400'}`}>
+                  <button onClick={() => handleHALock(entityId, isLocked ? 'unlock' : 'lock')} disabled={unlocking === entityId} className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl disabled:opacity-50 transition-colors">
                     {unlocking === entityId ? <RefreshCw className="w-4 h-4 animate-spin" /> : isLocked ? <Unlock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
                     <span>{isLocked ? 'Öffnen' : 'Schließen'}</span>
                   </button>

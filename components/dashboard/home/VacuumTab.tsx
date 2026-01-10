@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/card'
 import { useHAStore } from '@/lib/ha'
 import { useConfig } from '@/lib/config/store'
 import EmptyState from './EmptyState'
+import { cn } from '@/lib/utils'
 
 export default function VacuumTab() {
   const states = useHAStore((s) => s.states)
@@ -37,26 +38,26 @@ export default function VacuumTab() {
   }
 
   const batteryNum = battery ? parseInt(battery) : 0
-  const getBatteryColor = (level: number) => level > 50 ? 'text-green-400' : level > 20 ? 'text-yellow-400' : 'text-red-400'
-  const getStatusColor = () => isCleaning ? 'bg-green-500' : isCharging ? 'bg-cyan-500' : 'bg-gray-500'
+  const getBatteryColor = (level: number) => level > 50 ? 'text-white' : level > 20 ? 'text-white/70' : 'text-white/50'
+  const getStatusIndicator = () => isCleaning ? 'bg-white' : isCharging ? 'bg-white/60' : 'bg-white/30'
 
   return (
     <Card className="p-6">
       <div className="flex items-start justify-between mb-6">
         <div className="flex items-center gap-4">
           <div className="relative">
-            <div className="w-20 h-20 rounded-full bg-bg-secondary flex items-center justify-center">
-              <Sparkles className="w-10 h-10 text-accent-cyan" />
+            <div className="w-20 h-20 rounded-full bg-white/10 flex items-center justify-center">
+              <Sparkles className="w-10 h-10 text-white" />
             </div>
-            <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full ${getStatusColor()} border-2 border-bg-primary`} />
+            <div className={cn('absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-[#141b2d]', getStatusIndicator())} />
           </div>
           <div>
             <h2 className="text-xl font-bold text-white">{status || 'Unbekannt'}</h2>
-            <p className="text-sm text-text-secondary">{vacuumState?.attributes?.friendly_name || vacuumEntityId.split('.')[1]}</p>
+            <p className="text-sm text-white/50">{vacuumState?.attributes?.friendly_name || vacuumEntityId.split('.')[1]}</p>
           </div>
         </div>
         {battery && (
-          <div className={`flex items-center gap-1 ${getBatteryColor(batteryNum)}`}>
+          <div className={cn('flex items-center gap-1', getBatteryColor(batteryNum))}>
             <Battery className="w-5 h-5" />
             <span className="text-2xl font-bold">{battery}%</span>
           </div>
@@ -64,16 +65,16 @@ export default function VacuumTab() {
       </div>
 
       <div className="grid grid-cols-3 gap-3">
-        <button onClick={() => handleAction('start')} disabled={loading !== null} className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-green-500/20 hover:bg-green-500/30 disabled:opacity-50">
-          {loading === 'start' ? <RefreshCw className="w-6 h-6 text-green-400 animate-spin" /> : <Play className="w-6 h-6 text-green-400" />}
+        <button onClick={() => handleAction('start')} disabled={loading !== null} className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-white/10 hover:bg-white/20 disabled:opacity-50 transition-colors">
+          {loading === 'start' ? <RefreshCw className="w-6 h-6 text-white animate-spin" /> : <Play className="w-6 h-6 text-white" />}
           <span className="text-xs text-white">Start</span>
         </button>
-        <button onClick={() => handleAction('pause')} disabled={loading !== null} className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-yellow-500/20 hover:bg-yellow-500/30 disabled:opacity-50">
-          {loading === 'pause' ? <RefreshCw className="w-6 h-6 text-yellow-400 animate-spin" /> : <Pause className="w-6 h-6 text-yellow-400" />}
+        <button onClick={() => handleAction('pause')} disabled={loading !== null} className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-white/10 hover:bg-white/20 disabled:opacity-50 transition-colors">
+          {loading === 'pause' ? <RefreshCw className="w-6 h-6 text-white animate-spin" /> : <Pause className="w-6 h-6 text-white" />}
           <span className="text-xs text-white">Pause</span>
         </button>
-        <button onClick={() => handleAction('return_to_base')} disabled={loading !== null} className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-cyan-500/20 hover:bg-cyan-500/30 disabled:opacity-50">
-          {loading === 'return_to_base' ? <RefreshCw className="w-6 h-6 text-cyan-400 animate-spin" /> : <Home className="w-6 h-6 text-cyan-400" />}
+        <button onClick={() => handleAction('return_to_base')} disabled={loading !== null} className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-white/10 hover:bg-white/20 disabled:opacity-50 transition-colors">
+          {loading === 'return_to_base' ? <RefreshCw className="w-6 h-6 text-white animate-spin" /> : <Home className="w-6 h-6 text-white" />}
           <span className="text-xs text-white">Basis</span>
         </button>
       </div>

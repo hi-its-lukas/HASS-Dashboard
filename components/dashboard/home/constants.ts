@@ -3,12 +3,12 @@ import { Lightbulb, Blinds, Sun, Thermometer, Bot, Lock } from 'lucide-react'
 export type TabId = 'lights' | 'covers' | 'awnings' | 'climate' | 'vacuum' | 'locks'
 
 export const TABS: { id: TabId; label: string; icon: typeof Lightbulb; bgColor: string; textColor: string }[] = [
-  { id: 'lights', label: 'Licht', icon: Lightbulb, bgColor: 'rgba(255, 204, 0, 0.2)', textColor: '#ffcc00' },
-  { id: 'covers', label: 'Rollos', icon: Blinds, bgColor: 'rgba(168, 85, 247, 0.2)', textColor: '#a855f7' },
-  { id: 'awnings', label: 'Markisen', icon: Sun, bgColor: 'rgba(245, 158, 11, 0.2)', textColor: '#f59e0b' },
-  { id: 'climate', label: 'Klima', icon: Thermometer, bgColor: 'rgba(255, 149, 0, 0.2)', textColor: '#ff9500' },
-  { id: 'vacuum', label: 'Staubsauger', icon: Bot, bgColor: 'rgba(100, 210, 255, 0.2)', textColor: '#64d2ff' },
-  { id: 'locks', label: 'Schlösser', icon: Lock, bgColor: 'rgba(192, 132, 252, 0.2)', textColor: '#c084fc' },
+  { id: 'lights', label: 'Licht', icon: Lightbulb, bgColor: 'rgba(255, 255, 255, 0.15)', textColor: '#ffffff' },
+  { id: 'covers', label: 'Rollos', icon: Blinds, bgColor: 'rgba(255, 255, 255, 0.15)', textColor: '#ffffff' },
+  { id: 'awnings', label: 'Markisen', icon: Sun, bgColor: 'rgba(255, 255, 255, 0.15)', textColor: '#ffffff' },
+  { id: 'climate', label: 'Klima', icon: Thermometer, bgColor: 'rgba(255, 255, 255, 0.15)', textColor: '#ffffff' },
+  { id: 'vacuum', label: 'Staubsauger', icon: Bot, bgColor: 'rgba(255, 255, 255, 0.15)', textColor: '#ffffff' },
+  { id: 'locks', label: 'Schlösser', icon: Lock, bgColor: 'rgba(255, 255, 255, 0.15)', textColor: '#ffffff' },
 ]
 
 export const COLOR_PRESETS = [
