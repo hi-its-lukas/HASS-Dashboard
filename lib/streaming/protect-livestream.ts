@@ -414,7 +414,7 @@ export class ProtectLivestreamManager extends EventEmitter {
         this.sessionCleanupTimeouts.delete(cameraId)
       }
       
-      existingSession.clients.add(onData)
+      // DON'T add to clients yet - wait until init segment is sent
       if (onCodec) {
         existingSession.codecCallbacks.add(onCodec)
         // Send cached codec immediately
@@ -424,22 +424,26 @@ export class ProtectLivestreamManager extends EventEmitter {
         }
       }
       
-      // Send cached init segment with a small delay to allow client to create SourceBuffer
+      // Send cached init segment with a small delay, then add to clients for moof data
       if (existingSession.initSegment && existingSession.foundInit) {
         const initSegmentCopy = Buffer.from(existingSession.initSegment)
         console.log('[ProtectLivestream] Scheduling cached init segment for new client - size:', initSegmentCopy.length)
         setTimeout(() => {
-          // Verify client is still connected
-          if (existingSession.clients.has(onData)) {
-            console.log('[ProtectLivestream] Sending cached init segment to new client - size:', initSegmentCopy.length)
-            try {
-              onData(initSegmentCopy)
-              existingSession.initSegmentSent.add(onData)
-            } catch (e) {
-              console.error('[ProtectLivestream] Error sending cached init segment:', e)
-            }
+          console.log('[ProtectLivestream] Sending cached init segment to new client - size:', initSegmentCopy.length)
+          try {
+            // First send init segment
+            onData(initSegmentCopy)
+            existingSession.initSegmentSent.add(onData)
+            // THEN add to clients to receive moof data
+            existingSession.clients.add(onData)
+            console.log('[ProtectLivestream] Client now receiving live data')
+          } catch (e) {
+            console.error('[ProtectLivestream] Error sending cached init segment:', e)
           }
         }, 100) // 100ms delay for client to initialize SourceBuffer
+      } else {
+        // No init segment yet - add to clients immediately
+        existingSession.clients.add(onData)
       }
       
       return true
