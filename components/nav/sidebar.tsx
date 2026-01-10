@@ -13,17 +13,11 @@ import {
   ChevronLeft,
   ChevronRight,
   Lightbulb,
-  Blinds,
   Phone,
-  Thermometer,
   Calendar,
   Play,
-  Bot,
-  Sun,
-  Theater,
   Sparkles,
-  Cloud,
-  DoorOpen
+  Cloud
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useConfigStore } from '@/lib/config/store'
@@ -51,19 +45,13 @@ function DashboardTitle() {
 }
 
 const navItems = [
-  { href: '/', icon: Home, label: 'Home' },
-  { href: '/lights', icon: Lightbulb, label: 'Lichtquellen' },
-  { href: '/covers', icon: Blinds, label: 'Rollos' },
-  { href: '/awnings', icon: Sun, label: 'Markisen' },
-  { href: '/curtains', icon: Theater, label: 'Gardinen' },
-  { href: '/locks', icon: DoorOpen, label: 'Türschlösser' },
-  { href: '/climate', icon: Thermometer, label: 'Klima' },
+  { href: '/', icon: Home, label: 'Dashboard' },
+  { href: '/home', icon: Lightbulb, label: 'Zuhause' },
+  { href: '/cameras', icon: Video, label: 'Kameras' },
   { href: '/weather', icon: Cloud, label: 'Wetter' },
   { href: '/calendar', icon: Calendar, label: 'Kalender' },
-  { href: '/cameras', icon: Video, label: 'Kameras' },
   { href: '/energy', icon: Zap, label: 'Energie' },
   { href: '/family', icon: Users, label: 'Familie' },
-  { href: '/vacuum', icon: Bot, label: 'Saugroboter' },
   { href: '/more', icon: Play, label: 'Aktionen' },
 ]
 
