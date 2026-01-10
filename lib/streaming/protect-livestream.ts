@@ -147,6 +147,32 @@ function hasMoofBox(buffer: Buffer): boolean {
   return findBox(buffer, BOX_MOOF) !== null
 }
 
+function fixFtypForMSE(initSegment: Buffer): Buffer {
+  // UniFi sends major_brand: 'dash' which Safari/Chrome MSE doesn't like
+  // We need to change it to 'isom' or 'mp41' for browser compatibility
+  
+  if (initSegment.length < 12) return initSegment
+  
+  // Verify this is an ftyp box
+  const boxType = initSegment.readUInt32BE(4)
+  if (boxType !== 0x66747970) return initSegment // Not ftyp
+  
+  // Read current major_brand
+  const majorBrand = initSegment.subarray(8, 12).toString('ascii')
+  
+  if (majorBrand === 'dash') {
+    console.log('[ProtectLivestream] Fixing ftyp major_brand from "dash" to "isom" for MSE compatibility')
+    
+    // Create a copy and modify the major_brand
+    const fixed = Buffer.from(initSegment)
+    fixed.write('isom', 8, 4, 'ascii')
+    
+    return fixed
+  }
+  
+  return initSegment
+}
+
 function extractCodecFromInit(initSegment: Buffer): string | null {
   // Search for avcC box inside moov/trak/mdia/minf/stbl/stsd/avc1/avcC
   // The avcC box contains the actual codec parameters
@@ -369,12 +395,13 @@ export class ProtectLivestreamManager extends EventEmitter {
           // Try to extract init segment
           const result = extractInitSegment(combined)
           if (result) {
-            session.initSegment = result.init
+            // Fix ftyp major_brand for MSE compatibility (dash -> isom)
+            session.initSegment = fixFtypForMSE(result.init)
             session.foundInit = true
-            console.log('[ProtectLivestream] Init segment cached for', camera.name, '- size:', result.init.length)
+            console.log('[ProtectLivestream] Init segment cached for', camera.name, '- size:', session.initSegment.length)
             
             // Extract codec from init segment - this is the FIRST time we send codec to client
-            const extractedCodec = extractCodecFromInit(result.init)
+            const extractedCodec = extractCodecFromInit(session.initSegment)
             const codecToSend = extractedCodec || session.lastCodec || 'avc1.4d401f'
             console.log('[ProtectLivestream] Sending codec for', camera.name, ':', codecToSend, extractedCodec ? '(from init segment)' : '(fallback)')
             session.lastCodec = codecToSend
