@@ -135,7 +135,7 @@ export class ProtectLivestreamManager extends EventEmitter {
       }
       this.sessions.set(cameraId, session)
       
-      // Try to get codec from event (may not fire with useStream: true)
+      // Listen for codec event - fires with useStream: false
       livestream.on('codec', (codecInfo: string) => {
         console.log('[ProtectLivestream] Codec event for', camera.name, ':', codecInfo)
         session.lastCodec = codecInfo
@@ -147,42 +147,15 @@ export class ProtectLivestreamManager extends EventEmitter {
           }
         }
       })
-      
-      // Fallback: Get codec from camera channels config
-      const channelConfig = camera.channels?.find(ch => ch.id === this.channel)
-      const width = channelConfig?.width || 1920
-      const height = channelConfig?.height || 1080
-      
-      // Map camera codec to MSE-compatible codec string
-      // H.264 profile: 4d = Main, 40 = Level 4.0, 1f = Level 3.1
-      // Most UniFi cameras use Main profile
-      let codecString = 'avc1.4d401f' // H.264 Main profile, Level 3.1 (default)
-      if (height > 1080) {
-        codecString = 'avc1.640028' // High profile for 4K
-      } else if (height > 720) {
-        codecString = 'avc1.4d4028' // Main profile, Level 4.0 for 1080p
-      }
-      
-      // Send codec immediately - don't wait for event
-      console.log('[ProtectLivestream] Sending inferred codec for', camera.name, ':', codecString, '(', width, 'x', height, ')')
-      session.lastCodec = codecString
-      for (const callback of session.codecCallbacks) {
-        try {
-          callback(codecString)
-        } catch (e) {
-          console.error('[ProtectLivestream] Error sending codec to client:', e)
-        }
-      }
 
       livestream.on('close', () => {
         console.log('[ProtectLivestream] Stream closed for:', camera.name)
         this.sessions.delete(cameraId)
       })
 
-      // Start the stream with useStream: true to use Node.js Readable stream interface
-      // This is REQUIRED in unifi-protect v4.27+ for fMP4 data to flow
+      // Start stream with useStream: false so that events (codec, message) fire
       const started = await livestream.start(cameraId, this.channel, { 
-        useStream: true,
+        useStream: false,
         segmentLength: 100
       })
       
@@ -192,18 +165,10 @@ export class ProtectLivestreamManager extends EventEmitter {
         return false
       }
       
-      // Get the Readable stream and consume fMP4 data from it
-      const stream = livestream.stream
-      if (!stream) {
-        console.error('[ProtectLivestream] Stream interface not available for:', camera.name)
-        this.sessions.delete(cameraId)
-        return false
-      }
+      console.log('[ProtectLivestream] Stream started for:', camera.name, '- using event interface')
       
-      console.log('[ProtectLivestream] Stream started for:', camera.name, '- using stream interface')
-      
-      // Consume fMP4 chunks from the stream
-      stream.on('data', (data: Buffer) => {
+      // Listen for fMP4 data via 'message' event (fires with useStream: false)
+      livestream.on('message', (data: Buffer) => {
         session.dataCount++
         if (session.dataCount <= 5 || session.dataCount % 100 === 0) {
           console.log('[ProtectLivestream] Chunk #' + session.dataCount + ' for', camera.name, '- size:', data.length)
@@ -215,15 +180,6 @@ export class ProtectLivestreamManager extends EventEmitter {
             console.error('[ProtectLivestream] Error sending chunk:', e)
           }
         }
-      })
-      
-      stream.on('error', (err) => {
-        console.error('[ProtectLivestream] Stream error for', camera.name, ':', err.message)
-      })
-      
-      stream.on('end', () => {
-        console.log('[ProtectLivestream] Stream ended for:', camera.name)
-        this.sessions.delete(cameraId)
       })
       
       return true
