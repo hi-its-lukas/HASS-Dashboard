@@ -135,9 +135,9 @@ export class ProtectLivestreamManager extends EventEmitter {
       }
       this.sessions.set(cameraId, session)
       
-      // Listen for codec info (emitted before stream data)
+      // Try to get codec from event (may not fire with useStream: true)
       livestream.on('codec', (codecInfo: string) => {
-        console.log('[ProtectLivestream] Codec info for', camera.name, ':', codecInfo)
+        console.log('[ProtectLivestream] Codec event for', camera.name, ':', codecInfo)
         session.lastCodec = codecInfo
         for (const callback of session.codecCallbacks) {
           try {
@@ -147,6 +147,32 @@ export class ProtectLivestreamManager extends EventEmitter {
           }
         }
       })
+      
+      // Fallback: Get codec from camera channels config
+      const channelConfig = camera.channels?.find(ch => ch.id === this.channel)
+      const width = channelConfig?.width || 1920
+      const height = channelConfig?.height || 1080
+      
+      // Map camera codec to MSE-compatible codec string
+      // H.264 profile: 4d = Main, 40 = Level 4.0, 1f = Level 3.1
+      // Most UniFi cameras use Main profile
+      let codecString = 'avc1.4d401f' // H.264 Main profile, Level 3.1 (default)
+      if (height > 1080) {
+        codecString = 'avc1.640028' // High profile for 4K
+      } else if (height > 720) {
+        codecString = 'avc1.4d4028' // Main profile, Level 4.0 for 1080p
+      }
+      
+      // Send codec immediately - don't wait for event
+      console.log('[ProtectLivestream] Sending inferred codec for', camera.name, ':', codecString, '(', width, 'x', height, ')')
+      session.lastCodec = codecString
+      for (const callback of session.codecCallbacks) {
+        try {
+          callback(codecString)
+        } catch (e) {
+          console.error('[ProtectLivestream] Error sending codec to client:', e)
+        }
+      }
 
       livestream.on('close', () => {
         console.log('[ProtectLivestream] Stream closed for:', camera.name)

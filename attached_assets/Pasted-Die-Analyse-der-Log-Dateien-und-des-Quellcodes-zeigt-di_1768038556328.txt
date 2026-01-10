@@ -1,0 +1,100 @@
+Die Analyse der Log-Dateien und des Quellcodes zeigt die genaue Ursache für das Problem mit dem Livestream.
+
+Ursache
+Das Problem liegt in der Konfiguration des Livestreams in der Datei lib/streaming/protect-livestream.ts.
+
+Im Code wird der Livestream mit der Option useStream: true gestartet:
+
+TypeScript
+
+// lib/streaming/protect-livestream.ts (Zeile 84)
+const started = await livestream.start(cameraId, this.channel, { 
+  useStream: true,
+  segmentLength: 100
+})
+Laut der Dokumentation und dem Quellcode der verwendeten Bibliothek unifi-protect (Datei src/protect-api-livestream.ts) hat dies eine wichtige Nebenwirkung: Wenn der Stream-Modus aktiviert ist, werden fast alle Events unterdrückt, einschließlich des codec-Events.
+
+Der Quellcode von unifi-protect bestätigt dies:
+
+TypeScript
+
+// src/protect-api-livestream.ts (Zeile 359)
+case ProtectLiveFrame.CODECINFORMATION:
+  this._codec = data.toString();
+  if(!this._stream) { // <--- Event wird NUR gefeuert, wenn kein Stream aktiv ist
+    this.emit("codec", this.codec);
+  }
+Die Folge
+Der ProtectLivestreamManager wartet auf das codec-Event (Zeile 70), das aber nie ausgelöst wird.
+
+Folglich sendet der WS-Proxy niemals die Nachricht { type: 'codec', ... } an das Frontend.
+
+Im Frontend (WebRTCPlayer.tsx) wartet der Player zwingend auf diese Codec-Nachricht, um den SourceBuffer zu initialisieren (tryInitializeSourceBuffer).
+
+Ohne Initialisierung werden die Videodaten (Chunks), die laut Log erfolgreich übertragen werden (Chunk #1, Chunk #2...), vom Browser nicht verarbeitet und das Bild bleibt schwarz.
+
+Lösung
+Du musst den Code in lib/streaming/protect-livestream.ts anpassen, um entweder auf den Stream-Modus zu verzichten (und Events zu nutzen) oder den Codec manuell abzurufen.
+
+Die sauberste Lösung ist der Wechsel auf das Event-basierte System (useStream: false), da dein Code bereits Event-Listener (livestream.on(...)) verwendet.
+
+Ändere die Datei lib/streaming/protect-livestream.ts wie folgt:
+
+Setze useStream auf false.
+
+Verwende das message-Event anstelle von stream.on('data', ...).
+
+Hier ist der korrigierte Code-Ausschnitt für die Methode startStream:
+
+TypeScript
+
+// lib/streaming/protect-livestream.ts
+
+// ... (vorheriger Code)
+
+      // 1. ÄNDERUNG: useStream auf false setzen
+      const started = await livestream.start(cameraId, this.channel, { 
+        useStream: false, // WICHTIG: Auf false setzen, damit Events gefeuert werden
+        segmentLength: 100
+      })
+      
+      if (!started) {
+        console.error('[ProtectLivestream] Failed to start stream for:', camera.name)
+        this.sessions.delete(cameraId)
+        return false
+      }
+      
+      // 2. ÄNDERUNG: Stream-Interface Logik entfernen/ersetzen
+      /* VORHER:
+      const stream = livestream.stream
+      if (!stream) { ... }
+      console.log(...)
+      stream.on('data', (data: Buffer) => { ... })
+      stream.on('error', ...)
+      stream.on('end', ...)
+      */
+
+      // NEU: Auf das 'message' Event hören (das feuert für jeden fMP4 Chunk)
+      console.log('[ProtectLivestream] Stream started for:', camera.name, '- using event interface')
+      
+      livestream.on('message', (data: Buffer) => {
+        session.dataCount++
+        if (session.dataCount <= 5 || session.dataCount % 100 === 0) {
+          console.log('[ProtectLivestream] Chunk #' + session.dataCount + ' for', camera.name, '- size:', data.length)
+        }
+        for (const client of session.clients) {
+          try {
+            client(data)
+          } catch (e) {
+            console.error('[ProtectLivestream] Error sending chunk:', e)
+          }
+        }
+      })
+      
+      // Fehlerbehandlung über die Websocket-Events ist bereits im `start` Prozess von unifi-protect gekapselt,
+      // aber wir können auf 'close' hören, was oben bereits implementiert ist (Zeile 79).
+
+      return true
+
+// ... (Rest der Datei)
+Mit dieser Änderung wird das codec-Event wieder gefeuert, das Frontend erhält die Info und kann den Videostream korrekt initialisieren und abspielen.
