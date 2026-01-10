@@ -23,7 +23,7 @@ export default function UnifiIntercomPage() {
   const [success, setSuccess] = useState<string | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
   const [liveStreamEnabled, setLiveStreamEnabled] = useState(false)
-  const [useLiveStream, setUseLiveStream] = useState(false)
+  const [useLiveStream, setUseLiveStream] = useState(true)
   
   useEffect(() => {
     async function checkStreamingStatus() {
