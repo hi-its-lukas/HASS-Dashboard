@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { addSubscription } from '@/lib/push/subscriptions'
 import { csrfProtection } from '@/lib/auth/csrf'
 import { getSessionFromCookie } from '@/lib/auth/session'
+import { PushSubscriptionSchema, validateBody } from '@/lib/validation/api-schemas'
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,23 +15,16 @@ export async function POST(request: NextRequest) {
     }
     
     const body = await request.json()
-    const { userId, subscription } = body
+    
+    const validation = validateBody(PushSubscriptionSchema, body)
+    if (!validation.success) {
+      console.warn('[Push] Subscribe validation failed:', validation.details)
+      return NextResponse.json({ error: 'Invalid subscription data' }, { status: 400 })
+    }
+    
+    const { userId, subscription } = validation.data
     
     console.log('[Push] Subscribe request:', { userId, hasSubscription: !!subscription })
-    
-    if (!userId || userId.trim().length === 0) {
-      return NextResponse.json(
-        { error: 'userId is required' },
-        { status: 400 }
-      )
-    }
-    
-    if (!subscription || !subscription.endpoint || !subscription.keys) {
-      return NextResponse.json(
-        { error: 'Invalid subscription object' },
-        { status: 400 }
-      )
-    }
     
     addSubscription(userId.toLowerCase(), {
       endpoint: subscription.endpoint,

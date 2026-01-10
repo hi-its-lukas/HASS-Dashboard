@@ -4,6 +4,7 @@ import prisma from '@/lib/db/client'
 import { createSession, setSessionCookie } from '@/lib/auth/session'
 import { csrfProtection } from '@/lib/auth/csrf'
 import { checkRateLimit, recordLoginAttempt, getFailedAttemptCount } from '@/lib/auth/rate-limit'
+import { LoginSchema, validateBody } from '@/lib/validation/api-schemas'
 
 const DUMMY_HASH = '$2a$10$N9qo8uLOickgx2ZMRZoMye.SxLhNqVjBpWrWNKDiuSAp3nQv7LGIS'
 
@@ -53,12 +54,15 @@ export async function POST(request: NextRequest) {
     
     const body = await request.json()
     
-    if (!body.username || !body.password) {
+    const validation = validateBody(LoginSchema, body)
+    if (!validation.success) {
       return NextResponse.json({ error: 'Benutzername und Passwort erforderlich' }, { status: 400 })
     }
     
+    const { username, password } = validation.data
+    
     const user = await prisma.user.findUnique({
-      where: { username: body.username },
+      where: { username },
       include: {
         role: {
           include: {
@@ -73,11 +77,11 @@ export async function POST(request: NextRequest) {
     })
     
     const hashToCompare = user?.passwordHash || DUMMY_HASH
-    const validPassword = await bcrypt.compare(body.password, hashToCompare)
+    const validPassword = await bcrypt.compare(password, hashToCompare)
     
     if (!user || !user.passwordHash || !validPassword) {
       recordLoginAttempt(clientIP, false)
-      await logLoginAttempt(body.username, clientIP, false, 'Invalid credentials')
+      await logLoginAttempt(username, clientIP, false, 'Invalid credentials')
       const attempts = getFailedAttemptCount(clientIP)
       const remaining = 5 - attempts
       return NextResponse.json({ 
@@ -88,12 +92,12 @@ export async function POST(request: NextRequest) {
     }
     
     if (user.status !== 'active') {
-      await logLoginAttempt(body.username, clientIP, false, 'Account disabled')
+      await logLoginAttempt(username, clientIP, false, 'Account disabled')
       return NextResponse.json({ error: 'Konto deaktiviert' }, { status: 403 })
     }
     
     recordLoginAttempt(clientIP, true)
-    await logLoginAttempt(body.username, clientIP, true)
+    await logLoginAttempt(username, clientIP, true)
     
     try {
       await prisma.user.update({

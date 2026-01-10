@@ -1,62 +1,15 @@
 import { WebSocketServer, WebSocket } from 'ws'
-import { createServer, IncomingMessage } from 'http'
+import { createServer } from 'http'
 import { parse } from 'url'
-import { parse as parseCookie } from 'cookie'
-import { PrismaClient } from '@prisma/client'
-import { createDecipheriv } from 'crypto'
-import { existsSync, readFileSync } from 'fs'
-import { join } from 'path'
-import { ProtectLivestreamManager, initProtectLivestreamManager, getProtectLivestreamManager } from '../lib/streaming/protect-livestream'
 
-const WS_PORT = parseInt(process.env.WS_PROXY_PORT || '6000', 10)
-const SQLITE_URL = process.env.SQLITE_URL || 'file:./data/ha-dashboard.db'
-const IS_PRODUCTION = process.env.NODE_ENV === 'production'
+import { WS_PORT, prisma, loadEncryptionKey } from './lib/config'
+import { validateSession, extractSessionToken, validateOrigin } from './lib/auth'
+import { getHAConfig, createHAConnection } from './lib/ha-bridge'
+import { getUnifiProtectConfig } from './lib/unifi-config'
+import { ProtectLivestreamManager, initProtectLivestreamManager } from '../lib/streaming/protect-livestream'
 
-const prisma = new PrismaClient({ datasources: { db: { url: SQLITE_URL } } })
-
-let cachedEncryptionKey: Buffer | null = null
-
-function loadEncryptionKey(): Buffer {
-  if (cachedEncryptionKey) {
-    return cachedEncryptionKey
-  }
-
-  const envKey = process.env.ENCRYPTION_KEY
-  if (envKey) {
-    const keyBuffer = Buffer.from(envKey, 'hex')
-    if (keyBuffer.length === 32) {
-      cachedEncryptionKey = keyBuffer
-      return cachedEncryptionKey
-    }
-  }
-
-  const keyPaths = [
-    '/data/.encryption_key',
-    join(process.cwd(), 'data', '.encryption_key')
-  ]
-
-  for (const keyPath of keyPaths) {
-    if (existsSync(keyPath)) {
-      const keyHex = readFileSync(keyPath, 'utf-8').trim()
-      const keyBuffer = Buffer.from(keyHex, 'hex')
-      if (keyBuffer.length === 32) {
-        cachedEncryptionKey = keyBuffer
-        return cachedEncryptionKey
-      }
-    }
-  }
-
-  throw new Error('Encryption key not found. Set ENCRYPTION_KEY environment variable or create data/.encryption_key file.')
-}
-
-cachedEncryptionKey = loadEncryptionKey()
+loadEncryptionKey()
 console.log('[WS-Proxy] Encryption key loaded successfully')
-
-interface HAWebSocketMessage {
-  id?: number
-  type: string
-  [key: string]: unknown
-}
 
 interface ClientConnection {
   clientWs: WebSocket
@@ -64,221 +17,17 @@ interface ClientConnection {
   authenticated: boolean
   userId: string
   messageId: number
-  pendingAuth: boolean
 }
 
 const connections = new Map<WebSocket, ClientConnection>()
-
-function decryptToken(value: string): string {
-  const key = cachedEncryptionKey!
-  
-  const parsed = JSON.parse(value)
-  const ciphertext = Buffer.from(parsed.ciphertext, 'base64')
-  const nonce = Buffer.from(parsed.nonce, 'base64')
-  
-  const AUTH_TAG_LENGTH = 16
-  const authTag = ciphertext.slice(-AUTH_TAG_LENGTH)
-  const encryptedData = ciphertext.slice(0, -AUTH_TAG_LENGTH)
-  
-  const decipher = createDecipheriv('aes-256-gcm', key, nonce)
-  decipher.setAuthTag(authTag)
-  
-  const decrypted = Buffer.concat([
-    decipher.update(encryptedData),
-    decipher.final()
-  ])
-  
-  return decrypted.toString('utf-8')
-}
-
-function decryptFromParts(ciphertext: Buffer, nonce: Buffer): string {
-  const key = cachedEncryptionKey!
-  const AUTH_TAG_LENGTH = 16
-  const authTag = ciphertext.slice(-AUTH_TAG_LENGTH)
-  const encryptedData = ciphertext.slice(0, -AUTH_TAG_LENGTH)
-  
-  const decipher = createDecipheriv('aes-256-gcm', key, nonce)
-  decipher.setAuthTag(authTag)
-  
-  const decrypted = Buffer.concat([
-    decipher.update(encryptedData),
-    decipher.final()
-  ])
-  
-  return decrypted.toString('utf-8')
-}
-
-async function getHAConfig(): Promise<{ url: string; token: string } | null> {
-  const [urlConfig, tokenConfig] = await Promise.all([
-    prisma.systemConfig.findUnique({ where: { key: 'ha_instance_url' } }),
-    prisma.systemConfig.findUnique({ where: { key: 'ha_long_lived_token' } })
-  ])
-  
-  if (!urlConfig || !tokenConfig) return null
-  
-  const token = tokenConfig.encrypted 
-    ? decryptToken(tokenConfig.value)
-    : tokenConfig.value
-  
-  return { url: urlConfig.value, token }
-}
-
-async function validateSession(sessionToken: string): Promise<string | null> {
-  const session = await prisma.session.findUnique({
-    where: { token: sessionToken },
-    include: { user: true }
-  })
-  
-  if (!session || new Date() > session.expiresAt) {
-    return null
-  }
-  
-  return session.userId
-}
-
-function extractSessionToken(req: IncomingMessage): string | null {
-  const cookieHeader = req.headers.cookie
-  if (!cookieHeader) return null
-  
-  const cookies = parseCookie(cookieHeader)
-  return cookies['ha_session'] || null
-}
-
-function validateOrigin(req: IncomingMessage): boolean {
-  if (!IS_PRODUCTION) {
-    return true
-  }
-
-  const origin = req.headers.origin
-  if (!origin) {
-    return true
-  }
-
-  const allowedHosts = process.env.ALLOWED_HOSTS?.split(',').map(h => h.trim()) || []
-  const appBaseUrl = process.env.APP_BASE_URL
-
-  if (appBaseUrl) {
-    try {
-      const baseHost = new URL(appBaseUrl).host
-      allowedHosts.push(baseHost)
-    } catch {
-      // Invalid APP_BASE_URL
-    }
-  }
-
-  try {
-    const originHost = new URL(origin).host
-    return allowedHosts.some(allowed => originHost === allowed || originHost.endsWith('.' + allowed))
-  } catch {
-    return false
-  }
-}
-
-async function createHAConnection(config: { url: string; token: string }): Promise<WebSocket> {
-  return new Promise((resolve, reject) => {
-    const wsUrl = config.url.replace(/^http/, 'ws') + '/api/websocket'
-    const haWs = new WebSocket(wsUrl)
-    
-    const timeout = setTimeout(() => {
-      haWs.close()
-      reject(new Error('HA connection timeout'))
-    }, 10000)
-    
-    haWs.on('open', () => {
-      clearTimeout(timeout)
-    })
-    
-    haWs.on('message', (data) => {
-      try {
-        const msg = JSON.parse(data.toString()) as HAWebSocketMessage
-        
-        if (msg.type === 'auth_required') {
-          haWs.send(JSON.stringify({
-            type: 'auth',
-            access_token: config.token
-          }))
-        } else if (msg.type === 'auth_ok') {
-          resolve(haWs)
-        } else if (msg.type === 'auth_invalid') {
-          clearTimeout(timeout)
-          haWs.close()
-          reject(new Error('HA authentication failed'))
-        }
-      } catch {
-        // Ignore parse errors during auth
-      }
-    })
-    
-    haWs.on('error', (err) => {
-      clearTimeout(timeout)
-      reject(err)
-    })
-    
-    haWs.on('close', () => {
-      clearTimeout(timeout)
-    })
-  })
-}
 
 const wss = new WebSocketServer({ noServer: true })
 const livestreamWss = new WebSocketServer({ noServer: true })
 
 let livestreamManager: ProtectLivestreamManager | null = null
 let livestreamManagerInitializing: Promise<ProtectLivestreamManager | null> | null = null
-let lastInitAttempt: number = 0
+let lastInitAttempt = 0
 const INIT_COOLDOWN_MS = 10000
-
-async function getUnifiProtectConfig(): Promise<{ host: string; username: string; password: string; channel: number } | null> {
-  try {
-    const record = await prisma.systemConfig.findUnique({
-      where: { key: 'global_layout_config' }
-    })
-    
-    if (!record) return null
-    
-    let config: { unifi?: { controllerUrl?: string; rtspUsername?: string; rtspPassword?: string; rtspChannel?: number } }
-    
-    if (record.encrypted) {
-      const decrypted = decryptToken(record.value)
-      config = JSON.parse(decrypted)
-    } else {
-      config = JSON.parse(record.value)
-    }
-    
-    const unifi = config.unifi
-    if (!unifi?.controllerUrl || !unifi?.rtspUsername || !unifi?.rtspPassword) {
-      console.log('[WS-Proxy] UniFi Protect incomplete config:', { 
-        hasHost: !!unifi?.controllerUrl, 
-        hasUser: !!unifi?.rtspUsername, 
-        hasPass: !!unifi?.rtspPassword 
-      })
-      return null
-    }
-    
-    let password = unifi.rtspPassword
-    if (password.startsWith('enc:')) {
-      const data = Buffer.from(password.slice(4), 'base64')
-      const nonce = data.slice(0, 12)
-      const ciphertext = data.slice(12)
-      password = decryptFromParts(ciphertext, nonce)
-    }
-    
-    let host = unifi.controllerUrl
-    host = host.replace(/^https?:\/\//, '').replace(/\/+$/, '')
-    
-    console.log('[WS-Proxy] UniFi Protect config loaded:', { host, username: unifi.rtspUsername, channel: unifi.rtspChannel })
-    
-    return {
-      host,
-      username: unifi.rtspUsername,
-      password,
-      channel: unifi.rtspChannel ?? 1
-    }
-  } catch (error) {
-    console.error('[WS-Proxy] Error loading UniFi config:', error)
-    return null
-  }
-}
 
 async function ensureLivestreamManager(): Promise<ProtectLivestreamManager | null> {
   if (livestreamManager?.isConnected()) {
@@ -292,7 +41,7 @@ async function ensureLivestreamManager(): Promise<ProtectLivestreamManager | nul
   
   const now = Date.now()
   if (now - lastInitAttempt < INIT_COOLDOWN_MS) {
-    console.log('[WS-Proxy] Cooldown active, skipping init attempt')
+    console.log('[WS-Proxy] Init cooldown active, skipping')
     return null
   }
   
@@ -302,16 +51,27 @@ async function ensureLivestreamManager(): Promise<ProtectLivestreamManager | nul
     try {
       const config = await getUnifiProtectConfig()
       if (!config) {
-        console.log('[WS-Proxy] UniFi Protect not configured')
+        console.log('[WS-Proxy] No UniFi config, skipping manager init')
         return null
       }
       
-      console.log('[WS-Proxy] Initializing livestream manager...')
-      livestreamManager = await initProtectLivestreamManager(config.host, config.username, config.password, config.channel)
-      console.log('[WS-Proxy] Livestream manager initialized successfully')
-      return livestreamManager
-    } catch (err) {
-      console.error('[WS-Proxy] Failed to initialize livestream manager:', err)
+      console.log('[WS-Proxy] Initializing ProtectLivestreamManager...')
+      
+      const manager = await initProtectLivestreamManager(
+        config.host,
+        config.username,
+        config.password,
+        config.channel
+      )
+      
+      if (manager) {
+        livestreamManager = manager
+        console.log('[WS-Proxy] ProtectLivestreamManager initialized successfully')
+      }
+      
+      return manager
+    } catch (error) {
+      console.error('[WS-Proxy] Failed to init ProtectLivestreamManager:', error)
       return null
     } finally {
       livestreamManagerInitializing = null
@@ -321,57 +81,48 @@ async function ensureLivestreamManager(): Promise<ProtectLivestreamManager | nul
   return livestreamManagerInitializing
 }
 
-livestreamWss.on('connection', async (clientWs: WebSocket, { userId, cameraId }: { userId: string; cameraId: string }) => {
+livestreamWss.on('connection', async (ws: WebSocket, params: { userId: string; cameraId: string }) => {
+  const { userId, cameraId } = params
   console.log(`[WS-Proxy] Livestream client connected: ${userId} for camera ${cameraId}`)
   
   const manager = await ensureLivestreamManager()
+  
   if (!manager) {
-    clientWs.send(JSON.stringify({ type: 'error', message: 'UniFi Protect nicht konfiguriert' }))
-    clientWs.close(4503, 'UniFi Protect not configured')
+    console.error('[WS-Proxy] No livestream manager available')
+    ws.close(4503, 'Livestream manager not available')
     return
   }
   
   let codecSent = false
   
-  const onCodec = (codec: string) => {
-    if (clientWs.readyState === WebSocket.OPEN && !codecSent) {
-      console.log(`[WS-Proxy] Sending codec to client for ${cameraId}:`, codec)
-      clientWs.send(JSON.stringify({ type: 'codec', codec }))
-      codecSent = true
+  const onData = (data: Buffer) => {
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(data)
     }
   }
   
-  const onData = (data: Buffer) => {
-    if (clientWs.readyState === WebSocket.OPEN) {
-      clientWs.send(data)
+  const onCodec = (codec: string) => {
+    if (ws.readyState === WebSocket.OPEN && !codecSent) {
+      codecSent = true
+      ws.send(JSON.stringify({ type: 'codec', codec }))
     }
   }
   
   try {
-    const started = await manager.startStream(cameraId, onData, onCodec)
-    
-    if (!started) {
-      clientWs.send(JSON.stringify({ type: 'error', message: 'Stream konnte nicht gestartet werden' }))
-      clientWs.close(4500, 'Stream start failed')
-      return
-    }
-    
-    clientWs.send(JSON.stringify({ type: 'stream_started', cameraId }))
-    
-  } catch (err) {
-    console.error(`[WS-Proxy] Failed to start stream for ${cameraId}:`, err)
-    clientWs.send(JSON.stringify({ type: 'error', message: 'Stream-Fehler' }))
-    clientWs.close(4500, 'Stream error')
+    await manager.startStream(cameraId, onData, onCodec)
+  } catch (error) {
+    console.error(`[WS-Proxy] Failed to start stream for ${cameraId}:`, error)
+    ws.close(4500, 'Failed to start stream')
     return
   }
   
-  clientWs.on('close', () => {
+  ws.on('close', () => {
     console.log(`[WS-Proxy] Livestream client disconnected: ${userId} for camera ${cameraId}`)
     manager.stopStream(cameraId, onData, onCodec)
   })
   
-  clientWs.on('error', (err) => {
-    console.error(`[WS-Proxy] Livestream client error for ${userId}:`, err.message)
+  ws.on('error', (err) => {
+    console.error(`[WS-Proxy] Livestream error for ${userId}:`, err.message)
     manager.stopStream(cameraId, onData, onCodec)
   })
 })
@@ -384,8 +135,7 @@ wss.on('connection', async (clientWs: WebSocket, userId: string) => {
     haWs: null,
     authenticated: true,
     userId,
-    messageId: 1,
-    pendingAuth: false
+    messageId: 1
   }
   
   connections.set(clientWs, conn)
@@ -402,7 +152,9 @@ wss.on('connection', async (clientWs: WebSocket, userId: string) => {
     const haWs = await createHAConnection(haConfig)
     conn.haWs = haWs
     
-    clientWs.send(JSON.stringify({ type: 'auth_ok', ha_version: 'proxy' }))
+    clientWs.send(JSON.stringify({ type: 'auth_required', ha_version: '2024.1.0' }))
+    
+    let clientAuthReceived = false
     
     haWs.on('message', (data) => {
       if (clientWs.readyState === WebSocket.OPEN) {
@@ -422,6 +174,19 @@ wss.on('connection', async (clientWs: WebSocket, userId: string) => {
     })
     
     clientWs.on('message', (data) => {
+      try {
+        const msg = JSON.parse(data.toString())
+        if (msg.type === 'auth') {
+          if (!clientAuthReceived) {
+            clientAuthReceived = true
+            console.log(`[WS-Proxy] Client auth received for ${userId}, sending auth_ok`)
+            clientWs.send(JSON.stringify({ type: 'auth_ok', ha_version: 'proxy' }))
+          }
+          return
+        }
+      } catch {
+        // Not JSON, forward as-is
+      }
       if (haWs.readyState === WebSocket.OPEN) {
         haWs.send(data.toString())
       }
@@ -449,6 +214,12 @@ wss.on('connection', async (clientWs: WebSocket, userId: string) => {
 
 const server = createServer(async (req, res) => {
   const { pathname } = parse(req.url || '')
+  
+  if (pathname === '/health') {
+    res.writeHead(200, { 'Content-Type': 'application/json' })
+    res.end(JSON.stringify({ status: 'ok', port: WS_PORT }))
+    return
+  }
   
   if (pathname === '/debug/protect-test') {
     res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' })
@@ -494,6 +265,7 @@ server.on('upgrade', async (request, socket, head) => {
   const sessionToken = extractSessionToken(request)
   
   if (!sessionToken) {
+    console.warn('[WS-Proxy] No session token in request')
     socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n')
     socket.destroy()
     return
@@ -502,12 +274,12 @@ server.on('upgrade', async (request, socket, head) => {
   const userId = await validateSession(sessionToken)
   
   if (!userId) {
+    console.warn('[WS-Proxy] Invalid session token')
     socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n')
     socket.destroy()
     return
   }
   
-  // Route: /ws/ha - Home Assistant WebSocket proxy
   if (pathname === '/ws/ha') {
     wss.handleUpgrade(request, socket, head, (ws) => {
       wss.emit('connection', ws, userId)
@@ -515,7 +287,6 @@ server.on('upgrade', async (request, socket, head) => {
     return
   }
   
-  // Route: /ws/livestream/:cameraId - UniFi Protect Livestream
   const livestreamMatch = pathname?.match(/^\/ws\/livestream\/(.+)$/)
   if (livestreamMatch) {
     const cameraId = decodeURIComponent(livestreamMatch[1])
@@ -527,7 +298,7 @@ server.on('upgrade', async (request, socket, head) => {
     return
   }
   
-  // Unknown path
+  console.warn('[WS-Proxy] Unknown path:', pathname)
   socket.write('HTTP/1.1 404 Not Found\r\n\r\n')
   socket.destroy()
 })

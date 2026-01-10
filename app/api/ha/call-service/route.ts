@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSessionFromCookie } from '@/lib/auth/session'
 import { getGlobalHAConfig } from '@/lib/ha/token'
 import { csrfProtection } from '@/lib/auth/csrf'
+import { CallServiceSchema, validateBody } from '@/lib/validation/api-schemas'
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,11 +22,14 @@ export async function POST(request: NextRequest) {
     }
     
     const body = await request.json()
-    const { domain, service, entityId, data } = body
     
-    if (!domain || !service) {
-      return NextResponse.json({ error: 'Domain and service are required' }, { status: 400 })
+    const validation = validateBody(CallServiceSchema, body)
+    if (!validation.success) {
+      console.warn('[API] /ha/call-service validation failed:', validation.details)
+      return NextResponse.json({ error: validation.error, details: validation.details }, { status: 400 })
     }
+    
+    const { domain, service, entityId, data } = validation.data
     
     const serviceUrl = new URL(`/api/services/${domain}/${service}`, haConfig.url)
     

@@ -4,6 +4,7 @@ import prisma from '@/lib/db/client'
 import { getSessionFromCookie } from '@/lib/auth/session'
 import { hasPermission } from '@/lib/auth/permissions'
 import { csrfProtection } from '@/lib/auth/csrf'
+import { CreateUserSchema, validateBody } from '@/lib/validation/api-schemas'
 
 export const dynamic = 'force-dynamic'
 
@@ -69,11 +70,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
     
-    const { username, password, displayName, roleId, personEntityId } = await request.json()
+    const body = await request.json()
     
-    if (!username || !password) {
-      return NextResponse.json({ error: 'Username and password required' }, { status: 400 })
+    const validation = validateBody(CreateUserSchema, body)
+    if (!validation.success) {
+      console.warn('[API] /admin/users POST validation failed:', validation.details)
+      return NextResponse.json({ error: validation.error, details: validation.details }, { status: 400 })
     }
+    
+    const { username, password, displayName, roleId, personEntityId } = validation.data
     
     if (roleId) {
       const targetRole = await prisma.role.findUnique({ where: { id: roleId } })

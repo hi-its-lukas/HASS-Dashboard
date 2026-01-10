@@ -1,5 +1,5 @@
 {
-  "/api/settings/route": "app/api/settings/route.js",
-  "/api/ha/weather/route": "app/api/ha/weather/route.js",
-  "/(dashboard)/page": "app/(dashboard)/page.js"
+  "/(dashboard)/page": "app/(dashboard)/page.js",
+  "/login/page": "app/login/page.js",
+  "/(dashboard)/weather/page": "app/(dashboard)/weather/page.js"
 }
