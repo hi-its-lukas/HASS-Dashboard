@@ -189,12 +189,16 @@ function CamerasPageContent() {
                     className="relative aspect-video bg-bg-secondary cursor-pointer group"
                     onClick={() => setSelectedUnifiCamera(camera)}
                   >
-                    {useLiveStream ? (
+                    {useLiveStream && selectedUnifiCamera?.id !== camera.id ? (
                       <WebRTCPlayer
                         cameraId={camera.id}
                         className="w-full h-full"
                         autoPlay={true}
                       />
+                    ) : useLiveStream && selectedUnifiCamera?.id === camera.id ? (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                        <span className="text-white/50 text-sm">Anzeige im Modal</span>
+                      </div>
                     ) : (
                       <UnifiCameraFeed
                         cameraId={camera.id}
