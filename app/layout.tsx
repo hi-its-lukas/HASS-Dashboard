@@ -7,6 +7,10 @@ export const metadata: Metadata = {
   title: 'HA Dashboard',
   description: 'Mobile-first Home Assistant Dashboard',
   manifest: '/manifest.json',
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/icon-192.png',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
@@ -29,9 +33,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <head>
-        <link rel="apple-touch-icon" href="/icon-192.png" />
-      </head>
       <body className="antialiased">
         <ConfigProvider>
           <HAProvider>
