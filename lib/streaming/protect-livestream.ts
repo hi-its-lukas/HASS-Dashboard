@@ -269,33 +269,44 @@ function fixFtypForMSE(initSegment: Buffer): Buffer {
 }
 
 function extractCodecFromInit(initSegment: Buffer): string | null {
-  // Search for avcC box inside moov/trak/mdia/minf/stbl/stsd/avc1/avcC
-  // The avcC box contains the actual codec parameters
-  // For simplicity, search for 'avcC' marker and extract profile/level
+  const codecs: string[] = []
+  
+  // Extract video codec from avcC box
   const avcCMarker = Buffer.from([0x61, 0x76, 0x63, 0x43]) // 'avcC'
-  const idx = initSegment.indexOf(avcCMarker)
+  const avcIdx = initSegment.indexOf(avcCMarker)
   
-  if (idx === -1 || idx + 8 > initSegment.length) {
-    console.log('[ProtectLivestream] avcC box not found in init segment')
+  if (avcIdx !== -1 && avcIdx + 8 <= initSegment.length) {
+    const configOffset = avcIdx + 4
+    if (configOffset + 4 <= initSegment.length) {
+      const profileIndication = initSegment[configOffset + 1]
+      const profileCompatibility = initSegment[configOffset + 2]
+      const levelIndication = initSegment[configOffset + 3]
+      
+      const videoCodec = `avc1.${profileIndication.toString(16).padStart(2, '0')}${profileCompatibility.toString(16).padStart(2, '0')}${levelIndication.toString(16).padStart(2, '0')}`
+      codecs.push(videoCodec)
+      console.log('[ProtectLivestream] Extracted video codec:', videoCodec,
+        '(profile:', profileIndication, 'compat:', profileCompatibility, 'level:', levelIndication, ')')
+    }
+  }
+  
+  // Check for mp4a audio track
+  const mp4aMarker = Buffer.from([0x6d, 0x70, 0x34, 0x61]) // 'mp4a'
+  const mp4aIdx = initSegment.indexOf(mp4aMarker)
+  
+  if (mp4aIdx !== -1) {
+    // AAC-LC is typically mp4a.40.2
+    codecs.push('mp4a.40.2')
+    console.log('[ProtectLivestream] Detected audio track: mp4a.40.2')
+  }
+  
+  if (codecs.length === 0) {
+    console.log('[ProtectLivestream] No codecs found in init segment')
     return null
   }
   
-  // avcC structure: configurationVersion(1) + AVCProfileIndication(1) + profile_compatibility(1) + AVCLevelIndication(1)
-  const configOffset = idx + 4 // Skip 'avcC' marker
-  if (configOffset + 4 > initSegment.length) {
-    return null
-  }
-  
-  const profileIndication = initSegment[configOffset + 1]
-  const profileCompatibility = initSegment[configOffset + 2]
-  const levelIndication = initSegment[configOffset + 3]
-  
-  // Format: avc1.XXYYZZ where XX=profile, YY=compatibility, ZZ=level
-  const codec = `avc1.${profileIndication.toString(16).padStart(2, '0')}${profileCompatibility.toString(16).padStart(2, '0')}${levelIndication.toString(16).padStart(2, '0')}`
-  console.log('[ProtectLivestream] Extracted codec from init segment:', codec, 
-    '(profile:', profileIndication, 'compat:', profileCompatibility, 'level:', levelIndication, ')')
-  
-  return codec
+  const codecString = codecs.join(', ')
+  console.log('[ProtectLivestream] Combined codec string:', codecString)
+  return codecString
 }
 
 export class ProtectLivestreamManager extends EventEmitter {
