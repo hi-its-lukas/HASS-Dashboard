@@ -533,16 +533,8 @@ export class ProtectLivestreamManager extends EventEmitter {
           try {
             onData(initSegmentCopy)
             existingSession.initSegmentSent.add(onData)
-            
-            if (lastKeyframeCopy) {
-              console.log('[ProtectLivestream] Sending cached keyframe to new client - size:', lastKeyframeCopy.length)
-              onData(lastKeyframeCopy)
-              existingSession.clients.add(onData)
-              console.log('[ProtectLivestream] Client added directly with cached keyframe')
-            } else {
-              existingSession.waitingClients.add(onData)
-              console.log('[ProtectLivestream] Client added to waiting queue for next keyframe')
-            }
+            existingSession.clients.add(onData)
+            console.log('[ProtectLivestream] Client added directly after init segment')
           } catch (e) {
             console.error('[ProtectLivestream] Error sending cached init segment:', e)
           }

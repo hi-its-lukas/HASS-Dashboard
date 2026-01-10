@@ -1,0 +1,155 @@
+675-3b0705f70afa1aa3.js:1 [HA WS] Connected
+675-3b0705f70afa1aa3.js:1 [HA WS] Authenticated
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Starting streaming for camera: 68330e970123c803e4000703
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Cleanup called
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Connecting to: wss://hoas-dashboard.familie-hengl.de/ws/livestream/68330e970123c803e4000703
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Starting streaming for camera: 68315e3703866803e4000400
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Cleanup called
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Connecting to: wss://hoas-dashboard.familie-hengl.de/ws/livestream/68315e3703866803e4000400
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Starting streaming for camera: 68315e3703326803e40003fe
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Cleanup called
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Connecting to: wss://hoas-dashboard.familie-hengl.de/ws/livestream/68315e3703326803e40003fe
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Starting streaming for camera: 68315e3702fd6803e40003fc
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Cleanup called
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Connecting to: wss://hoas-dashboard.familie-hengl.de/ws/livestream/68315e3702fd6803e40003fc
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Starting streaming for camera: 68315e3703a36803e4000401
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Cleanup called
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Connecting to: wss://hoas-dashboard.familie-hengl.de/ws/livestream/68315e3703a36803e4000401
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Starting streaming for camera: 68315e37035b6803e40003ff
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Cleanup called
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Connecting to: wss://hoas-dashboard.familie-hengl.de/ws/livestream/68315e37035b6803e40003ff
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Starting streaming for camera: 69047ecf0361dd03e46b58bd
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Cleanup called
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Connecting to: wss://hoas-dashboard.familie-hengl.de/ws/livestream/69047ecf0361dd03e46b58bd
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Starting streaming for camera: 68315e3702d06803e40003fb
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Cleanup called
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Connecting to: wss://hoas-dashboard.familie-hengl.de/ws/livestream/68315e3702d06803e40003fb
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Starting streaming for camera: 68315e3703c16803e4000402
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Cleanup called
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Connecting to: wss://hoas-dashboard.familie-hengl.de/ws/livestream/68315e3703c16803e4000402
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] MediaSource opened, readyState: open
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] tryInitializeSourceBuffer - codec: null sourceOpenReady: true readyState: open
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] MediaSource opened, readyState: open
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] tryInitializeSourceBuffer - codec: null sourceOpenReady: true readyState: open
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] MediaSource opened, readyState: open
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] tryInitializeSourceBuffer - codec: null sourceOpenReady: true readyState: open
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] MediaSource opened, readyState: open
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] tryInitializeSourceBuffer - codec: null sourceOpenReady: true readyState: open
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] MediaSource opened, readyState: open
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] tryInitializeSourceBuffer - codec: null sourceOpenReady: true readyState: open
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] MediaSource opened, readyState: open
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] tryInitializeSourceBuffer - codec: null sourceOpenReady: true readyState: open
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] MediaSource opened, readyState: open
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] tryInitializeSourceBuffer - codec: null sourceOpenReady: true readyState: open
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] MediaSource opened, readyState: open
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] tryInitializeSourceBuffer - codec: null sourceOpenReady: true readyState: open
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] MediaSource opened, readyState: open
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] tryInitializeSourceBuffer - codec: null sourceOpenReady: true readyState: open
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] WebSocket connected
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Received message: codec avc1.640020, mp4a.40.2
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Received codec info: avc1.640020, mp4a.40.2
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] tryInitializeSourceBuffer - codec: avc1.640020, mp4a.40.2 sourceOpenReady: true readyState: open
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Checking codec support: video/mp4; codecs="avc1.640020, mp4a.40.2"
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Creating SourceBuffer with: video/mp4; codecs="avc1.640020, mp4a.40.2"
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] SourceBuffer created successfully!
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Received message: stream_started 
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Stream started for camera: 68330e970123c803e4000703
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Binary chunk #1 - size: 1181 - box: ftyp - sourceBuffer ready: true - queue length: 0
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] INIT SEGMENT received! Size: 1181
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] appendBuffer #1 - size: 1181 - box: ftyp - buffered ranges: none
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] WebSocket connected
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Received message: codec avc1.4d401f, mp4a.40.2
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Received codec info: avc1.4d401f, mp4a.40.2
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] tryInitializeSourceBuffer - codec: avc1.4d401f, mp4a.40.2 sourceOpenReady: true readyState: open
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Checking codec support: video/mp4; codecs="avc1.4d401f, mp4a.40.2"
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Creating SourceBuffer with: video/mp4; codecs="avc1.4d401f, mp4a.40.2"
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] SourceBuffer created successfully!
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Received message: stream_started 
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Stream started for camera: 68315e3703866803e4000400
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Binary chunk #1 - size: 1183 - box: ftyp - sourceBuffer ready: true - queue length: 0
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] INIT SEGMENT received! Size: 1183
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] appendBuffer #1 - size: 1183 - box: ftyp - buffered ranges: none
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] WebSocket connected
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Received message: codec avc1.4d401f, mp4a.40.2
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Received codec info: avc1.4d401f, mp4a.40.2
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] tryInitializeSourceBuffer - codec: avc1.4d401f, mp4a.40.2 sourceOpenReady: true readyState: open
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Checking codec support: video/mp4; codecs="avc1.4d401f, mp4a.40.2"
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Creating SourceBuffer with: video/mp4; codecs="avc1.4d401f, mp4a.40.2"
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] SourceBuffer created successfully!
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Received message: stream_started 
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Stream started for camera: 68315e3703326803e40003fe
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Binary chunk #1 - size: 1183 - box: ftyp - sourceBuffer ready: true - queue length: 0
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] INIT SEGMENT received! Size: 1183
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] appendBuffer #1 - size: 1183 - box: ftyp - buffered ranges: none
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] WebSocket connected
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Received message: codec avc1.4d401f, mp4a.40.2
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Received codec info: avc1.4d401f, mp4a.40.2
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] tryInitializeSourceBuffer - codec: avc1.4d401f, mp4a.40.2 sourceOpenReady: true readyState: open
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Checking codec support: video/mp4; codecs="avc1.4d401f, mp4a.40.2"
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Creating SourceBuffer with: video/mp4; codecs="avc1.4d401f, mp4a.40.2"
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] SourceBuffer created successfully!
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Received message: stream_started 
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Stream started for camera: 68315e3702fd6803e40003fc
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Binary chunk #1 - size: 1183 - box: ftyp - sourceBuffer ready: true - queue length: 0
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] INIT SEGMENT received! Size: 1183
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] appendBuffer #1 - size: 1183 - box: ftyp - buffered ranges: none
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] WebSocket connected
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Received message: codec avc1.4d401f, mp4a.40.2
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Received codec info: avc1.4d401f, mp4a.40.2
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] tryInitializeSourceBuffer - codec: avc1.4d401f, mp4a.40.2 sourceOpenReady: true readyState: open
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Checking codec support: video/mp4; codecs="avc1.4d401f, mp4a.40.2"
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Creating SourceBuffer with: video/mp4; codecs="avc1.4d401f, mp4a.40.2"
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] SourceBuffer created successfully!
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Received message: stream_started 
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Stream started for camera: 68315e3703a36803e4000401
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Binary chunk #1 - size: 1183 - box: ftyp - sourceBuffer ready: true - queue length: 0
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] INIT SEGMENT received! Size: 1183
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] appendBuffer #1 - size: 1183 - box: ftyp - buffered ranges: none
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] WebSocket connected
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Received message: codec avc1.4d401f, mp4a.40.2
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Received codec info: avc1.4d401f, mp4a.40.2
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] tryInitializeSourceBuffer - codec: avc1.4d401f, mp4a.40.2 sourceOpenReady: true readyState: open
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Checking codec support: video/mp4; codecs="avc1.4d401f, mp4a.40.2"
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Creating SourceBuffer with: video/mp4; codecs="avc1.4d401f, mp4a.40.2"
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] SourceBuffer created successfully!
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Received message: stream_started 
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Stream started for camera: 68315e37035b6803e40003ff
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Binary chunk #1 - size: 1183 - box: ftyp - sourceBuffer ready: true - queue length: 0
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] INIT SEGMENT received! Size: 1183
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] appendBuffer #1 - size: 1183 - box: ftyp - buffered ranges: none
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] WebSocket connected
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Received message: codec avc1.640020, mp4a.40.2
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Received codec info: avc1.640020, mp4a.40.2
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] tryInitializeSourceBuffer - codec: avc1.640020, mp4a.40.2 sourceOpenReady: true readyState: open
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Checking codec support: video/mp4; codecs="avc1.640020, mp4a.40.2"
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Creating SourceBuffer with: video/mp4; codecs="avc1.640020, mp4a.40.2"
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] SourceBuffer created successfully!
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Received message: stream_started 
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Stream started for camera: 69047ecf0361dd03e46b58bd
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Binary chunk #1 - size: 1181 - box: ftyp - sourceBuffer ready: true - queue length: 0
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] INIT SEGMENT received! Size: 1181
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] appendBuffer #1 - size: 1181 - box: ftyp - buffered ranges: none
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] WebSocket connected
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Received message: codec avc1.4d401f, mp4a.40.2
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Received codec info: avc1.4d401f, mp4a.40.2
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] tryInitializeSourceBuffer - codec: avc1.4d401f, mp4a.40.2 sourceOpenReady: true readyState: open
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Checking codec support: video/mp4; codecs="avc1.4d401f, mp4a.40.2"
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Creating SourceBuffer with: video/mp4; codecs="avc1.4d401f, mp4a.40.2"
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] SourceBuffer created successfully!
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Received message: stream_started 
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Stream started for camera: 68315e3702d06803e40003fb
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Binary chunk #1 - size: 1183 - box: ftyp - sourceBuffer ready: true - queue length: 0
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] INIT SEGMENT received! Size: 1183
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] appendBuffer #1 - size: 1183 - box: ftyp - buffered ranges: none
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] WebSocket connected
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Received message: codec avc1.4d401f, mp4a.40.2
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Received codec info: avc1.4d401f, mp4a.40.2
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] tryInitializeSourceBuffer - codec: avc1.4d401f, mp4a.40.2 sourceOpenReady: true readyState: open
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Checking codec support: video/mp4; codecs="avc1.4d401f, mp4a.40.2"
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Creating SourceBuffer with: video/mp4; codecs="avc1.4d401f, mp4a.40.2"
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] SourceBuffer created successfully!
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Received message: stream_started 
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Stream started for camera: 68315e3703c16803e4000402
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] Binary chunk #1 - size: 1183 - box: ftyp - sourceBuffer ready: true - queue length: 0
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] INIT SEGMENT received! Size: 1183
+209.8be9b189e1143a2f.js:1 [LivestreamPlayer] appendBuffer #1 - size: 1183 - box: ftyp - buffered ranges: none
