@@ -14,3 +14,17 @@ services:
       - HOSTNAME=0.0.0.0
     volumes:
       - ./data:/data
+
+  nginx-proxy-manager:
+    image: 'jc21/nginx-proxy-manager:latest'
+    container_name: nginx-proxy-manager
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+      - '81:81'
+    volumes:
+      - ./npm-data:/data
+      - ./npm-letsencrypt:/etc/letsencrypt
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
