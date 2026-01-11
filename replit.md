@@ -51,6 +51,7 @@ Preferred communication style: Simple, everyday language.
 - **Apple Home Design Overhaul**: Complete visual redesign inspired by Apple Home app, featuring glassmorphism UI, translucent cards, backdrop blur, and customizable warm gradient backgrounds.
 - **Dashboard Popup Notifications**: Real-time popups triggered by Home Assistant events, featuring queue management, deduplication, severity levels, and media.
 - **Dynamic Pages**: Dedicated pages for Lights, Covers, Cameras, Intercoms, and Climate control.
+- **Heat Pump Monitoring**: Dedicated page (`/heatpump`) for Stiebel Eltron heat pump monitoring with collapsible sections for temperatures (Gesamt/OG/EG with Vorlauf/Rücklauf), hot water, compressor, energy (with COP calculation), and SG Ready. All entities configurable via Settings dropdown selection.
 
 ## External Dependencies
 
