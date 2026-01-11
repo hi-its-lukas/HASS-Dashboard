@@ -17,7 +17,8 @@ import {
   Calendar,
   Play,
   Sparkles,
-  Cloud
+  Cloud,
+  Flame
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useConfigStore } from '@/lib/config/store'
@@ -62,11 +63,18 @@ export function Sidebar() {
   const isLoaded = useConfigStore((s) => s.isLoaded)
   const intercoms = useConfigStore((s) => s.config.intercoms)
   const unifi = useConfigStore((s) => s.unifi)
+  const heatPump = useConfigStore((s) => s.heatPump)
   const connectionMode = useHAStore((s) => s.connectionMode)
   const connected = useHAStore((s) => s.connected)
   
   const unifiAccessIntercoms = unifi?.accessDevices || []
   const aiSurveillanceEnabled = unifi?.aiSurveillanceEnabled ?? false
+  const hasHeatPumpConfig = heatPump && Object.values(heatPump).some(v => {
+    if (!v) return false
+    if (typeof v === 'string') return v.length > 0
+    if (typeof v === 'object') return Object.values(v).some(sv => sv && String(sv).length > 0)
+    return false
+  })
   
   const collapsed = sidebarState === 'collapsed'
   
@@ -184,6 +192,33 @@ export function Sidebar() {
                   className="font-medium text-sm"
                 >
                   AI Surveillance
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </Link>
+        )}
+        
+        {hasHeatPumpConfig && (
+          <Link
+            href="/heatpump"
+            className={cn(
+              'flex items-center gap-3 px-3 py-3 rounded-xl transition-all group relative',
+              pathname === '/heatpump'
+                ? 'text-white' 
+                : 'text-text-secondary hover:text-white'
+            )}
+            style={pathname === '/heatpump' ? { background: 'rgba(255, 255, 255, 0.12)' } : undefined}
+          >
+            <Flame className="w-5 h-5 flex-shrink-0 text-cyan-400" />
+            <AnimatePresence mode="wait">
+              {!collapsed && (
+                <motion.span
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  className="font-medium text-sm"
+                >
+                  Wärmepumpe
                 </motion.span>
               )}
             </AnimatePresence>
