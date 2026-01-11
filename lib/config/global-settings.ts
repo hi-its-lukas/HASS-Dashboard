@@ -48,6 +48,54 @@ export interface GlobalLayoutConfig {
   intercoms?: { id: string; name: string; cameraEntityId: string; speakUrl?: string; lockEntityId?: string; slug: string }[]
   vacuum?: { entityId?: string; roomIds?: Record<string, number> }
   unifi?: UnifiConfig
+  heatPump?: {
+    operationModeEntityId?: string
+    outdoorTemperatureEntityId?: string
+    activeErrorEntityId?: string
+    temperatures?: {
+      totalFlowEntityId?: string
+      totalReturnEntityId?: string
+      upperFloorFlowEntityId?: string
+      upperFloorReturnEntityId?: string
+      groundFloorFlowEntityId?: string
+      groundFloorReturnEntityId?: string
+    }
+    hotWater?: {
+      actualTemperatureEntityId?: string
+      targetTemperatureEntityId?: string
+      bufferActualEntityId?: string
+      bufferTargetEntityId?: string
+    }
+    compressor?: {
+      flowTemperatureEntityId?: string
+      returnTemperatureEntityId?: string
+      hotGasTemperatureEntityId?: string
+      highPressureEntityId?: string
+      lowPressureEntityId?: string
+      volumeStreamEntityId?: string
+      heaterPressureEntityId?: string
+    }
+    energy?: {
+      consumedHeatingEntityId?: string
+      consumedHeatingTodayEntityId?: string
+      consumedHeatingTotalEntityId?: string
+      producedHeatingEntityId?: string
+      producedHeatingTodayEntityId?: string
+      producedHeatingTotalEntityId?: string
+      consumedWaterEntityId?: string
+      consumedWaterTodayEntityId?: string
+      consumedWaterTotalEntityId?: string
+      producedWaterEntityId?: string
+      producedWaterTodayEntityId?: string
+      producedWaterTotalEntityId?: string
+    }
+    sgReady?: {
+      stateEntityId?: string
+      activeEntityId?: string
+      input1EntityId?: string
+      input2EntityId?: string
+    }
+  }
 }
 
 export async function getGlobalLayoutConfig(): Promise<GlobalLayoutConfig> {

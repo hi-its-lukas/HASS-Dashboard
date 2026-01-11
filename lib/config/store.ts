@@ -31,6 +31,55 @@ export interface UnifiConfig {
   aiSurveillanceEnabled?: boolean
 }
 
+export interface HeatPumpConfig {
+  operationModeEntityId?: string
+  outdoorTemperatureEntityId?: string
+  activeErrorEntityId?: string
+  temperatures?: {
+    totalFlowEntityId?: string
+    totalReturnEntityId?: string
+    upperFloorFlowEntityId?: string
+    upperFloorReturnEntityId?: string
+    groundFloorFlowEntityId?: string
+    groundFloorReturnEntityId?: string
+  }
+  hotWater?: {
+    actualTemperatureEntityId?: string
+    targetTemperatureEntityId?: string
+    bufferActualEntityId?: string
+    bufferTargetEntityId?: string
+  }
+  compressor?: {
+    flowTemperatureEntityId?: string
+    returnTemperatureEntityId?: string
+    hotGasTemperatureEntityId?: string
+    highPressureEntityId?: string
+    lowPressureEntityId?: string
+    volumeStreamEntityId?: string
+    heaterPressureEntityId?: string
+  }
+  energy?: {
+    consumedHeatingEntityId?: string
+    consumedHeatingTodayEntityId?: string
+    consumedHeatingTotalEntityId?: string
+    producedHeatingEntityId?: string
+    producedHeatingTodayEntityId?: string
+    producedHeatingTotalEntityId?: string
+    consumedWaterEntityId?: string
+    consumedWaterTodayEntityId?: string
+    consumedWaterTotalEntityId?: string
+    producedWaterEntityId?: string
+    producedWaterTodayEntityId?: string
+    producedWaterTotalEntityId?: string
+  }
+  sgReady?: {
+    stateEntityId?: string
+    activeEntityId?: string
+    input1EntityId?: string
+    input2EntityId?: string
+  }
+}
+
 export interface WeatherLocation {
   id: string
   name: string
@@ -76,6 +125,7 @@ interface UserLayoutConfig {
   intercoms?: IntercomConfig[]
   vacuum?: VacuumConfig
   unifi?: UnifiConfig
+  heatPump?: HeatPumpConfig
 }
 
 function entityIdToName(entityId: string): string {
@@ -152,6 +202,7 @@ interface ConfigStore {
   cameras: string[]
   locks: string[]
   unifi: UnifiConfig | null
+  heatPump: HeatPumpConfig | null
   weatherLocations: WeatherLocation[]
   
   loadConfig: () => Promise<void>
@@ -231,6 +282,7 @@ export const useConfigStore = create<ConfigStore>((set, get) => ({
   cameras: [],
   locks: [],
   unifi: null,
+  heatPump: null,
   weatherLocations: [],
 
   loadConfig: async () => {
@@ -261,6 +313,7 @@ export const useConfigStore = create<ConfigStore>((set, get) => ({
         cameras: data.layoutConfig?.cameras || [],
         locks: data.layoutConfig?.locks || [],
         unifi: data.layoutConfig?.unifi || null,
+        heatPump: data.layoutConfig?.heatPump || null,
         weatherLocations: data.layoutConfig?.weatherLocations || []
       })
     } catch (error) {
