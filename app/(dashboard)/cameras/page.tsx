@@ -15,6 +15,18 @@ interface UnifiCameraInfo {
   id: string
   name: string
   type: string
+  width?: number
+  height?: number
+}
+
+function getAspectRatioStyle(width?: number, height?: number): React.CSSProperties {
+  if (!width || !height) return {}
+  return { aspectRatio: `${width} / ${height}` }
+}
+
+function isPortrait(width?: number, height?: number): boolean {
+  if (!width || !height) return false
+  return height > width
 }
 
 function CamerasPageContent() {
@@ -179,7 +191,7 @@ function CamerasPageContent() {
           <div className={`grid gap-4 ${
             selectedUnifiCamera 
               ? 'grid-cols-1' 
-              : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
+              : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
           }`}>
             {displayedUnifiCameras.map((camera, index) => {
               const isSelected = selectedUnifiCamera?.id === camera.id
@@ -196,8 +208,9 @@ function CamerasPageContent() {
                   <Card className="overflow-hidden">
                     <div 
                       className={`relative bg-bg-secondary cursor-pointer group ${
-                        isSelected ? 'aspect-[16/9] max-h-[70vh]' : 'aspect-video'
-                      }`}
+                        isSelected ? 'max-h-[70vh]' : ''
+                      } ${!camera.width || !camera.height ? 'aspect-video' : ''}`}
+                      style={getAspectRatioStyle(camera.width, camera.height)}
                       onClick={() => setSelectedUnifiCamera(isSelected ? null : camera)}
                     >
                       {useLiveStream ? (
@@ -234,6 +247,7 @@ function CamerasPageContent() {
                         </p>
                         <p className="text-xs text-text-muted">
                           UniFi Protect • {camera.type}
+                          {camera.width && camera.height && ` • ${camera.width}×${camera.height}`}
                         </p>
                       </div>
                       {isSelected && (
@@ -350,7 +364,7 @@ function CameraFeed({
           key={`${entityId}-${useStream ? 'stream' : 'image'}-${refreshKey}`}
           src={src}
           alt={friendlyName}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-contain"
           onLoad={() => setLoading(false)}
           onError={() => {
             setError(true)
@@ -468,7 +482,7 @@ function UnifiCameraFeed({
           key={`${cameraId}-${refreshKey}`}
           src={snapshotUrl}
           alt={cameraName}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-contain"
           onLoad={() => setLoading(false)}
           onError={() => {
             setError(true)

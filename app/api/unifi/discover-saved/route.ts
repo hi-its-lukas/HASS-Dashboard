@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Controller URL required' }, { status: 400 })
     }
     
-    const cameras: { id: string; name: string; type: string; state: string; host: string }[] = []
+    const cameras: { id: string; name: string; type: string; state: string; host: string; width?: number; height?: number }[] = []
     const accessDevices: { id: string; name: string; type: string; doorId?: string }[] = []
     
     if (unifi.protectApiKey) {
@@ -31,13 +31,18 @@ export async function POST(request: NextRequest) {
         const protectClient = new ProtectClient(unifi.controllerUrl, unifi.protectApiKey)
         const protectCameras = await protectClient.getCameras()
         
-        cameras.push(...protectCameras.map(cam => ({
-          id: cam.id,
-          name: cam.name,
-          type: cam.modelKey || cam.type,
-          state: cam.state,
-          host: cam.host
-        })))
+        cameras.push(...protectCameras.map(cam => {
+          const highChannel = cam.channels?.find(ch => ch.name === 'High') || cam.channels?.[0]
+          return {
+            id: cam.id,
+            name: cam.name,
+            type: cam.modelKey || cam.type,
+            state: cam.state,
+            host: cam.host,
+            width: highChannel?.width,
+            height: highChannel?.height
+          }
+        }))
       } catch (error) {
         console.error('[API] Protect discovery error:', error)
       }
