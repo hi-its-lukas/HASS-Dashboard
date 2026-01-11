@@ -1,0 +1,270 @@
+Dual Mode Temperature HZG
+Stiebel Eltron ISG
+—
+number.stiebel_eltron_isg_dual_mode_temperature_hzg
+Stiebel Eltron ISG
+—
+Dual Mode Temperature WW
+Stiebel Eltron ISG
+—
+number.stiebel_eltron_isg_dual_mode_temperature_ww
+Stiebel Eltron ISG
+—
+Eco Temperature Target HK1
+Stiebel Eltron ISG
+—
+number.stiebel_eltron_isg_eco_temperature_target_hk1
+Stiebel Eltron ISG
+—
+Eco Water Temperature Target
+Stiebel Eltron ISG
+—
+number.stiebel_eltron_isg_eco_water_temperature_target
+Stiebel Eltron ISG
+—
+Heating Curve Rise HK1
+Stiebel Eltron ISG
+—
+number.stiebel_eltron_isg_heating_curve_rise_hk1
+Stiebel Eltron ISG
+—
+Operation Mode
+Stiebel Eltron ISG
+—
+select.stiebel_eltron_isg_operation_mode
+Stiebel Eltron ISG
+—
+Active Error
+Stiebel Eltron ISG
+—
+sensor.stiebel_eltron_isg_active_error
+Stiebel Eltron ISG
+—
+Actual Room Temperature HK 1
+Stiebel Eltron ISG
+—
+sensor.stiebel_eltron_isg_actual_room_temperature_hk_1
+Stiebel Eltron ISG
+—
+Actual Temperature Buffer
+Stiebel Eltron ISG
+—
+sensor.stiebel_eltron_isg_actual_temperature_buffer
+Stiebel Eltron ISG
+—
+Actual Temperature HK 1
+Stiebel Eltron ISG
+—
+sensor.stiebel_eltron_isg_actual_temperature_hk_1
+Stiebel Eltron ISG
+—
+Actual Temperature Water
+Stiebel Eltron ISG
+—
+sensor.stiebel_eltron_isg_actual_temperature_water
+Stiebel Eltron ISG
+—
+Consumed Heating
+Stiebel Eltron ISG
+—
+sensor.stiebel_eltron_isg_consumed_heating
+Stiebel Eltron ISG
+—
+Consumed Heating Today
+Stiebel Eltron ISG
+—
+sensor.stiebel_eltron_isg_consumed_heating_today
+Stiebel Eltron ISG
+—
+Consumed Heating Total
+Stiebel Eltron ISG
+—
+sensor.stiebel_eltron_isg_consumed_heating_total
+Stiebel Eltron ISG
+—
+Consumed Water Heating
+Stiebel Eltron ISG
+—
+sensor.stiebel_eltron_isg_consumed_water_heating
+Stiebel Eltron ISG
+—
+Consumed Water Heating Today
+Stiebel Eltron ISG
+—
+sensor.stiebel_eltron_isg_consumed_water_heating_today
+Stiebel Eltron ISG
+—
+Consumed Water Heating Total
+Stiebel Eltron ISG
+—
+sensor.stiebel_eltron_isg_consumed_water_heating_total
+Stiebel Eltron ISG
+—
+Dew Point Temperature HK 1
+Stiebel Eltron ISG
+—
+sensor.stiebel_eltron_isg_dew_point_temperature_hk_1
+Stiebel Eltron ISG
+—
+Flow Temperature NHZ
+Stiebel Eltron ISG
+—
+sensor.stiebel_eltron_isg_flow_temperature_nhz
+Stiebel Eltron ISG
+—
+Flow Temperature WP
+Stiebel Eltron ISG
+—
+sensor.stiebel_eltron_isg_flow_temperature_wp
+Stiebel Eltron ISG
+—
+Flow Temperature WP1
+Stiebel Eltron ISG
+—
+sensor.stiebel_eltron_isg_flow_temperature_wp1
+Stiebel Eltron ISG
+—
+Heater Pressure
+Stiebel Eltron ISG
+—
+sensor.stiebel_eltron_isg_heater_pressure
+Stiebel Eltron ISG
+—
+High Pressure WP1
+Stiebel Eltron ISG
+—
+sensor.stiebel_eltron_isg_high_pressure_wp1
+Stiebel Eltron ISG
+—
+Hot Gas Temperature WP1
+Stiebel Eltron ISG
+—
+sensor.stiebel_eltron_isg_hot_gas_temperature_wp1
+Stiebel Eltron ISG
+—
+Humidity HK 1
+Stiebel Eltron ISG
+—
+sensor.stiebel_eltron_isg_humidity_hk_1
+Stiebel Eltron ISG
+—
+Low Pressure WP1
+Stiebel Eltron ISG
+—
+sensor.stiebel_eltron_isg_low_pressure_wp1
+Stiebel Eltron ISG
+—
+Outdoor Temperature
+Stiebel Eltron ISG
+—
+sensor.stiebel_eltron_isg_outdoor_temperature
+Stiebel Eltron ISG
+—
+Produced Heating
+Stiebel Eltron ISG
+—
+sensor.stiebel_eltron_isg_produced_heating
+Stiebel Eltron ISG
+—
+Produced Heating Today
+Stiebel Eltron ISG
+—
+sensor.stiebel_eltron_isg_produced_heating_today
+Stiebel Eltron ISG
+—
+Produced Heating Total
+Stiebel Eltron ISG
+—
+sensor.stiebel_eltron_isg_produced_heating_total
+Stiebel Eltron ISG
+—
+Produced Water Heating
+Stiebel Eltron ISG
+—
+sensor.stiebel_eltron_isg_produced_water_heating
+Stiebel Eltron ISG
+—
+Produced Water Heating Today
+Stiebel Eltron ISG
+—
+sensor.stiebel_eltron_isg_produced_water_heating_today
+Stiebel Eltron ISG
+—
+Produced Water Heating Total
+Stiebel Eltron ISG
+—
+sensor.stiebel_eltron_isg_produced_water_heating_total
+Stiebel Eltron ISG
+—
+Return Temperature
+Stiebel Eltron ISG
+—
+sensor.stiebel_eltron_isg_return_temperature
+Stiebel Eltron ISG
+—
+Return Temperature WP1
+Stiebel Eltron ISG
+—
+sensor.stiebel_eltron_isg_return_temperature_wp1
+Stiebel Eltron ISG
+—
+SG Ready State
+Stiebel Eltron ISG
+—
+sensor.stiebel_eltron_isg_sg_ready_state
+Stiebel Eltron ISG
+—
+Target Room Temperature HK 1
+Stiebel Eltron ISG
+—
+sensor.stiebel_eltron_isg_target_room_temperature_hk_1
+Stiebel Eltron ISG
+—
+Target Temperature Buffer
+Stiebel Eltron ISG
+—
+sensor.stiebel_eltron_isg_target_temperature_buffer
+Stiebel Eltron ISG
+—
+Target Temperature HK 1
+Stiebel Eltron ISG
+—
+sensor.stiebel_eltron_isg_target_temperature_hk_1
+Stiebel Eltron ISG
+—
+Target Temperature Water
+Stiebel Eltron ISG
+—
+sensor.stiebel_eltron_isg_target_temperature_water
+Stiebel Eltron ISG
+—
+Volume Stream
+Stiebel Eltron ISG
+—
+sensor.stiebel_eltron_isg_volume_stream
+Stiebel Eltron ISG
+—
+Volume Stream WP1
+Stiebel Eltron ISG
+—
+sensor.stiebel_eltron_isg_volume_stream_wp1
+Stiebel Eltron ISG
+—
+SG Ready Active
+Stiebel Eltron ISG
+—
+switch.stiebel_eltron_isg_sg_ready_active
+Stiebel Eltron ISG
+—
+SG Ready Input 1
+Stiebel Eltron ISG
+—
+switch.stiebel_eltron_isg_sg_ready_input_1
+Stiebel Eltron ISG
+—
+SG Ready Input 2
+Stiebel Eltron ISG
+—
+switch.stiebel_eltron_isg_sg_ready_input_2
+Stiebel Eltron ISG
+—
